@@ -48,7 +48,7 @@
 URL зашит в `Info.plist` через build setting `INFOPLIST_KEY_DictionaryDownloadURL` (см. `WordTrainer.xcodeproj/project.pbxproj`). Сейчас там:
 
 ```
-https://github.com/denis-kremko/wordtrainer-dict/releases/download/v1/dictionary.sqlite
+https://github.com/denis-kremko/wordtrainer/releases/download/dict-v1/dictionary.sqlite.gz
 ```
 
 ### Как выложить релиз (один раз)
@@ -58,24 +58,22 @@ https://github.com/denis-kremko/wordtrainer-dict/releases/download/v1/dictionary
    curl -LO https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl
    cd DictBuilder
    python3 build_dict.py ../kaikki.org-dictionary-English.jsonl /tmp/dictionary.sqlite
+   gzip -9 /tmp/dictionary.sqlite   # приложение ждёт .gz — разжимает при первом запуске
    ```
-   Скрипт с текущими фильтрами (3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare/dialectal, без cross-reference «plural of / past tense of») даёт файл ~60 МБ + таблицу форм.
+   С текущими фильтрами (3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare/dialectal): ~124 МБ сырого, ~54 МБ в gzip, 815k senses, 653k лемм, 584k форм.
 
-2. Создай публичный репозиторий `denis-kremko/wordtrainer-dict` (пустой, без README) — приватный не подойдёт, GitHub Release приватного репо требует токен.
-
-3. Залей файл релизом. Через `gh`:
+2. Залей файл релизом. Через `gh`:
    ```bash
-   gh release create v1 /tmp/dictionary.sqlite \
-     --repo denis-kremko/wordtrainer-dict \
+   gh release create dict-v1 /tmp/dictionary.sqlite.gz \
+     --repo denis-kremko/wordtrainer \
      --title "Dictionary v1" \
-     --notes "Full English dictionary (~60 MB)."
+     --notes "Full English dictionary (~54 MB gzipped)."
    ```
-   Либо через web-интерфейс: `Releases → Draft a new release → Attach binaries`.
 
-4. Проверь URL:
+3. Проверь URL:
    ```bash
-   curl -IL https://github.com/denis-kremko/wordtrainer-dict/releases/download/v1/dictionary.sqlite
-   # HTTP/2 200, content-length ~60 МБ
+   curl -IL https://github.com/denis-kremko/wordtrainer/releases/download/dict-v1/dictionary.sqlite.gz
+   # HTTP/2 200
    ```
 
 5. (Опционально) Дополни `Info.plist` контрольной суммой:
