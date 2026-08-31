@@ -17,9 +17,12 @@ final class DictionaryService: @unchecked Sendable {
     struct LookupResult {
         var exact: [Entry]
         var formMatches: [String]
+        var prefixMatches: [String]
         var substringMatches: [String]
 
-        var isEmpty: Bool { exact.isEmpty && formMatches.isEmpty && substringMatches.isEmpty }
+        var isEmpty: Bool {
+            exact.isEmpty && formMatches.isEmpty && prefixMatches.isEmpty && substringMatches.isEmpty
+        }
     }
 
     enum Source { case none, bundle, downloaded }
@@ -109,7 +112,7 @@ final class DictionaryService: @unchecked Sendable {
 
     func search(_ query: String) async -> LookupResult {
         let key = Self.normalize(query)
-        let empty = LookupResult(exact: [], formMatches: [], substringMatches: [])
+        let empty = LookupResult(exact: [], formMatches: [], prefixMatches: [], substringMatches: [])
         guard !key.isEmpty else { return empty }
         let cancelled = CancelFlag()
         return await withTaskCancellationHandler {
@@ -117,8 +120,9 @@ final class DictionaryService: @unchecked Sendable {
                 guard !cancelled.isSet else { return empty }
                 let exact = self.lookupLocked(key)
                 let forms = exact.isEmpty ? self.formBasesLocked(for: key) : []
+                let prefixes = key.count >= 3 ? self.prefixMatchesLocked(for: key) : []
                 let subs = key.count >= 3 ? self.substringMatchesLocked(for: key, excluding: key) : []
-                return LookupResult(exact: exact, formMatches: forms, substringMatches: subs)
+                return LookupResult(exact: exact, formMatches: forms, prefixMatches: prefixes, substringMatches: subs)
             }
         } onCancel: {
             cancelled.set()
@@ -158,6 +162,28 @@ final class DictionaryService: @unchecked Sendable {
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
         defer { sqlite3_finalize(stmt) }
         sqlite3_bind_text(stmt, 1, form, -1, SQLITE_TRANSIENT)
+        var out: [String] = []
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            out.append(String(cString: sqlite3_column_text(stmt, 0)))
+        }
+        return out
+    }
+
+    // Range scan instead of LIKE 'q%' so the lemma index is used; '{' is the
+    // first character above 'z', past every character lemmas may contain.
+    private func prefixMatchesLocked(for query: String) -> [String] {
+        guard let db else { return [] }
+        let sql = """
+            SELECT DISTINCT lemma FROM entries
+            WHERE lemma >= ? AND lemma < ? AND lemma != ?
+            ORDER BY length(lemma), lemma LIMIT 8
+        """
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+        defer { sqlite3_finalize(stmt) }
+        sqlite3_bind_text(stmt, 1, query, -1, SQLITE_TRANSIENT)
+        sqlite3_bind_text(stmt, 2, query + "{", -1, SQLITE_TRANSIENT)
+        sqlite3_bind_text(stmt, 3, query, -1, SQLITE_TRANSIENT)
         var out: [String] = []
         while sqlite3_step(stmt) == SQLITE_ROW {
             out.append(String(cString: sqlite3_column_text(stmt, 0)))

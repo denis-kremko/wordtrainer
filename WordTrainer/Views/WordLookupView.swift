@@ -142,6 +142,7 @@ struct WordLookupView: View {
         var out: [String] = []
         if !result.exact.isEmpty { out.append(searchedKey) }
         for f in result.formMatches where !out.contains(f) { out.append(f) }
+        for p in result.prefixMatches where !out.contains(p) { out.append(p) }
         for m in result.substringMatches where !out.contains(m) { out.append(m) }
         return out
     }
