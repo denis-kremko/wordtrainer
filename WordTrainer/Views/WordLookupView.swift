@@ -80,7 +80,6 @@ struct WordLookupView: View {
     // Live like allCustomSenses: this view outlives quiz runs (the Dict tab
     // instance lasts the whole session), so a snapshot would miss rows a
     // saved quiz inserts for the currently displayed word.
-    @Query private var allSenseStats: [SenseStats]
 
     private var customSenses: [CustomSense] {
         guard !searchedKey.isEmpty else { return [] }
@@ -88,11 +87,6 @@ struct WordLookupView: View {
     }
 
     // Global quiz stats for the current lemma, keyed by definition text.
-    private var statsByDefinition: [String: SenseStats] {
-        guard !searchedKey.isEmpty else { return [:] }
-        return SenseStats.byDefinition(allSenseStats, lemma: searchedKey)
-    }
-
     var body: some View {
         if isEmbedded {
             content
@@ -461,7 +455,6 @@ struct WordLookupView: View {
                     .foregroundStyle(.secondary)
             }
             if !showsSelection {
-                SenseStatsLine(stats: statsByDefinition[definition])
             }
         }
         .padding(.vertical, 2)
