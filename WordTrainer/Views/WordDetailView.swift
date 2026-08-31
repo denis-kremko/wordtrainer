@@ -49,7 +49,11 @@ struct WordDetailView: View {
                     sense: sense,
                     stats: statsByDefinition[sense.definition],
                     onDelete: { context.delete(sense) },
-                    onResetStats: { resetTarget = .sense(sense) }
+                    onResetStats: { resetTarget = .sense(sense) },
+                    onSetStatus: { status in
+                        SenseStats.findOrInsert(lemma: word.lemma, definition: sense.definition,
+                                                in: context).learnStatus = status
+                    }
                 )
             }
 
@@ -136,6 +140,7 @@ private struct SenseSection: View {
     let stats: SenseStats?
     let onDelete: () -> Void
     let onResetStats: () -> Void
+    let onSetStatus: (LearnStatus) -> Void
 
     private var excludedLemma: String {
         DictionaryService.normalize(sense.word?.lemma ?? "")
@@ -163,6 +168,14 @@ private struct SenseSection: View {
                 Text("Translation").font(.caption).foregroundStyle(.secondary)
                 TextField("your translation or mnemonic", text: $sense.translation, axis: .vertical)
                     .lineLimit(1...4)
+            }
+            Picker("Progress", selection: Binding(
+                get: { stats?.learnStatus ?? .none },
+                set: { onSetStatus($0) }
+            )) {
+                ForEach(LearnStatus.allCases, id: \.self) { status in
+                    Text(status == .none ? "—" : status.title).tag(status)
+                }
             }
             SenseStatsLine(stats: stats)
             if (stats?.timesSeen ?? 0) > 0 {

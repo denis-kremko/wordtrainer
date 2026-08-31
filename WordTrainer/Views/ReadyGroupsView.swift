@@ -69,9 +69,17 @@ enum ReadyGroupsCatalog {
 
 struct ReadyGroupsListView: View {
     @Query private var groups: [WordGroup]
+    @Query(filter: #Predicate<SenseStats> { $0.status != "" }) private var progressed: [SenseStats]
 
     private var addedIDs: Set<String> {
         Set(groups.compactMap { $0.sourceReadyGroupID })
+    }
+
+    // A list word counts as closed once any sense of its lemma has a status.
+    private func progress(for ready: ReadyGroup) -> (Int, Int)? {
+        let lemmas = Set(progressed.map { $0.lemma })
+        let done = ready.words.filter { lemmas.contains(DictionaryService.normalize($0.w)) }.count
+        return done > 0 ? (done, ready.words.count) : nil
     }
 
     var body: some View {
@@ -97,6 +105,16 @@ struct ReadyGroupsListView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(2)
+                            if let (done, total) = progress(for: ready) {
+                                HStack(spacing: 6) {
+                                    ProgressView(value: Double(done), total: Double(total))
+                                        .tint(.green)
+                                    Text("\(done)/\(total)")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .fixedSize()
+                                }
+                            }
                         }
                     }
                     .padding(.vertical, 2)
@@ -113,6 +131,7 @@ struct ReadyGroupDetailView: View {
     let onCreated: (WordGroup) -> Void
 
     @State private var entriesByWord: [String: [DictionaryService.Entry]]? = nil
+    @Query(filter: #Predicate<SenseStats> { $0.status != "" }) private var progressed: [SenseStats]
     @State private var showingConvert = false
     @State private var browsingWord: ReadyWord? = nil
     @State private var createdGroup: WordGroup? = nil
@@ -126,11 +145,18 @@ struct ReadyGroupDetailView: View {
                         .foregroundStyle(.secondary)
                 }
                 Section("Words (\(ready.words.count))") {
+                    let progressedLemmas = Set(progressed.map { $0.lemma })
                     ForEach(ready.words) { word in
-                        DisclosureRow(title: word.w,
-                                      subtitle: firstDefinition(for: word) ?? "—",
-                                      titleIsHeadline: true) {
-                            browsingWord = word
+                        HStack(spacing: 8) {
+                            DisclosureRow(title: word.w,
+                                          subtitle: firstDefinition(for: word) ?? "—",
+                                          titleIsHeadline: true) {
+                                browsingWord = word
+                            }
+                            if progressedLemmas.contains(DictionaryService.normalize(word.w)) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                            }
                         }
                         .padding(.vertical, 1)
                     }

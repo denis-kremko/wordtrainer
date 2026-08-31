@@ -6,6 +6,7 @@ struct GroupsListView: View {
 
     @Environment(\.modelContext) private var context
     @Query(sort: \WordGroup.createdAt, order: .reverse) private var groups: [WordGroup]
+    @Query(filter: #Predicate<SenseStats> { $0.status != "" }) private var progressed: [SenseStats]
 
     @State private var tab: Tab = .my
     @State private var path = NavigationPath()
@@ -88,6 +89,12 @@ struct GroupsListView: View {
                                             Text("^[\(group.words.count) word](inflect: true)")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
+                                            if let progress = learnedLabel(for: group) {
+                                                Text("•").foregroundStyle(.secondary)
+                                                Text(progress)
+                                                    .font(.caption)
+                                                    .foregroundStyle(.green)
+                                            }
                                             if !group.groupDescription.isEmpty {
                                                 Text("•").foregroundStyle(.secondary)
                                                 Text(group.groupDescription)
@@ -155,6 +162,14 @@ struct GroupsListView: View {
             newGroupDesc = ""
             showingNewGroup = true
         }
+    }
+
+    private func learnedLabel(for group: WordGroup) -> String? {
+        let done = Set(progressed.map { $0.definition })
+        let senses = group.words.flatMap { $0.senses.filter { $0.isEnabled } }
+        guard !senses.isEmpty else { return nil }
+        let learned = senses.filter { done.contains($0.definition) }.count
+        return learned > 0 ? "\(learned)/\(senses.count) learned" : nil
     }
 
     private func delete(at offsets: IndexSet) {

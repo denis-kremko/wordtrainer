@@ -178,12 +178,32 @@ extension Word {
 
 // Global per-definition quiz counters, shared across groups: the identity is
 // (lemma, definition text), the same for dictionary and custom senses.
+enum LearnStatus: String, CaseIterable {
+    case none = ""
+    case learned
+    case knew
+
+    var title: String {
+        switch self {
+        case .none: return "Not learned"
+        case .learned: return "Learned"
+        case .knew: return "Knew already"
+        }
+    }
+}
+
 @Model
 final class SenseStats {
     var lemma: String = ""
     var definition: String = ""
     var timesSeen: Int = 0
     var timesCorrect: Int = 0
+    var status: String = ""
+
+    var learnStatus: LearnStatus {
+        get { LearnStatus(rawValue: status) ?? .none }
+        set { status = newValue.rawValue }
+    }
 
     init(lemma: String, definition: String) {
         self.lemma = lemma
