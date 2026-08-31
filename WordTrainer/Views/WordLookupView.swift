@@ -4,6 +4,7 @@ import SwiftData
 struct WordLookupView: View {
     enum Mode {
         case addTo(WordGroup)
+        case extend(Word)
         case browse(String)
         case dictionary
     }
@@ -17,6 +18,12 @@ struct WordLookupView: View {
 
     init(addingTo group: WordGroup) {
         mode = .addTo(group)
+    }
+
+    init(extending word: Word) {
+        mode = .extend(word)
+        _lemma = State(initialValue: word.lemma)
+        _picked = State(initialValue: DictionaryService.normalize(word.lemma))
     }
 
     init(browsing lemma: String, starring: Set<Int64> = []) {
@@ -35,12 +42,20 @@ struct WordLookupView: View {
         return nil
     }
 
-    private var lockedLemma: String? {
-        if case .browse(let l) = mode { return l }
+    private var extendingWord: Word? {
+        if case .extend(let w) = mode { return w }
         return nil
     }
 
-    private var showsSelection: Bool { group != nil }
+    private var lockedLemma: String? {
+        switch mode {
+        case .browse(let l): return l
+        case .extend(let w): return w.lemma
+        default: return nil
+        }
+    }
+
+    private var showsSelection: Bool { group != nil || extendingWord != nil }
 
     private var isEmbedded: Bool {
         if case .dictionary = mode { return true }
@@ -562,7 +577,12 @@ struct WordLookupView: View {
     }
 
     private var canAdd: Bool {
-        picked != nil && !searchedKey.isEmpty
+        // Extending an existing word: only its own senses may be added, not a
+        // drilled-into word's.
+        if let word = extendingWord, searchedKey != DictionaryService.normalize(word.lemma) {
+            return false
+        }
+        return picked != nil && !searchedKey.isEmpty
             && (!chosenEntries.isEmpty || !chosenCustoms.isEmpty || !draftDefinition.isEmpty)
     }
 
@@ -575,11 +595,7 @@ struct WordLookupView: View {
     }
 
     private func addWord() {
-        guard canAdd, let group else { return }
-
-        let word = Word(lemma: searchedKey)
-        context.insert(word)
-        word.group = group
+        guard canAdd else { return }
 
         var customs = chosenCustoms
         if !draftDefinition.isEmpty {
@@ -588,6 +604,22 @@ struct WordLookupView: View {
                 customs.append(draft)
             }
         }
+
+        if let word = extendingWord {
+            let existing = Set(word.senses.map { $0.definition })
+            word.appendSenses(
+                entries: chosenEntries.filter { !existing.contains($0.definition) }.map { ($0, true) },
+                customs: customs.filter { !existing.contains($0.definition) },
+                in: context
+            )
+            dismiss()
+            return
+        }
+
+        guard let group else { return }
+        let word = Word(lemma: searchedKey)
+        context.insert(word)
+        word.group = group
         word.appendSenses(entries: chosenEntries.map { ($0, true) }, customs: customs, in: context)
 
         dismiss()

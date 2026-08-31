@@ -11,8 +11,6 @@ struct WordDetailView: View {
 
     @State private var showingAddSense = false
     @State private var browsing: BrowseTarget? = nil
-    @State private var newDefinition = ""
-    @State private var newExample = ""
 
     var body: some View {
         let statsByDefinition = SenseStats.byDefinition(allSenseStats, lemma: word.lemma)
@@ -32,10 +30,9 @@ struct WordDetailView: View {
 
             Section {
                 Button {
-                    newDefinition = ""; newExample = ""
                     showingAddSense = true
                 } label: {
-                    Label("Add my own sense", systemImage: "plus")
+                    Label("Add senses", systemImage: "plus")
                 }
             }
 
@@ -61,39 +58,7 @@ struct WordDetailView: View {
             WordLookupView(browsing: target.id)
         }
         .sheet(isPresented: $showingAddSense) {
-            NavigationStack {
-                Form {
-                    Section("Definition") {
-                        TextField("definition", text: $newDefinition, axis: .vertical)
-                            .lineLimit(2...5)
-                    }
-                    Section("Example (optional)") {
-                        TextField("example sentence", text: $newExample, axis: .vertical)
-                            .lineLimit(1...3)
-                    }
-                }
-                .navigationTitle("New Sense")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { showingAddSense = false }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Add") {
-                            let custom = CustomSense.findOrInsert(
-                                lemma: word.lemma,
-                                definition: newDefinition.trimmingCharacters(in: .whitespacesAndNewlines),
-                                example: newExample.trimmingCharacters(in: .whitespacesAndNewlines),
-                                in: context
-                            )
-                            word.appendSenses(entries: [], customs: [custom], in: context)
-                            showingAddSense = false
-                        }
-                        .disabled(newDefinition.isBlank)
-                    }
-                }
-                .presentationDetents([.medium, .large])
-            }
+            WordLookupView(extending: word)
         }
     }
 }
