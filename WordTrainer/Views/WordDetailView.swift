@@ -135,6 +135,30 @@ struct BrowseTarget: Identifiable {
     let id: String
 }
 
+// Row background that observes the status itself: List repaints row
+// backgrounds only when the background VIEW invalidates, not when the
+// enclosing section recomputes its value.
+private struct SenseGlow: View {
+    let stats: SenseStats?
+
+    var body: some View {
+        ZStack {
+            Color(.secondarySystemGroupedBackground)
+            if let color {
+                color.opacity(0.10)
+            }
+        }
+    }
+
+    private var color: Color? {
+        switch stats?.learnStatus ?? .none {
+        case .learned: return .green
+        case .knew: return .yellow
+        case .none: return nil
+        }
+    }
+}
+
 private struct SenseSection: View {
     @Bindable var sense: WordSense
     let stats: SenseStats?
@@ -147,14 +171,6 @@ private struct SenseSection: View {
     }
 
     private var currentStatus: LearnStatus { stats?.learnStatus ?? .none }
-
-    private var statusColor: Color? {
-        switch currentStatus {
-        case .learned: return .green
-        case .knew: return .yellow
-        case .none: return nil
-        }
-    }
 
     private func statusButton(_ status: LearnStatus, color: Color, selectedText: Color) -> some View {
         let isOn = currentStatus == status
@@ -215,6 +231,6 @@ private struct SenseSection: View {
                 }
             }
         }
-        .listRowBackground(statusColor.map { $0.opacity(0.10) })
+        .listRowBackground(SenseGlow(stats: stats))
     }
 }
