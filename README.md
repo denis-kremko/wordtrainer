@@ -68,7 +68,7 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v2/dictionary
      --norvig ../count_1w.txt --subs ../en_full.txt --review-queue /tmp/review_queue.jsonl
    gzip -9 /tmp/dictionary.sqlite   # приложение ждёт .gz — разжимает при первом запуске
    ```
-   Фильтры: частотник (Norvig top-100k ∪ OpenSubtitles top-250k по каждому content-слову леммы), 3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare, без инфлекционных кросс-рефов и словообразовательных заглушек. Подозрительные определения (самоссылки, циркулярные, сложные) не выбрасываются, а пишутся в `review_queue.jsonl` — их прогоняет LLM-ревью (`review_tools.py split/validate/apply`). dict-v2: 310k senses, 178k лемм, ~26 МБ в gzip; ~85k определений переписаны LLM на простой язык.
+   Фильтры: частотник (Norvig top-100k ∪ OpenSubtitles top-250k по каждому content-слову леммы), 3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare (vulgar/derogatory-лексика включена намеренно — сериальный английский; offensive/slur исключены), без инфлекционных кросс-рефов и словообразовательных заглушек. Подозрительные определения (самоссылки, циркулярные, сложные) не выбрасываются, а пишутся в `review_queue.jsonl` — их прогоняет LLM-ревью (`review_tools.py split/validate/apply`). dict-v2: 310k senses, 178k лемм, ~26 МБ в gzip; ~85k определений переписаны LLM на простой язык.
 
 2. Залей файл релизом. Через `gh`:
    ```bash

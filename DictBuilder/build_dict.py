@@ -69,10 +69,12 @@ DROP_PREFIXES = (
 
 # NOTE: "historical" is deliberately NOT here: obsolete/archaic mark dead WORDS,
 # but historical marks past THINGS named by living words (felony, musket).
+# vulgar/derogatory are deliberately admitted (learners meet them constantly in
+# shows); offensive/slur stay out — that's where ethnic slurs live.
 DROP_TAGS = frozenset({
     "obsolete", "archaic", "dated", "rare",
-    "dialectal", "proscribed", "nonstandard", "vulgar",
-    "offensive", "derogatory", "slur",
+    "dialectal", "proscribed", "nonstandard",
+    "offensive", "slur",
 })
 
 DROP_POS = frozenset({
