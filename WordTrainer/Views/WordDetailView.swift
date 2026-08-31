@@ -146,6 +146,34 @@ private struct SenseSection: View {
         DictionaryService.normalize(sense.word?.lemma ?? "")
     }
 
+    private var currentStatus: LearnStatus { stats?.learnStatus ?? .none }
+
+    private var statusColor: Color? {
+        switch currentStatus {
+        case .learned: return .green
+        case .knew: return .yellow
+        case .none: return nil
+        }
+    }
+
+    private func statusButton(_ status: LearnStatus, color: Color, selectedText: Color) -> some View {
+        let isOn = currentStatus == status
+        return Button {
+            onSetStatus(isOn ? .none : status)
+        } label: {
+            Text(status.title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(isOn ? selectedText : color)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(isOn ? color : color.opacity(0.15))
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.borderless)
+        .scaleEffect(isOn ? 0.94 : 1)
+        .animation(.spring(duration: 0.25), value: isOn)
+    }
+
     var body: some View {
         Section {
             Toggle("Learn this sense", isOn: $sense.isEnabled)
@@ -169,13 +197,10 @@ private struct SenseSection: View {
                 TextField("your translation or mnemonic", text: $sense.translation, axis: .vertical)
                     .lineLimit(1...4)
             }
-            Picker("Progress", selection: Binding(
-                get: { stats?.learnStatus ?? .none },
-                set: { onSetStatus($0) }
-            )) {
-                ForEach(LearnStatus.allCases, id: \.self) { status in
-                    Text(status == .none ? "—" : status.title).tag(status)
-                }
+            HStack(spacing: 10) {
+                statusButton(.learned, color: .green, selectedText: .white)
+                statusButton(.knew, color: .yellow, selectedText: .black)
+                Spacer()
             }
             SenseStatsLine(stats: stats)
             if (stats?.timesSeen ?? 0) > 0 {
@@ -190,5 +215,6 @@ private struct SenseSection: View {
                 }
             }
         }
+        .listRowBackground(statusColor.map { $0.opacity(0.10) })
     }
 }
