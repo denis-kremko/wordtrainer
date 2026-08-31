@@ -58,27 +58,29 @@ struct GroupsListView: View {
                     )
                 } else {
                     List {
-                        ForEach(groups) { group in
-                            NavigationLink(value: group) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(group.name).font(.headline)
-                                    HStack(spacing: 8) {
-                                        Text("^[\(group.words.count) word](inflect: true)")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                        if !group.groupDescription.isEmpty {
-                                            Text("•").foregroundStyle(.secondary)
-                                            Text(group.groupDescription)
+                        Section {
+                            ForEach(groups) { group in
+                                NavigationLink(value: group) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(group.name).font(.headline)
+                                        HStack(spacing: 8) {
+                                            Text("^[\(group.words.count) word](inflect: true)")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
-                                                .lineLimit(1)
+                                            if !group.groupDescription.isEmpty {
+                                                Text("•").foregroundStyle(.secondary)
+                                                Text(group.groupDescription)
+                                                    .font(.caption)
+                                                    .foregroundStyle(.secondary)
+                                                    .lineLimit(1)
+                                            }
                                         }
                                     }
+                                    .padding(.vertical, 2)
                                 }
-                                .padding(.vertical, 2)
                             }
+                            .onDelete(perform: delete)
                         }
-                        .onDelete(perform: delete)
 
                         ListBottomSpacer()
                     }
