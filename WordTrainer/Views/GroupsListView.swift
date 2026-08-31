@@ -89,11 +89,12 @@ struct GroupsListView: View {
                                             Text("^[\(group.words.count) word](inflect: true)")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
-                                            if let progress = learnedLabel(for: group) {
+                                            if !group.words.isEmpty {
+                                                let learned = learnedWordCount(in: group)
                                                 Text("•").foregroundStyle(.secondary)
-                                                Text(progress)
+                                                Text("\(learned)/\(group.words.count) learned")
                                                     .font(.caption)
-                                                    .foregroundStyle(.green)
+                                                    .foregroundStyle(learned > 0 ? .green : .secondary)
                                             }
                                             if !group.groupDescription.isEmpty {
                                                 Text("•").foregroundStyle(.secondary)
@@ -164,12 +165,12 @@ struct GroupsListView: View {
         }
     }
 
-    private func learnedLabel(for group: WordGroup) -> String? {
+    // A word is learned when every sense it carries IN THIS GROUP has a status.
+    private func learnedWordCount(in group: WordGroup) -> Int {
         let done = Set(progressed.map { $0.definition })
-        let senses = group.words.flatMap { $0.senses.filter { $0.isEnabled } }
-        guard !senses.isEmpty else { return nil }
-        let learned = senses.filter { done.contains($0.definition) }.count
-        return learned > 0 ? "\(learned)/\(senses.count) learned" : nil
+        return group.words.filter { word in
+            !word.senses.isEmpty && word.senses.allSatisfy { done.contains($0.definition) }
+        }.count
     }
 
     private func delete(at offsets: IndexSet) {
