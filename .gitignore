@@ -8,3 +8,4 @@
 DictBuilder/kaikki.org-dictionary-English.jsonl
 DictBuilder/kaikki.org-dictionary-English.jsonl.gz
 DictBuilder/dictionary.sqlite
+__pycache__/

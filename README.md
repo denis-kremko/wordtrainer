@@ -5,25 +5,29 @@
 ## Что уже работает
 
 - Приложение целиком на английском — чтобы погружаться в язык пока им пользуешься.
-- **Группы слов** — создавай и удаляй; каждая группа — отдельная колода.
-- **Добавление слова** — вводишь лемму, получаешь все значения из офлайн-словаря, отмечаешь нужные.
-- **Умный поиск** — ввёл `came` → предложит `come`; ввёл `up with` → покажет `come up with`, `put up with` и т.д.
-- **Фразовые глаголы и идиомы** — в словаре есть большая часть таких лемм целиком (`break a leg`, `come up with`).
+- **Три вкладки**: My Groups (свои колоды), Ready Groups (20 готовых тематических листов, ~800 слов уровня B1+), Dict (просто словарь с поиском).
+- **Двухэтапный поиск** — печатаешь по мере ввода (debounce ~250 мс, запросы вне main-потока), выбираешь слово из кандидатов (`came` → `come`; `up with` → `come up with`, `put up with`), потом видишь значения по частям речи и фразы, содержащие слово.
+- **Ready Groups** — тематический лист конвертируется в свою группу через фильтр «сними то, что знаешь»; тематичные значения включаются автоматически (hint-ключи в `ready_groups.json`), нетематичные импортируются выключенными.
 - **Значения (senses)** — у каждого слова любое число значений с отдельным чекбоксом «учить это значение» и полем свободной заметки.
-- **Своё определение** — можно добавить своё (помечается бейджем CUSTOM) к любому слову, даже если оно есть в словаре.
-- **Слово не найдено** — кнопка «Add without looking up»: сразу перейти к ручной форме.
+- **Своё определение** — база кастомных определений живёт параллельно словарю (переживает его обновления): добавляй своё, правь словарное карандашом — оно станет custom-копией.
 - **Три режима теста:**
   - `EN → translation (самопроверка)` — видишь слово, вспоминаешь смысл, потом жмёшь «знал / ошибся».
   - `Translation → EN` — видишь свой перевод/мнемонику, вводишь английское слово.
   - `Definition → EN` — видишь английское определение, вводишь слово.
 - **Рандомный сэмпл** — слайдер «10 из 100» (или сколько нужно) прямо перед тестом.
+- **Статистика по значениям** — после квиза выбираешь, сохранять ли прогон; счётчики живут на уровне значения (sense), история — снапшотами в `QuizSession`/`QuizResult` (UI ещё не сделан).
 - **Всё офлайн** — данные в SwiftData, словарь в SQLite, сеть используется только один раз при первом запуске для скачивания полного словаря.
 
 ## Что лежит в проекте
 
 - `WordTrainer.xcodeproj` — Xcode-проект (iOS 17+, SwiftUI + SwiftData).
 - `WordTrainer/Resources/dictionary.sqlite` — **демо-словарь**: несколько слов + фразовых глаголов + таблица форм (came→come и т.п.) чтобы всё пощупать. Полноценный словарь собирается скриптом ниже.
-- `DictBuilder/build_dict.py` — конвертер из Kaikki JSONL в SQLite.
+- `WordTrainer/Resources/ready_groups.json` — 20 готовых тематических листов (леммы + pos-фильтры + hint-ключи тематичности).
+- `DictBuilder/build_dict.py` — конвертер из Kaikki JSONL в SQLite (частотный фильтр + эвристики качества, флаги для LLM-ревью).
+- `DictBuilder/dictfilters.py` — общие эвристики/помощники пайплайна.
+- `DictBuilder/review_tools.py` — split/validate/apply для LLM-ревью определений.
+- `DictBuilder/analyze_dict.py` — анализ собранного словаря (репорты по флагам).
+- `DictBuilder/build_demo_dict.py` — генератор демо-словаря: `python3 build_demo_dict.py ../WordTrainer/Resources/dictionary.sqlite`.
 
 ## Как запустить (первый раз)
 
@@ -45,48 +49,52 @@
 
 Приложение при первом запуске показывает splash с прогресс-баром и качает `dictionary.sqlite` из GitHub Release. Bundled демо-БД остаётся как fallback, чтобы Xcode всегда собирался и превьюшки работали.
 
-URL зашит в `Info.plist` через build setting `INFOPLIST_KEY_DictionaryDownloadURL` (см. `WordTrainer.xcodeproj/project.pbxproj`). Сейчас там:
+URL и контрольная сумма зашиты в `WordTrainer/Info.plist` (ключи `DictionaryDownloadURL` и `DictionarySHA256`). Именно файл, а не build setting: механизм `INFOPLIST_KEY_*` работает только для известных системных ключей — кастомные Xcode молча выбрасывает. Сейчас там:
 
 ```
-https://github.com/denis-kremko/wordtrainer/releases/download/dict-v1/dictionary.sqlite.gz
+https://github.com/denis-kremko/wordtrainer/releases/download/dict-v2/dictionary.sqlite.gz
 ```
 
 ### Как выложить релиз (один раз)
 
 1. Собери полный словарь у себя:
    ```bash
-   curl -LO https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl
+   curl -LO https://kaikki.org/dictionary/English/kaikki.org-dictionary-English.jsonl.gz
+   gunzip kaikki.org-dictionary-English.jsonl.gz
+   curl -LO https://norvig.com/ngrams/count_1w.txt
+   curl -LO https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/en/en_full.txt
    cd DictBuilder
-   python3 build_dict.py ../kaikki.org-dictionary-English.jsonl /tmp/dictionary.sqlite
+   python3 build_dict.py ../kaikki.org-dictionary-English.jsonl /tmp/dictionary.sqlite \
+     --norvig ../count_1w.txt --subs ../en_full.txt --review-queue /tmp/review_queue.jsonl
    gzip -9 /tmp/dictionary.sqlite   # приложение ждёт .gz — разжимает при первом запуске
    ```
-   С текущими фильтрами (3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare/dialectal): ~124 МБ сырого, ~54 МБ в gzip, 815k senses, 653k лемм, 584k форм.
+   Фильтры: частотник (Norvig top-100k ∪ OpenSubtitles top-250k по каждому content-слову леммы), 3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare, без инфлекционных кросс-рефов и словообразовательных заглушек. Подозрительные определения (самоссылки, циркулярные, сложные) не выбрасываются, а пишутся в `review_queue.jsonl` — их прогоняет LLM-ревью (`review_tools.py split/validate/apply`). dict-v2: 310k senses, 178k лемм, ~26 МБ в gzip; ~85k определений переписаны LLM на простой язык.
 
 2. Залей файл релизом. Через `gh`:
    ```bash
-   gh release create dict-v1 /tmp/dictionary.sqlite.gz \
+   gh release create dict-v2 /tmp/dictionary.sqlite.gz \
      --repo denis-kremko/wordtrainer \
-     --title "Dictionary v1" \
-     --notes "Full English dictionary (~54 MB gzipped)."
+     --title "Dictionary v2" \
+     --notes "Curated English dictionary (~26 MB gzipped)."
    ```
 
 3. Проверь URL:
    ```bash
-   curl -IL https://github.com/denis-kremko/wordtrainer/releases/download/dict-v1/dictionary.sqlite.gz
+   curl -IL https://github.com/denis-kremko/wordtrainer/releases/download/dict-v2/dictionary.sqlite.gz
    # HTTP/2 200
    ```
 
-5. (Опционально) Дополни `Info.plist` контрольной суммой:
+4. Обнови контрольную сумму в `WordTrainer/Info.plist` (ключ `DictionarySHA256`) — считается по **распакованному** файлу:
    ```bash
    shasum -a 256 /tmp/dictionary.sqlite
    ```
-   В `project.pbxproj` добавь `INFOPLIST_KEY_DictionarySHA256 = "<hex>"` рядом с `INFOPLIST_KEY_DictionaryDownloadURL`. При несовпадении приложение отклонит скачанный файл (защита от кривых прокси/DNS).
+   При несовпадении приложение отклонит скачанный файл (защита от кривых прокси/DNS).
 
 ### Как обновить словарь
 
 1. Пересобери `dictionary.sqlite`.
-2. `gh release create v2 ...` (новый тег).
-3. Обнови URL в `INFOPLIST_KEY_DictionaryDownloadURL` на `.../v2/dictionary.sqlite`.
+2. `gh release create dict-v3 ...` (новый тег).
+3. Обнови `DictionaryDownloadURL` и `DictionarySHA256` в `WordTrainer/Info.plist`.
 4. Первое приложение при следующем запуске увидит, что локальный файл уже есть, и **не** перекачает. Для форс-обновления сейчас нужно снести приложение или добавить кнопку «Redownload dictionary» в настройки (по запросу сделаю).
 
 ### Где лежит скачанный файл
@@ -95,16 +103,18 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v1/dictionary
 
 ## Архитектура коротко
 
-- `Models/Models.swift` — SwiftData-модели `WordGroup`, `Word`, `WordSense`. Данные пользователя хранятся в SwiftData (SQLite под капотом, в песочнице приложения).
-- `Dictionary/DictionaryService.swift` — read-only доступ к bundled `dictionary.sqlite` через SQLite3 напрямую.
+- `Models/Models.swift` — SwiftData-модели: `WordGroup` → `Word` → `WordSense`, `CustomSense` (переиспользуемые свои определения по леммам), `QuizSession`/`QuizResult` (история квизов снапшотами), `PartOfSpeech` (отображение POS-тегов).
+- `Dictionary/DictionaryService.swift` — read-only доступ к `dictionary.sqlite` через SQLite3 (serial queue, async-обёртки).
+- `Dictionary/DictionaryDownloader.swift` — скачивание gzip-словаря с GitHub Release, gunzip + SHA256 вне main-потока.
 - `Quiz/QuizEngine.swift` — сборка вопросов из группы: фильтрация по включённым значениям, шаффл, сэмплирование, проверка ответа.
 - `Views/*` — SwiftUI-экраны:
-  - `GroupsListView` — список групп
-  - `GroupDetailView` — слова в группе + меню «Начать тест»
-  - `AddWordSheet` — добавление слова с lookup'ом
+  - `GroupsListView` — вкладки My Groups | Ready Groups | Dict
+  - `GroupDetailView` — слова в группе + «Start quiz»
+  - `WordLookupView` — один компонент на три режима: добавление в группу / просмотр слова / вкладка Dict
+  - `ReadyGroupsView` — каталог готовых листов + конверсия в группу
   - `WordDetailView` — редактирование значений и заметок
-  - `QuizConfigSheet` — выбор режима и размера сэмпла
-  - `QuizRunnerView` — прохождение и итоги
+  - `QuizConfigSheet`, `QuizRunnerView` — настройка, прохождение, сохранение статистики по выбору
+  - `SharedViews` — общие компоненты (BottomCTA, TagBadge, DisclosureRow)
 
 ## Возможные апгрейды (легко доделать по запросу)
 
