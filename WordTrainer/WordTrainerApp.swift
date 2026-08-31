@@ -9,7 +9,7 @@ struct WordTrainerApp: App {
     let container: ModelContainer = {
         let schema = Schema([
             WordGroup.self, Word.self, WordSense.self, CustomSense.self,
-            QuizSession.self, QuizResult.self,
+            QuizSession.self, QuizResult.self, SenseStats.self,
         ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {

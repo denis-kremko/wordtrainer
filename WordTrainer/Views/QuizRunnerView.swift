@@ -177,8 +177,9 @@ struct QuizRunnerView: View {
             )
             context.insert(result)
             result.session = session
-            q.sense.timesSeen += 1
-            if answer.isCorrect { q.sense.timesCorrect += 1 }
+            let stats = SenseStats.findOrInsert(lemma: q.lemma, definition: q.sense.definition, in: context)
+            stats.timesSeen += 1
+            if answer.isCorrect { stats.timesCorrect += 1 }
         }
     }
 }

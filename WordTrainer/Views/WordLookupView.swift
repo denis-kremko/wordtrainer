@@ -77,6 +77,8 @@ struct WordLookupView: View {
     @State private var editingEntry: DictionaryService.Entry? = nil
 
     @Query(sort: \CustomSense.createdAt) private var allCustomSenses: [CustomSense]
+    // Global quiz stats for the current lemma, keyed by definition text.
+    @State private var statsByDefinition: [String: SenseStats] = [:]
 
     private var customSenses: [CustomSense] {
         guard !searchedKey.isEmpty else { return [] }
@@ -443,12 +445,17 @@ struct WordLookupView: View {
     private func senseText(definition: String, example: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             linkable(definition, color: .primary)
-                .font(.body)
+                .font(.subheadline)
                 .foregroundStyle(.primary)
             if !example.isEmpty {
                 linkable("“\(example)”", color: .secondary)
-                    .font(.caption).italic()
+                    .font(.footnote).italic()
                     .foregroundStyle(.secondary)
+            }
+            if !showsSelection, let stats = statsByDefinition[definition], stats.timesSeen > 0 {
+                Text("asked \(stats.timesSeen) · correct \(stats.timesCorrect)")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
         }
         .padding(.vertical, 2)
@@ -531,6 +538,7 @@ struct WordLookupView: View {
         if key != searchedKey {
             searchedKey = key
             selectedCustom = []
+            statsByDefinition = SenseStats.byDefinition(lemma: key, in: context)
         }
         if let restore = pendingRestore {
             // A goBack target finished loading: bring its selections back.

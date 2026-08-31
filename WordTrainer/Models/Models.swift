@@ -109,16 +109,10 @@ final class WordSense {
     var isEnabled: Bool = true
     var isCustom: Bool = false
     var order: Int = 0
-    var timesSeen: Int = 0
-    var timesCorrect: Int = 0
 
     var word: Word?
 
     static let customPartOfSpeech = "custom"
-
-    var accuracy: Double? {
-        timesSeen > 0 ? Double(timesCorrect) / Double(timesSeen) : nil
-    }
 
     init(partOfSpeech: String, definition: String, example: String = "", translation: String = "", isEnabled: Bool = true, isCustom: Bool = false, order: Int = 0) {
         self.partOfSpeech = partOfSpeech
@@ -162,6 +156,50 @@ extension Word {
             sense.word = self
             order += 1
         }
+    }
+}
+
+// Global per-definition quiz counters, shared across groups: the identity is
+// (lemma, definition text), the same for dictionary and custom senses.
+@Model
+final class SenseStats {
+    var lemma: String = ""
+    var definition: String = ""
+    var timesSeen: Int = 0
+    var timesCorrect: Int = 0
+
+    init(lemma: String, definition: String) {
+        self.lemma = lemma
+        self.definition = definition
+    }
+
+    var accuracy: Double? {
+        timesSeen > 0 ? Double(timesCorrect) / Double(timesSeen) : nil
+    }
+}
+
+extension SenseStats {
+    @discardableResult
+    static func findOrInsert(lemma rawLemma: String, definition: String,
+                             in context: ModelContext) -> SenseStats {
+        let lemma = DictionaryService.normalize(rawLemma)
+        var descriptor = FetchDescriptor<SenseStats>(
+            predicate: #Predicate { $0.lemma == lemma && $0.definition == definition }
+        )
+        descriptor.fetchLimit = 1
+        if let existing = (try? context.fetch(descriptor))?.first {
+            return existing
+        }
+        let stats = SenseStats(lemma: lemma, definition: definition)
+        context.insert(stats)
+        return stats
+    }
+
+    static func byDefinition(lemma rawLemma: String, in context: ModelContext) -> [String: SenseStats] {
+        let lemma = DictionaryService.normalize(rawLemma)
+        let descriptor = FetchDescriptor<SenseStats>(predicate: #Predicate { $0.lemma == lemma })
+        let all = (try? context.fetch(descriptor)) ?? []
+        return Dictionary(all.map { ($0.definition, $0) }, uniquingKeysWith: { a, _ in a })
     }
 }
 
