@@ -9,7 +9,20 @@ struct WordDetailView: View {
     // every sense section instead of a per-section, per-render fetch.
     @Query private var allSenseStats: [SenseStats]
 
+    private enum ResetTarget: Identifiable {
+        case sense(WordSense)
+        case all
+
+        var id: String {
+            switch self {
+            case .sense(let sense): return sense.definition
+            case .all: return "all"
+            }
+        }
+    }
+
     @State private var showingAddSense = false
+    @State private var resetTarget: ResetTarget? = nil
     @State private var browsing: BrowseTarget? = nil
     @State private var isDeletingWord = false
 
@@ -36,7 +49,7 @@ struct WordDetailView: View {
                     sense: sense,
                     stats: statsByDefinition[sense.definition],
                     onDelete: { context.delete(sense) },
-                    onResetStats: { resetStats(for: sense, in: statsByDefinition) }
+                    onResetStats: { resetTarget = .sense(sense) }
                 )
             }
 
@@ -50,9 +63,7 @@ struct WordDetailView: View {
 
             Section {
                 Button("Reset statistics for all senses") {
-                    for sense in word.senses {
-                        resetStats(for: sense, in: statsByDefinition)
-                    }
+                    resetTarget = .all
                 }
                 .disabled(!word.senses.contains { (statsByDefinition[$0.definition]?.timesSeen ?? 0) > 0 })
                 Button("Delete word from group", role: .destructive) {
@@ -69,6 +80,34 @@ struct WordDetailView: View {
         })
         .sheet(item: $browsing) { target in
             WordLookupView(browsing: target.id)
+        }
+        .confirmationDialog(
+            "Reset statistics?",
+            isPresented: Binding(
+                get: { resetTarget != nil },
+                set: { if !$0 { resetTarget = nil } }
+            ),
+            presenting: resetTarget
+        ) { target in
+            Button("Reset", role: .destructive) {
+                let statsByDefinition = SenseStats.byDefinition(allSenseStats, lemma: word.lemma)
+                switch target {
+                case .sense(let sense):
+                    resetStats(for: sense, in: statsByDefinition)
+                case .all:
+                    for sense in word.senses {
+                        resetStats(for: sense, in: statsByDefinition)
+                    }
+                }
+                resetTarget = nil
+            }
+        } message: { target in
+            switch target {
+            case .sense:
+                Text("Asked and correct counters for this sense will be lost.")
+            case .all:
+                Text("Asked and correct counters for every sense of “\(word.lemma)” will be lost.")
+            }
         }
         .sheet(isPresented: $showingAddSense) {
             WordLookupView(extending: word)

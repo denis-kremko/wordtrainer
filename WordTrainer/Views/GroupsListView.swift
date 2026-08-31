@@ -10,6 +10,7 @@ struct GroupsListView: View {
     @State private var tab: Tab = .my
     @State private var path = NavigationPath()
     @State private var showingNewGroup = false
+    @State private var groupPendingDelete: WordGroup? = nil
     @State private var newGroupName = ""
     @State private var newGroupDesc = ""
 
@@ -48,6 +49,21 @@ struct GroupsListView: View {
                 }
             }
             .sheet(isPresented: $showingNewGroup) { newGroupSheet }
+            .confirmationDialog(
+                "Delete group?",
+                isPresented: Binding(
+                    get: { groupPendingDelete != nil },
+                    set: { if !$0 { groupPendingDelete = nil } }
+                ),
+                presenting: groupPendingDelete
+            ) { group in
+                Button("Delete “\(group.name)”", role: .destructive) {
+                    context.delete(group)
+                    groupPendingDelete = nil
+                }
+            } message: { group in
+                Text("This removes the group and all \(group.words.count) of its words. Quiz history is kept.")
+            }
         }
     }
 
@@ -141,8 +157,8 @@ struct GroupsListView: View {
     }
 
     private func delete(at offsets: IndexSet) {
-        for i in offsets {
-            context.delete(groups[i])
+        if let i = offsets.first {
+            groupPendingDelete = groups[i]
         }
     }
 }
