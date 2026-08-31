@@ -62,7 +62,8 @@ struct QuizConfigSheet: View {
                 }
             }
             .navigationDestination(isPresented: $startQuiz) {
-                QuizRunnerView(questions: questions, mode: mode, groupName: group.name)
+                QuizRunnerView(questions: questions, mode: mode,
+                               groupName: group.name, groupID: group.id.uuidString)
             }
         }
         .presentationDetents([.medium])

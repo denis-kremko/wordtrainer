@@ -48,7 +48,7 @@ struct GroupDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink {
-                    GroupStatsView(groupName: group.name)
+                    GroupStatsView(group: group)
                 } label: {
                     Label("Stats", systemImage: "chart.bar.xaxis")
                 }

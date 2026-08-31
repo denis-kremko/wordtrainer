@@ -8,6 +8,7 @@ struct QuizRunnerView: View {
     let questions: [QuizQuestion]
     let mode: QuizMode
     let groupName: String
+    let groupID: String
 
     @State private var index = 0
     @State private var userAnswer = ""
@@ -161,13 +162,15 @@ struct QuizRunnerView: View {
         let session = QuizSession(
             mode: mode.rawValue,
             groupName: groupName,
+            groupID: groupID,
             totalCount: results.count,
             correctCount: results.filter { $0.isCorrect }.count
         )
         context.insert(session)
-        for answer in results {
+        for (order, answer) in results.enumerated() {
             let q = answer.question
             let result = QuizResult(
+                order: order,
                 lemma: q.lemma,
                 senseDefinition: q.sense.definition,
                 prompt: q.prompt,

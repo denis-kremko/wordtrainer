@@ -546,6 +546,8 @@ struct WordLookupView: View {
         if key != searchedKey {
             searchedKey = key
             selectedCustom = []
+            newCustomDefinition = ""
+            newCustomExample = ""
         }
         if let restore = pendingRestore {
             // A goBack target finished loading: bring its selections back.
@@ -612,9 +614,16 @@ struct WordLookupView: View {
         }
 
         guard let group else { return }
-        let word = Word(lemma: searchedKey)
-        context.insert(word)
-        word.group = group
+        // Adding a lemma the group already has extends that word instead of
+        // creating a duplicate row.
+        let word: Word
+        if let existing = group.words.first(where: { $0.lemma == searchedKey }) {
+            word = existing
+        } else {
+            word = Word(lemma: searchedKey)
+            context.insert(word)
+            word.group = group
+        }
         word.appendSenses(entries: chosenEntries.map { ($0, true) }, customs: customs, in: context)
 
         dismiss()

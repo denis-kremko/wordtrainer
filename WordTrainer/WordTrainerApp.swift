@@ -56,16 +56,22 @@ struct WordTrainerApp: App {
     // Pre-existing rows get one shared UUID backfilled by the migration.
     private static func repairDuplicateCustomSenseIDs(_ container: ModelContainer) {
         let context = ModelContext(container)
-        guard let all = try? context.fetch(FetchDescriptor<CustomSense>()) else { return }
-        var seen = Set<UUID>()
         var changed = false
-        for sense in all {
-            if seen.contains(sense.id) {
-                sense.id = UUID()
-                changed = true
+
+        func repair<T: PersistentModel>(_ type: T.Type, id: ReferenceWritableKeyPath<T, UUID>) {
+            guard let all = try? context.fetch(FetchDescriptor<T>()) else { return }
+            var seen = Set<UUID>()
+            for row in all {
+                if seen.contains(row[keyPath: id]) {
+                    row[keyPath: id] = UUID()
+                    changed = true
+                }
+                seen.insert(row[keyPath: id])
             }
-            seen.insert(sense.id)
         }
+
+        repair(CustomSense.self, id: \CustomSense.id)
+        repair(WordGroup.self, id: \WordGroup.id)
         if changed { try? context.save() }
     }
 

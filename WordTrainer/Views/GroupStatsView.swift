@@ -6,10 +6,15 @@ struct GroupStatsView: View {
     private let groupName: String
     @Query private var sessions: [QuizSession]
 
-    init(groupName: String) {
-        self.groupName = groupName
+    init(group: WordGroup) {
+        let name = group.name
+        let id = group.id.uuidString
+        groupName = name
+        // Legacy sessions predate groupID and joined by display name.
         _sessions = Query(
-            filter: #Predicate<QuizSession> { $0.groupName == groupName },
+            filter: #Predicate<QuizSession> {
+                $0.groupID == id || ($0.groupID == "" && $0.groupName == name)
+            },
             sort: \QuizSession.date
         )
     }
@@ -56,7 +61,7 @@ struct GroupStatsView: View {
     private var summaryTiles: some View {
         HStack(spacing: 12) {
             statTile(value: "\(sessions.count)", label: "quizzes")
-            statTile(value: "\(averageAccuracy)%", label: "average")
+            statTile(value: "\(overallAccuracy)%", label: "accuracy")
             statTile(value: "\(bestAccuracy)%", label: "best")
         }
     }
@@ -143,8 +148,12 @@ struct GroupStatsView: View {
         session.totalCount > 0 ? 100 * session.correctCount / session.totalCount : 0
     }
 
-    private var averageAccuracy: Int {
-        sessions.isEmpty ? 0 : sessions.map(accuracy).reduce(0, +) / sessions.count
+    // Weighted by quiz size: total correct over total asked, not a mean of
+    // per-quiz percentages.
+    private var overallAccuracy: Int {
+        let total = sessions.map(\.totalCount).reduce(0, +)
+        let correct = sessions.map(\.correctCount).reduce(0, +)
+        return total > 0 ? 100 * correct / total : 0
     }
 
     private var bestAccuracy: Int {
@@ -176,7 +185,8 @@ struct QuizSessionDetailView: View {
                 LabeledContent("Score", value: "\(session.correctCount) of \(session.totalCount)")
             }
             Section("Answers") {
-                ForEach(session.results.sorted(by: { $0.lemma < $1.lemma }), id: \.persistentModelID) { result in
+                ForEach(session.results.sorted(by: { ($0.order, $0.lemma) < ($1.order, $1.lemma) }),
+                        id: \.persistentModelID) { result in
                     HStack(alignment: .top) {
                         Image(systemName: result.isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
                             .foregroundStyle(result.isCorrect ? .green : .red)

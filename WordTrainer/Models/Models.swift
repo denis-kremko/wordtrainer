@@ -16,6 +16,10 @@ extension ModelContext {
 
 @Model
 final class WordGroup {
+    // Stable identity for quiz-session linkage: names are neither unique nor
+    // rename-proof. Not @Attribute(.unique) — migration backfills one shared
+    // UUID into old rows; launch repair de-duplicates instead.
+    var id: UUID = UUID()
     var name: String
     var groupDescription: String
     var createdAt: Date
@@ -25,6 +29,7 @@ final class WordGroup {
     var words: [Word] = []
 
     init(name: String, groupDescription: String = "") {
+        self.id = UUID()
         self.name = name
         self.groupDescription = groupDescription
         self.createdAt = Date()
@@ -216,16 +221,18 @@ final class QuizSession {
     var date: Date = Date()
     var mode: String = ""
     var groupName: String = ""
+    var groupID: String = ""      // WordGroup.id.uuidString; "" on legacy rows
     var totalCount: Int = 0
     var correctCount: Int = 0
 
     @Relationship(deleteRule: .cascade, inverse: \QuizResult.session)
     var results: [QuizResult] = []
 
-    init(mode: String, groupName: String, totalCount: Int, correctCount: Int) {
+    init(mode: String, groupName: String, groupID: String, totalCount: Int, correctCount: Int) {
         self.date = Date()
         self.mode = mode
         self.groupName = groupName
+        self.groupID = groupID
         self.totalCount = totalCount
         self.correctCount = correctCount
     }
@@ -233,6 +240,7 @@ final class QuizSession {
 
 @Model
 final class QuizResult {
+    var order: Int = 0
     var lemma: String = ""
     var senseDefinition: String = ""
     var prompt: String = ""
@@ -242,8 +250,9 @@ final class QuizResult {
 
     var session: QuizSession?
 
-    init(lemma: String, senseDefinition: String, prompt: String, expected: String,
+    init(order: Int, lemma: String, senseDefinition: String, prompt: String, expected: String,
          userAnswer: String, isCorrect: Bool) {
+        self.order = order
         self.lemma = lemma
         self.senseDefinition = senseDefinition
         self.prompt = prompt
