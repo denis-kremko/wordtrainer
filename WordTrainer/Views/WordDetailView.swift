@@ -175,28 +175,41 @@ private struct SenseSection: View {
 
     private var currentStatus: LearnStatus { stats?.learnStatus ?? .none }
 
-    private func statusButton(_ status: LearnStatus, color: Color, selectedText: Color) -> some View {
-        let isOn = currentStatus == status
-        return Button {
-            onSetStatus(isOn ? .none : status)
-        } label: {
-            Text(status.title)
+    private func capsuleButton(_ title: String,
+                               isOn: Bool,
+                               color: Color,
+                               selectedText: Color = .white,
+                               isDisabled: Bool = false,
+                               action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(isOn ? selectedText : color)
+                .foregroundStyle(isDisabled ? Color.secondary : (isOn ? selectedText : color))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 7)
-                .background(isOn ? color : color.opacity(0.15))
+                .background(isDisabled ? Color(.systemGray5) : (isOn ? color : color.opacity(0.15)))
                 .clipShape(Capsule())
         }
         .buttonStyle(.borderless)
-        .scaleEffect(isOn ? 0.94 : 1)
+        .scaleEffect(isOn && !isDisabled ? 0.94 : 1)
         .animation(.spring(duration: 0.25), value: isOn)
+        .disabled(isDisabled)
     }
 
     var body: some View {
         Section {
-            Toggle("Learn this sense", isOn: $sense.isEnabled)
-                .disabled(currentStatus != .none)
+            capsuleButton("Learn this sense",
+                          isOn: sense.isEnabled,
+                          color: .yellow,
+                          selectedText: .black,
+                          isDisabled: currentStatus != .none) {
+                sense.isEnabled.toggle()
+            }
+            capsuleButton("Learned",
+                          isOn: currentStatus == .learned,
+                          color: .green) {
+                onSetStatus(currentStatus == .learned ? .none : .learned)
+            }
             VStack(alignment: .leading, spacing: 4) {
                 Text(sense.isCustom
                      ? "Definition"
@@ -218,12 +231,11 @@ private struct SenseSection: View {
                 TextField("your translation or mnemonic", text: $sense.translation, axis: .vertical)
                     .lineLimit(1...4)
             }
-            statusButton(.learned, color: .green, selectedText: .white)
             SenseStatsLine(stats: stats)
             if (stats?.timesSeen ?? 0) > 0 {
-                Button("Reset statistics", action: onResetStats)
+                capsuleButton("Reset statistics", isOn: false, color: .blue, action: onResetStats)
             }
-            Button("Delete sense", role: .destructive, action: onDelete)
+            capsuleButton("Delete sense", isOn: false, color: .red, action: onDelete)
         } header: {
             HStack {
                 Text("Sense \(sense.order + 1)")
