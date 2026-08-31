@@ -35,7 +35,10 @@ struct GroupStatsView: View {
                             .padding(.vertical, 8)
                     }
                     Section("History") {
-                        ForEach(Array(sessions.enumerated().reversed()), id: \.element.persistentModelID) { index, session in
+                        // Identity = chronological position (sessions are
+                        // append-only): persistentModelID changes on autosave
+                        // and would rebuild rows, popping a pushed detail.
+                        ForEach(Array(sessions.enumerated().reversed()), id: \.offset) { index, session in
                             NavigationLink {
                                 QuizSessionDetailView(session: session, attempt: index + 1)
                             } label: {
@@ -75,17 +78,30 @@ struct GroupStatsView: View {
 
     private var progressChart: some View {
         Chart {
-            ForEach(Array(sessions.enumerated()), id: \.element.persistentModelID) { index, session in
+            ForEach(Array(sessions.enumerated()), id: \.offset) { index, session in
+                let accuracy = accuracy(session)
+                AreaMark(
+                    x: .value("Attempt", index + 1),
+                    y: .value("Accuracy", accuracy)
+                )
+                .foregroundStyle(
+                    .linearGradient(
+                        colors: [Color.accentColor.opacity(0.25), Color.accentColor.opacity(0.02)],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                )
+                .interpolationMethod(.monotone)
+
                 LineMark(
                     x: .value("Attempt", index + 1),
-                    y: .value("Accuracy", accuracy(session))
+                    y: .value("Accuracy", accuracy)
                 )
                 .foregroundStyle(Color.accentColor)
-                .interpolationMethod(.catmullRom)
+                .interpolationMethod(.monotone)
 
                 PointMark(
                     x: .value("Attempt", index + 1),
-                    y: .value("Accuracy", accuracy(session))
+                    y: .value("Accuracy", accuracy)
                 )
                 .foregroundStyle(by: .value("Mode", modeTitle(session)))
             }
@@ -98,7 +114,8 @@ struct GroupStatsView: View {
             }
         }
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: min(sessions.count, 8))) {
+            AxisMarks(values: Array(stride(from: 1, through: sessions.count,
+                                           by: max(1, sessions.count / 8)))) {
                 AxisGridLine()
                 AxisValueLabel()
             }

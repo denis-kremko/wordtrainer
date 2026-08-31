@@ -92,16 +92,12 @@ struct WordLookupView: View {
     @State private var editingEntry: DictionaryService.Entry? = nil
 
     @Query(sort: \CustomSense.createdAt) private var allCustomSenses: [CustomSense]
-    // Live like allCustomSenses: this view outlives quiz runs (the Dict tab
-    // instance lasts the whole session), so a snapshot would miss rows a
-    // saved quiz inserts for the currently displayed word.
 
     private var customSenses: [CustomSense] {
         guard !searchedKey.isEmpty else { return [] }
         return allCustomSenses.filter { $0.lemma == searchedKey }
     }
 
-    // Global quiz stats for the current lemma, keyed by definition text.
     var body: some View {
         if isEmbedded {
             content
@@ -469,8 +465,6 @@ struct WordLookupView: View {
                     .font(.footnote).italic()
                     .foregroundStyle(.secondary)
             }
-            if !showsSelection {
-            }
         }
         .padding(.vertical, 2)
     }
@@ -577,13 +571,18 @@ struct WordLookupView: View {
     }
 
     private var canAdd: Bool {
-        // Extending an existing word: only its own senses may be added, not a
-        // drilled-into word's.
-        if let word = extendingWord, searchedKey != DictionaryService.normalize(word.lemma) {
-            return false
+        guard picked != nil, !searchedKey.isEmpty else { return false }
+        if let word = extendingWord {
+            // Extending an existing word: only its own senses may be added, not
+            // a drilled-into word's — and only ones it doesn't already have,
+            // so Add can't be an enabled no-op (appendSenses would skip them).
+            guard searchedKey == DictionaryService.normalize(word.lemma) else { return false }
+            let existing = Set(word.senses.map { $0.definition })
+            return chosenEntries.contains { !existing.contains($0.definition) }
+                || chosenCustoms.contains { !existing.contains($0.definition) }
+                || (!draftDefinition.isEmpty && !existing.contains(draftDefinition))
         }
-        return picked != nil && !searchedKey.isEmpty
-            && (!chosenEntries.isEmpty || !chosenCustoms.isEmpty || !draftDefinition.isEmpty)
+        return !chosenEntries.isEmpty || !chosenCustoms.isEmpty || !draftDefinition.isEmpty
     }
 
     private var chosenEntries: [DictionaryService.Entry] {
@@ -606,12 +605,8 @@ struct WordLookupView: View {
         }
 
         if let word = extendingWord {
-            let existing = Set(word.senses.map { $0.definition })
-            word.appendSenses(
-                entries: chosenEntries.filter { !existing.contains($0.definition) }.map { ($0, true) },
-                customs: customs.filter { !existing.contains($0.definition) },
-                in: context
-            )
+            // appendSenses skips definitions the word already has.
+            word.appendSenses(entries: chosenEntries.map { ($0, true) }, customs: customs, in: context)
             dismiss()
             return
         }

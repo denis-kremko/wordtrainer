@@ -11,8 +11,20 @@ struct WordDetailView: View {
 
     @State private var showingAddSense = false
     @State private var browsing: BrowseTarget? = nil
+    @State private var isDeletingWord = false
 
     var body: some View {
+        // Once the word is deleted, never touch it again: autosave can
+        // invalidate the model mid-pop and any read of it would crash.
+        if isDeletingWord {
+            Color.clear
+        } else {
+            detail
+        }
+    }
+
+    @ViewBuilder
+    private var detail: some View {
         let statsByDefinition = SenseStats.byDefinition(allSenseStats, lemma: word.lemma)
         Form {
             Section("Word") {
@@ -44,6 +56,7 @@ struct WordDetailView: View {
                 }
                 .disabled(!word.senses.contains { (statsByDefinition[$0.definition]?.timesSeen ?? 0) > 0 })
                 Button("Delete word from group", role: .destructive) {
+                    isDeletingWord = true
                     context.delete(word)
                     dismiss()
                 }
@@ -64,10 +77,13 @@ struct WordDetailView: View {
 }
 
 extension WordDetailView {
+    // Zero the counters instead of deleting the row: launch-time
+    // backfillSenseStats treats an empty SenseStats table as a pre-migration
+    // store and would rebuild every deleted counter from saved QuizResults.
     private func resetStats(for sense: WordSense, in statsByDefinition: [String: SenseStats]) {
-        if let stats = statsByDefinition[sense.definition] {
-            context.delete(stats)
-        }
+        guard let stats = statsByDefinition[sense.definition] else { return }
+        stats.timesSeen = 0
+        stats.timesCorrect = 0
     }
 }
 

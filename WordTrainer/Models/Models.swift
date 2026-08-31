@@ -145,18 +145,24 @@ extension WordSense {
 
 extension Word {
     // Single home for turning dictionary entries and custom senses into
-    // WordSense rows, owning the running order counter.
+    // WordSense rows, owning the running order counter. One WordSense per
+    // definition text — the identity quizzes and SenseStats key on — so
+    // anything the word already has, or this batch already added (e.g. a
+    // dictionary entry plus its unedited "Save to custom" copy), is skipped.
     func appendSenses(entries: [(entry: DictionaryService.Entry, isEnabled: Bool)],
                       customs: [CustomSense],
                       in context: ModelContext) {
+        var seen = Set(senses.map { $0.definition })
         var order = (senses.map { $0.order }.max() ?? -1) + 1
         for (entry, isEnabled) in entries {
+            guard seen.insert(entry.definition).inserted else { continue }
             let sense = WordSense(entry: entry, isEnabled: isEnabled, order: order)
             context.insert(sense)
             sense.word = self
             order += 1
         }
         for custom in customs {
+            guard seen.insert(custom.definition).inserted else { continue }
             let sense = WordSense(custom: custom, order: order)
             context.insert(sense)
             sense.word = self
