@@ -180,7 +180,7 @@ private struct SenseSection: View {
             Text(status.title)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(isOn ? selectedText : color)
-                .padding(.horizontal, 14)
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, 7)
                 .background(isOn ? color : color.opacity(0.15))
                 .clipShape(Capsule())
@@ -216,7 +216,6 @@ private struct SenseSection: View {
             HStack(spacing: 10) {
                 statusButton(.learned, color: .green, selectedText: .white)
                 statusButton(.knew, color: .yellow, selectedText: .black)
-                Spacer()
             }
             SenseStatsLine(stats: stats)
             if (stats?.timesSeen ?? 0) > 0 {
