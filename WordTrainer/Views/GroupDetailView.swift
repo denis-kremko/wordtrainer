@@ -38,7 +38,12 @@ struct GroupDetailView: View {
                             }
                             .listRowBackground(ZStack {
                                 Color(.secondarySystemGroupedBackground)
-                                if learned { Color.green.opacity(0.12) }
+                                if learned {
+                                    Color.green.opacity(0.12)
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .strokeBorder(Color.green, lineWidth: 2)
+                                        .padding(4)
+                                }
                             })
                         }
                         .onDelete(perform: deleteWords)
