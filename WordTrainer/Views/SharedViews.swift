@@ -32,6 +32,21 @@ enum WordLink {
     static func isCandidate(_ token: String) -> Bool {
         token.count >= 3 && !skip.contains(token)
     }
+
+    // Inflections resolve to base lemmas ("having" -> "have"), so the skip
+    // list must also veto the resolved target, not just the surface token.
+    static func isLinkTarget(_ lemma: String) -> Bool {
+        !skip.contains(lemma)
+    }
+
+    // Shared parse-and-fallback policy for wordtrainer:// links.
+    static func openURLAction(_ open: @escaping (String) -> Void) -> OpenURLAction {
+        OpenURLAction { url in
+            guard let lemma = lemma(from: url) else { return .systemAction }
+            open(lemma)
+            return .handled
+        }
+    }
 }
 
 // Text whose dictionary words are tappable links (wordtrainer://word/<lemma>).
@@ -41,11 +56,29 @@ struct LinkedText: View {
     let color: Color
     var excluding: String? = nil
 
-    @State private var attributed: AttributedString?
+    private struct Linked {
+        let text: String
+        let attributed: AttributedString
+    }
+
+    @State private var linked: Linked?
 
     var body: some View {
-        Text(attributed ?? AttributedString(text))
-            .task(id: text) { attributed = await linkify() }
+        Text(displayed)
+            .task(id: text) {
+                let attributed = await linkify()
+                // A restarted task (text changed) owns the state now; a stale
+                // result must not land after it — resolveTokens' queue hop
+                // resumes even for cancelled tasks.
+                guard !Task.isCancelled else { return }
+                linked = Linked(text: text, attributed: attributed)
+            }
+    }
+
+    // Never render a cached string built from different text.
+    private var displayed: AttributedString {
+        if let linked, linked.text == text { return linked.attributed }
+        return AttributedString(text)
     }
 
     private func linkify() async -> AttributedString {
@@ -55,7 +88,9 @@ struct LinkedText: View {
 
         func flushWord() {
             if !word.isEmpty {
-                segments.append((word, word.lowercased()))
+                // Straight quotes for lookup: lemmas and the "'s" strip in
+                // resolveTokenLocked use ASCII apostrophes.
+                segments.append((word, word.lowercased().replacingOccurrences(of: "’", with: "'")))
                 word = ""
             }
         }
@@ -67,7 +102,7 @@ struct LinkedText: View {
         }
 
         for ch in text {
-            if ch.isLetter || ch == "'" {
+            if ch.isLetter || ch == "'" || ch == "’" {
                 flushPlain()
                 word.append(ch)
             } else {
@@ -92,6 +127,7 @@ struct LinkedText: View {
             if let token = segment.token,
                let lemma = resolved[token],
                lemma != excluding,
+               WordLink.isLinkTarget(lemma),
                let url = WordLink.url(for: lemma) {
                 run.link = url
             }

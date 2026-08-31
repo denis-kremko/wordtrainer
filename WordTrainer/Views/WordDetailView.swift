@@ -33,10 +33,8 @@ struct WordDetailView: View {
         }
         .navigationTitle(word.lemma)
         .navigationBarTitleDisplayMode(.inline)
-        .environment(\.openURL, OpenURLAction { url in
-            guard let lemma = WordLink.lemma(from: url) else { return .systemAction }
+        .environment(\.openURL, WordLink.openURLAction { lemma in
             browsing = BrowseTarget(id: lemma)
-            return .handled
         })
         .sheet(item: $browsing) { target in
             WordLookupView(browsing: target.id)
@@ -87,6 +85,10 @@ private struct SenseSection: View {
     @Bindable var sense: WordSense
     let onDelete: () -> Void
 
+    private var excludedLemma: String {
+        DictionaryService.normalize(sense.word?.lemma ?? "")
+    }
+
     var body: some View {
         Section {
             Toggle("Learn this sense", isOn: $sense.isEnabled)
@@ -94,14 +96,12 @@ private struct SenseSection: View {
                            value: PartOfSpeech.displayName(sense.partOfSpeech, lemma: sense.word?.lemma ?? ""))
             VStack(alignment: .leading, spacing: 4) {
                 Text("Definition").font(.caption).foregroundStyle(.secondary)
-                LinkedText(text: sense.definition, color: .primary,
-                           excluding: DictionaryService.normalize(sense.word?.lemma ?? ""))
+                LinkedText(text: sense.definition, color: .primary, excluding: excludedLemma)
             }
             if !sense.example.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Example").font(.caption).foregroundStyle(.secondary)
-                    LinkedText(text: "“\(sense.example)”", color: .primary,
-                               excluding: DictionaryService.normalize(sense.word?.lemma ?? ""))
+                    LinkedText(text: "“\(sense.example)”", color: .primary, excluding: excludedLemma)
                         .italic()
                 }
             }

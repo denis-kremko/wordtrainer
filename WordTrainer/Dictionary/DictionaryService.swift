@@ -103,13 +103,24 @@ final class DictionaryService: @unchecked Sendable {
     }
 
     private func tableExistsLocked(_ name: String) -> Bool {
-        guard let db else { return false }
+        let sql = "SELECT name FROM sqlite_master WHERE type='table' AND name=? LIMIT 1"
+        return !stringColumnLocked(sql, binds: [name]).isEmpty
+    }
+
+    // Shared prepare/bind/step scaffold for the single-text-column queries.
+    private func stringColumnLocked(_ sql: String, binds: [String]) -> [String] {
+        guard let db else { return [] }
         var stmt: OpaquePointer?
-        let sql = "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1"
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return false }
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
         defer { sqlite3_finalize(stmt) }
-        sqlite3_bind_text(stmt, 1, name, -1, SQLITE_TRANSIENT)
-        return sqlite3_step(stmt) == SQLITE_ROW
+        for (i, bind) in binds.enumerated() {
+            sqlite3_bind_text(stmt, Int32(i + 1), bind, -1, SQLITE_TRANSIENT)
+        }
+        var out: [String] = []
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            out.append(String(cString: sqlite3_column_text(stmt, 0)))
+        }
+        return out
     }
 
     func search(_ query: String) async -> LookupResult {
@@ -141,7 +152,7 @@ final class DictionaryService: @unchecked Sendable {
     // queue.sync inside the queue deadlocks.
     private func lookupLocked(_ key: String) -> [Entry] {
         guard let db else { return [] }
-        let sql = "SELECT id, pos, definition, example FROM entries WHERE lemma = ? ORDER BY id"
+        let sql = "SELECT id, pos, definition, example FROM entries WHERE lemma = ? ORDER BY rank, id"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
         defer { sqlite3_finalize(stmt) }
@@ -158,58 +169,29 @@ final class DictionaryService: @unchecked Sendable {
     }
 
     private func formBasesLocked(for form: String) -> [String] {
-        guard hasFormsTable, let db else { return [] }
-        let sql = "SELECT DISTINCT lemma FROM forms WHERE form = ? LIMIT 8"
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-        defer { sqlite3_finalize(stmt) }
-        sqlite3_bind_text(stmt, 1, form, -1, SQLITE_TRANSIENT)
-        var out: [String] = []
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            out.append(String(cString: sqlite3_column_text(stmt, 0)))
-        }
-        return out
+        guard hasFormsTable else { return [] }
+        return stringColumnLocked("SELECT DISTINCT lemma FROM forms WHERE form = ? LIMIT 8",
+                                  binds: [form])
     }
 
     // Range scan instead of LIKE 'q%' so the lemma index is used; '{' is the
     // first character above 'z', past every character lemmas may contain.
     private func prefixMatchesLocked(for query: String) -> [String] {
-        guard let db else { return [] }
         let sql = """
             SELECT DISTINCT lemma FROM entries
             WHERE lemma >= ? AND lemma < ? AND lemma != ?
             ORDER BY length(lemma), lemma LIMIT 8
         """
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-        defer { sqlite3_finalize(stmt) }
-        sqlite3_bind_text(stmt, 1, query, -1, SQLITE_TRANSIENT)
-        sqlite3_bind_text(stmt, 2, query + "{", -1, SQLITE_TRANSIENT)
-        sqlite3_bind_text(stmt, 3, query, -1, SQLITE_TRANSIENT)
-        var out: [String] = []
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            out.append(String(cString: sqlite3_column_text(stmt, 0)))
-        }
-        return out
+        return stringColumnLocked(sql, binds: [query, query + "{", query])
     }
 
     private func substringMatchesLocked(for query: String, excluding exclude: String) -> [String] {
-        guard let db else { return [] }
         let sql = """
             SELECT DISTINCT lemma FROM entries
             WHERE lemma LIKE ? AND lemma LIKE '% %' AND lemma != ?
             ORDER BY length(lemma) LIMIT 12
         """
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-        defer { sqlite3_finalize(stmt) }
-        sqlite3_bind_text(stmt, 1, "%\(query)%", -1, SQLITE_TRANSIENT)
-        sqlite3_bind_text(stmt, 2, exclude, -1, SQLITE_TRANSIENT)
-        var out: [String] = []
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            out.append(String(cString: sqlite3_column_text(stmt, 0)))
-        }
-        return out
+        return stringColumnLocked(sql, binds: ["%\(query)%", exclude])
     }
 
     // token (lowercased) -> base lemma, for tappable words inside definitions.
@@ -243,12 +225,7 @@ final class DictionaryService: @unchecked Sendable {
     }
 
     private func lemmaExistsLocked(_ lemma: String) -> Bool {
-        guard let db else { return false }
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, "SELECT 1 FROM entries WHERE lemma = ? LIMIT 1", -1, &stmt, nil) == SQLITE_OK else { return false }
-        defer { sqlite3_finalize(stmt) }
-        sqlite3_bind_text(stmt, 1, lemma, -1, SQLITE_TRANSIENT)
-        return sqlite3_step(stmt) == SQLITE_ROW
+        !stringColumnLocked("SELECT lemma FROM entries WHERE lemma = ? LIMIT 1", binds: [lemma]).isEmpty
     }
 
     func entriesByLemma(_ lemmas: [String]) async -> [String: [Entry]] {

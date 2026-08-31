@@ -44,11 +44,23 @@ struct WordLookupView: View {
         return false
     }
 
+    // One step of the drill-down trail: the word plus the selections to bring
+    // back when the user returns to it.
+    private struct HistoryEntry {
+        let key: String
+        let selected: Set<Int64>
+        let selectedCustom: Set<UUID>
+    }
+
     @State private var lemma: String = ""
     @State private var picked: String? = nil
     // Drill-down trail (word links, "Contains" taps); back pops it, and in
     // dict/add modes the last back returns to the search stage.
-    @State private var history: [String] = []
+    @State private var history: [HistoryEntry] = []
+    // Selections to reapply once the search for a goBack target lands.
+    @State private var pendingRestore: HistoryEntry? = nil
+    // The typed query pick() overwrote, so the last back can restore it.
+    @State private var preSearchQuery: String? = nil
     @State private var lookup: DictionaryService.LookupResult? = nil
     @State private var searchedKey: String = ""
     @State private var selected: Set<Int64> = []
@@ -125,11 +137,7 @@ struct WordLookupView: View {
             }
         }
         .task(id: lemma) { await performSearch() }
-        .environment(\.openURL, OpenURLAction { url in
-            guard let lemma = WordLink.lemma(from: url) else { return .systemAction }
-            pick(lemma)
-            return .handled
-        })
+        .environment(\.openURL, WordLink.openURLAction { pick($0) })
         .sheet(item: $editingEntry) { entry in
             ModifySenseSheet(entry: entry) { definition, example in
                 let sense = findOrInsertCustomSense(definition: definition, example: example)
@@ -178,6 +186,16 @@ struct WordLookupView: View {
                 ForEach(candidates, id: \.self) { candidate in
                     candidateRow(candidate)
                 }
+                // Prefix completions alone must not hide the escape hatch:
+                // the typed word itself is still absent from the dictionary.
+                if result.exact.isEmpty && result.formMatches.isEmpty
+                    && result.substringMatches.isEmpty {
+                    Button {
+                        pick(searchedKey)
+                    } label: {
+                        Label("Use “\(searchedKey)” anyway", systemImage: "square.and.pencil")
+                    }
+                }
             }
         }
     }
@@ -190,14 +208,29 @@ struct WordLookupView: View {
         let key = DictionaryService.normalize(word)
         guard !key.isEmpty else { return }
         if let current = picked, current != key {
-            history.append(current)
+            history.append(HistoryEntry(key: current, selected: selected, selectedCustom: selectedCustom))
+        }
+        if picked == nil {
+            preSearchQuery = lemma  // so the last back can restore the typed query
         }
         picked = key
         if DictionaryService.normalize(lemma) != key {
+            clearStaleResult()
             lemma = word  // restarts .task(id: lemma); performSearch handles the rest
-        } else {
+        } else if searchedKey == key {
             expandAddFormIfNoSenses(exactIsEmpty: lookup?.exact.isEmpty ?? true)
+        } else {
+            // lookup still belongs to an older query (debounced search in flight).
+            clearStaleResult()
         }
+    }
+
+    // Blank out the previous word's result so it never renders under the new
+    // header (and a stale searchedKey can't feed canAdd/addWord meanwhile).
+    private func clearStaleResult() {
+        lookup = nil
+        searchedKey = ""
+        selected = []
     }
 
     private var canGoBack: Bool { !history.isEmpty || lockedLemma == nil }
@@ -217,6 +250,10 @@ struct WordLookupView: View {
             Text(picked ?? "")
                 .font(.title2).bold()
                 .foregroundStyle(.primary)
+            if isSearching {
+                ProgressView()
+                    .padding(.leading, 4)
+            }
             Spacer()
         }
         .padding(.vertical, 2)
@@ -224,10 +261,23 @@ struct WordLookupView: View {
 
     private func goBack() {
         if let previous = history.popLast() {
-            picked = previous
-            lemma = previous
+            picked = previous.key
+            if DictionaryService.normalize(lemma) == previous.key {
+                // Same query already loaded; nothing to re-run.
+                selected = previous.selected
+                selectedCustom = previous.selectedCustom
+            } else {
+                pendingRestore = previous
+                clearStaleResult()
+                lemma = previous.key  // restarts .task(id: lemma)
+            }
         } else {
             picked = nil
+            pendingRestore = nil
+            if let query = preSearchQuery {
+                preSearchQuery = nil
+                lemma = query  // restore the typed query (no-op if unchanged)
+            }
         }
     }
 
@@ -379,32 +429,29 @@ struct WordLookupView: View {
         .padding(.vertical, 2)
     }
 
-    // Links only in browse/dictionary modes: in add mode the row is a selection
-    // button and word taps would fight the checkbox.
     private func senseText(definition: String, example: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Group {
-                if showsSelection {
-                    Text(definition)
-                } else {
-                    LinkedText(text: definition, color: .primary, excluding: searchedKey)
-                }
-            }
-            .font(.body)
-            .foregroundStyle(.primary)
+            linkable(definition, color: .primary)
+                .font(.body)
+                .foregroundStyle(.primary)
             if !example.isEmpty {
-                Group {
-                    if showsSelection {
-                        Text("“\(example)”")
-                    } else {
-                        LinkedText(text: "“\(example)”", color: .secondary, excluding: searchedKey)
-                    }
-                }
-                .font(.caption).italic()
-                .foregroundStyle(.secondary)
+                linkable("“\(example)”", color: .secondary)
+                    .font(.caption).italic()
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 2)
+    }
+
+    // Links only in browse/dictionary modes: in add mode the row is a selection
+    // button and word taps would fight the checkbox.
+    @ViewBuilder
+    private func linkable(_ string: String, color: Color) -> some View {
+        if showsSelection {
+            Text(string)
+        } else {
+            LinkedText(text: string, color: color, excluding: searchedKey)
+        }
     }
 
     private func findOrInsertCustomSense(definition: String, example: String) -> CustomSense {
@@ -438,6 +485,7 @@ struct WordLookupView: View {
         if let p = picked, p != key {
             picked = nil
             history = []
+            pendingRestore = nil
         }
         guard !key.isEmpty else {
             lookup = nil
@@ -445,6 +493,8 @@ struct WordLookupView: View {
             selected = []
             selectedCustom = []
             history = []
+            pendingRestore = nil
+            preSearchQuery = nil
             isSearching = false
             return
         }
@@ -470,6 +520,14 @@ struct WordLookupView: View {
         if key != searchedKey {
             searchedKey = key
             selectedCustom = []
+        }
+        if let restore = pendingRestore {
+            // A goBack target finished loading: bring its selections back.
+            if restore.key == key {
+                selected = restore.selected.intersection(newIDs)
+                selectedCustom = restore.selectedCustom
+            }
+            pendingRestore = nil
         }
         if picked == key {
             expandAddFormIfNoSenses(exactIsEmpty: result.exact.isEmpty)

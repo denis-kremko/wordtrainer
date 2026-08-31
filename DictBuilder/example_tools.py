@@ -20,16 +20,21 @@ from collections import defaultdict
 from pathlib import Path
 
 from dictfilters import TOKEN_RE, build_forms_map, content_words, stem_candidates, write_jsonl
-from review_tools import load_queue
+from review_tools import load_queue, load_verdicts
 
 MIN_LEN = 4
 MAX_LEN = 160
 
 
+def lemma_words(lemma: str) -> tuple[str, ...]:
+    """Words an example must use: content words, else every raw token (so short
+    or stopword-only headwords like "go"/"do in" still get checked — and their
+    forms stay in the map cmd_validate builds)."""
+    return content_words(lemma) or tuple(TOKEN_RE.findall(lemma.lower()))
+
+
 def example_uses_lemma(lemma: str, example: str, forms_of: dict[str, set[str]]) -> bool:
-    words = content_words(lemma)
-    if not words:
-        words = tuple(TOKEN_RE.findall(lemma.lower()))
+    words = lemma_words(lemma)
     tokens = set(TOKEN_RE.findall(example.lower()))
     for w in words:
         wc = stem_candidates(w)
@@ -41,26 +46,10 @@ def example_uses_lemma(lemma: str, example: str, forms_of: dict[str, set[str]]) 
 
 def cmd_validate(queue_path: str, workdir: str, db_path: str) -> None:
     queue = load_queue(queue_path)
-    wanted = {w for r in queue.values() for w in content_words(r["w"])}
-    forms_of = {k: v for k, v in build_forms_map(db_path).items() if k in wanted}
+    wanted = {w for r in queue.values() for w in lemma_words(r["w"])}
+    forms_of = build_forms_map(db_path, wanted)
     wd = Path(workdir)
-
-    verdicts: dict[int, dict] = {}
-    bad_lines = 0
-    for vf in sorted(wd.glob("verdict_*.jsonl")):
-        for line in vf.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                v = json.loads(line)
-            except json.JSONDecodeError:
-                bad_lines += 1
-                continue
-            if not isinstance(v, dict) or type(v.get("id")) is not int:
-                bad_lines += 1
-                continue
-            verdicts[v["id"]] = v
+    verdicts, bad_lines = load_verdicts(wd)
 
     clean: list[dict] = []
     requeue: list[dict] = []
@@ -107,10 +96,13 @@ def cmd_validate(queue_path: str, workdir: str, db_path: str) -> None:
 def cmd_apply(clean_path: str, db_path: str) -> None:
     conn = sqlite3.connect(db_path)
     updates = [(v["e"], v["id"]) for v in load_queue(clean_path).values()]
-    conn.executemany("UPDATE entries SET example = ? WHERE id = ?", updates)
+    cur = conn.executemany("UPDATE entries SET example = ? WHERE id = ?", updates)
+    applied = cur.rowcount  # ids deleted since validation match no rows
     conn.commit()
     conn.close()
-    print(f"applied: {len(updates)} examples")
+    print(f"applied: {applied} of {len(updates)} examples")
+    if applied != len(updates):
+        print(f"WARNING: {len(updates) - applied} ids no longer exist in entries")
 
 
 if __name__ == "__main__":

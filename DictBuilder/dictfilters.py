@@ -201,11 +201,14 @@ class FrequencyFilter:
         return (not parts) or all(self.word_is_common(p) for p in parts)
 
 
-def build_forms_map(db_path: str) -> dict[str, set[str]]:
+def build_forms_map(db_path: str, wanted: set[str] | None = None) -> dict[str, set[str]]:
+    """lemma -> its inflected forms; `wanted` keeps only those lemmas (saves
+    materializing the whole forms table when the caller needs a few words)."""
     conn = sqlite3.connect(db_path)
     forms_of: dict[str, set[str]] = defaultdict(set)
     for form, lemma in conn.execute("SELECT form, lemma FROM forms"):
-        forms_of[lemma].add(form)
+        if wanted is None or lemma in wanted:
+            forms_of[lemma].add(form)
     conn.close()
     return forms_of
 
@@ -217,7 +220,8 @@ def create_schema(cur: sqlite3.Cursor) -> None:
             lemma TEXT NOT NULL,
             pos TEXT NOT NULL,
             definition TEXT NOT NULL,
-            example TEXT
+            example TEXT,
+            rank INTEGER NOT NULL DEFAULT 0
         )
     """)
     cur.execute("CREATE TABLE forms (form TEXT NOT NULL, lemma TEXT NOT NULL)")

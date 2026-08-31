@@ -33,6 +33,27 @@ def load_queue(path: str) -> dict[int, dict]:
     return rows
 
 
+def load_verdicts(workdir: str | Path) -> tuple[dict[int, dict], int]:
+    """Rows from verdict_*.jsonl keyed by id (last wins), plus the malformed-line count."""
+    verdicts: dict[int, dict] = {}
+    bad_lines = 0
+    for vf in sorted(Path(workdir).glob("verdict_*.jsonl")):
+        for line in vf.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                v = json.loads(line)
+            except json.JSONDecodeError:
+                bad_lines += 1
+                continue
+            if not isinstance(v, dict) or type(v.get("id")) is not int:
+                bad_lines += 1
+                continue
+            verdicts[v["id"]] = v
+    return verdicts, bad_lines
+
+
 def cmd_split(queue_path: str, workdir: str, batch_size: int = 150) -> None:
     out = Path(workdir)
     out.mkdir(parents=True, exist_ok=True)
@@ -55,25 +76,9 @@ def cmd_split(queue_path: str, workdir: str, batch_size: int = 150) -> None:
 def cmd_validate(queue_path: str, workdir: str, db_path: str) -> None:
     queue = load_queue(queue_path)
     wanted = {w for r in queue.values() for w in content_words(r["lemma"])}
-    forms_of = {k: v for k, v in build_forms_map(db_path).items() if k in wanted}
+    forms_of = build_forms_map(db_path, wanted)
     wd = Path(workdir)
-
-    verdicts: dict[int, dict] = {}
-    bad_lines = 0
-    for vf in sorted(wd.glob("verdict_*.jsonl")):
-        for line in vf.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                v = json.loads(line)
-            except json.JSONDecodeError:
-                bad_lines += 1
-                continue
-            if not isinstance(v, dict) or type(v.get("id")) is not int:
-                bad_lines += 1
-                continue
-            verdicts[v["id"]] = v
+    verdicts, bad_lines = load_verdicts(wd)
 
     clean: list[dict] = []
     requeue: list[dict] = []
