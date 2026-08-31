@@ -200,8 +200,7 @@ private struct SenseSection: View {
         Section {
             capsuleButton("Learn this sense",
                           isOn: sense.isEnabled,
-                          color: .yellow,
-                          selectedText: .black,
+                          color: .orange,
                           isDisabled: currentStatus != .none) {
                 sense.isEnabled.toggle()
             }
