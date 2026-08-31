@@ -2,7 +2,6 @@ import Foundation
 import CryptoKit
 import Compression
 
-// Info.plist keys: DictionaryDownloadURL (required), DictionarySHA256, DictionaryMinBytes.
 @MainActor
 @Observable
 final class DictionaryDownloader: NSObject {
@@ -14,11 +13,18 @@ final class DictionaryDownloader: NSObject {
         case installing
         case done
         case failed(String)
+
+        var isTerminal: Bool {
+            switch self {
+            case .done, .failed: return true
+            default: return false
+            }
+        }
     }
 
     private(set) var state: State = .idle
 
-    static var installedURL: URL? {
+    nonisolated static var installedURL: URL? {
         guard let appSupport = try? FileManager.default.url(
             for: .applicationSupportDirectory,
             in: .userDomainMask,
@@ -28,14 +34,14 @@ final class DictionaryDownloader: NSObject {
         return appSupport.appendingPathComponent("dictionary.sqlite")
     }
 
-    static var isInstalled: Bool {
+    nonisolated static var isInstalled: Bool {
         guard let url = installedURL else { return false }
         return FileManager.default.fileExists(atPath: url.path)
     }
 
-    static var isConfigured: Bool { remoteURL != nil }
+    nonisolated static var isConfigured: Bool { remoteURL != nil }
 
-    private static var remoteURL: URL? {
+    nonisolated private static var remoteURL: URL? {
         guard let s = Bundle.main.object(forInfoDictionaryKey: "DictionaryDownloadURL") as? String,
               let url = URL(string: s),
               url.scheme == "https" || url.scheme == "http"
@@ -43,19 +49,20 @@ final class DictionaryDownloader: NSObject {
         return url
     }
 
-    private static var expectedSHA256: String? {
+    nonisolated private static var expectedSHA256: String? {
         (Bundle.main.object(forInfoDictionaryKey: "DictionarySHA256") as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
             .nilIfEmpty
     }
 
-    private static var minBytes: Int64 {
+    nonisolated private static var minBytes: Int64 {
         (Bundle.main.object(forInfoDictionaryKey: "DictionaryMinBytes") as? Int).map(Int64.init) ?? (1 * 1024 * 1024)
     }
 
-    private var task: URLSessionDownloadTask?
-    private lazy var session: URLSession = {
+    @ObservationIgnored private var task: URLSessionDownloadTask?
+    // The Observation macro rewrites stored properties; `lazy` doesn't survive it.
+    @ObservationIgnored private lazy var session: URLSession = {
         let cfg = URLSessionConfiguration.default
         cfg.waitsForConnectivity = true
         cfg.timeoutIntervalForResource = 60 * 60
@@ -68,14 +75,14 @@ final class DictionaryDownloader: NSObject {
     func start() {
         guard case .idle = state else { return }
         guard let remote = Self.remoteURL else {
-            state = .failed("No DictionaryDownloadURL in Info.plist.")
+            setState(.failed("No DictionaryDownloadURL in Info.plist."))
             return
         }
         if Self.isInstalled {
-            state = .done
+            setState(.done)
             return
         }
-        state = .downloading(bytesReceived: 0, bytesTotal: -1)
+        setState(.downloading(bytesReceived: 0, bytesTotal: -1))
         let task = session.downloadTask(with: URLRequest(url: remote))
         self.task = task
         task.resume()
@@ -83,15 +90,21 @@ final class DictionaryDownloader: NSObject {
 
     func cancel() {
         task?.cancel()
-        task = nil
-        state = .idle
+        setState(.failed("Download cancelled."))
     }
 
-    fileprivate func handleFinishedDownload(tempURL: URL, response: URLResponse?) {
-        Task { @MainActor in
+    nonisolated fileprivate func handleFinishedDownload(tempURL: URL) {
+        Task {
+            // A cancel can land right after the download finishes; the terminal
+            // state latch would hide every later state change, so don't verify
+            // and install behind the user's back.
+            guard await isProcessing else {
+                try? FileManager.default.removeItem(at: tempURL)
+                return
+            }
+            var payloadURL = tempURL
             do {
-                state = .verifying
-                var payloadURL = tempURL
+                await setState(.verifying)
                 if Self.remoteURL?.pathExtension.lowercased() == "gz" {
                     payloadURL = try Self.gunzip(tempURL)
                     try? FileManager.default.removeItem(at: tempURL)
@@ -102,13 +115,13 @@ final class DictionaryDownloader: NSObject {
                     throw DownloadError("Downloaded file is too small (\(size) bytes) — likely an HTML error page.")
                 }
                 if let expected = Self.expectedSHA256 {
-                    let actual = try sha256Hex(of: payloadURL)
+                    let actual = try Self.sha256Hex(of: payloadURL)
                     if actual != expected {
                         throw DownloadError("Checksum mismatch (expected \(expected), got \(actual)).")
                     }
                 }
 
-                state = .installing
+                await setState(.installing)
                 guard let dest = Self.installedURL else {
                     throw DownloadError("Could not locate Application Support directory.")
                 }
@@ -127,25 +140,53 @@ final class DictionaryDownloader: NSObject {
                 try? resDest.setResourceValues(values)
 
                 DictionaryService.shared.reload()
-                state = .done
+                await setState(.done)
             } catch {
-                state = .failed(error.localizedDescription)
+                // Verification/install failed: don't strand a ~60 MB payload in tmp.
+                try? FileManager.default.removeItem(at: payloadURL)
+                await setState(.failed(error.localizedDescription))
             }
         }
     }
 
-    fileprivate func handleTaskFailure(_ error: Error) {
-        Task { @MainActor in
-            state = .failed(error.localizedDescription)
+    nonisolated fileprivate func handleTaskFailure(_ error: Error) {
+        Task { await setState(.failed(error.localizedDescription)) }
+    }
+
+    private var isProcessing: Bool { !state.isTerminal }
+
+    // The single owner of state transitions: terminal states are sticky, and
+    // progress updates cannot resurrect a run that moved past downloading.
+    private func setState(_ new: State) {
+        guard !state.isTerminal else { return }
+        if case .downloading = new {
+            switch state {
+            case .idle, .downloading: break
+            default: return
+            }
+        }
+        state = new
+        // URLSession retains its delegate until invalidated.
+        if new.isTerminal, task != nil {
+            task = nil
+            session.finishTasksAndInvalidate()
         }
     }
 
     // Streams gunzip on disk using Apple's Compression framework. RFC 1952 header parsing.
-    fileprivate static func gunzip(_ src: URL) throws -> URL {
+    nonisolated fileprivate static func gunzip(_ src: URL) throws -> URL {
         let dst = FileManager.default.temporaryDirectory
             .appendingPathComponent("dictionary-\(UUID().uuidString).sqlite")
         FileManager.default.createFile(atPath: dst.path, contents: nil)
+        do {
+            return try gunzip(src, into: dst)
+        } catch {
+            try? FileManager.default.removeItem(at: dst)  // don't leak a partial file
+            throw error
+        }
+    }
 
+    nonisolated private static func gunzip(_ src: URL, into dst: URL) throws -> URL {
         let inHandle = try FileHandle(forReadingFrom: src)
         defer { try? inHandle.close() }
         let outHandle = try FileHandle(forWritingTo: dst)
@@ -210,7 +251,7 @@ final class DictionaryDownloader: NSObject {
         }
     }
 
-    private static func skipGzipHeader(_ h: FileHandle) throws {
+    nonisolated private static func skipGzipHeader(_ h: FileHandle) throws {
         guard let magic = try h.read(upToCount: 2), magic.count == 2,
               magic[0] == 0x1f, magic[1] == 0x8b else {
             throw DownloadError("Not a gzip file.")
@@ -219,7 +260,6 @@ final class DictionaryDownloader: NSObject {
             throw DownloadError("Truncated gzip header.")
         }
         let flg = cmFlg[1]
-        // mtime(4) + xfl(1) + os(1)
         _ = try h.read(upToCount: 6)
         if flg & 0x04 != 0 {
             guard let xlenData = try h.read(upToCount: 2), xlenData.count == 2 else {
@@ -239,7 +279,7 @@ final class DictionaryDownloader: NSObject {
         }
     }
 
-    private func sha256Hex(of url: URL) throws -> String {
+    nonisolated private static func sha256Hex(of url: URL) throws -> String {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         var hasher = SHA256()
@@ -270,10 +310,10 @@ extension DictionaryDownloader: URLSessionDownloadDelegate {
                                 totalBytesWritten: Int64,
                                 totalBytesExpectedToWrite: Int64) {
         Task { @MainActor in
-            self.state = .downloading(
+            self.setState(.downloading(
                 bytesReceived: totalBytesWritten,
                 bytesTotal: totalBytesExpectedToWrite
-            )
+            ))
         }
     }
 
@@ -294,7 +334,7 @@ extension DictionaryDownloader: URLSessionDownloadDelegate {
             handleTaskFailure(DownloadError("HTTP \(http.statusCode) from server."))
             return
         }
-        handleFinishedDownload(tempURL: tempCopy, response: downloadTask.response)
+        handleFinishedDownload(tempURL: tempCopy)
     }
 
     nonisolated func urlSession(_ session: URLSession,

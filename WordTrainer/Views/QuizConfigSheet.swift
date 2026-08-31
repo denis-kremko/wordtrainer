@@ -9,9 +9,8 @@ struct QuizConfigSheet: View {
     @State private var sampleSize: Double = 10
     @State private var useAll: Bool = false
     @State private var startQuiz = false
-    // Built once when the user taps "Start" — the navigationDestination closure
-    // is re-evaluated on parent re-renders, so building questions there would
-    // silently reshuffle the quiz mid-session.
+    // Built once on Start: the navigationDestination closure re-runs on parent
+    // re-renders and would silently reshuffle the quiz mid-session.
     @State private var questions: [QuizQuestion] = []
 
     var body: some View {
@@ -63,7 +62,7 @@ struct QuizConfigSheet: View {
                 }
             }
             .navigationDestination(isPresented: $startQuiz) {
-                QuizRunnerView(questions: questions, mode: mode)
+                QuizRunnerView(questions: questions, mode: mode, groupName: group.name)
             }
         }
         .presentationDetents([.medium])

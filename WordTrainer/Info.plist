@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Custom keys must live in a real Info.plist: Xcode's INFOPLIST_KEY_* build
+	     settings only work for known system keys and silently drop custom ones.
+	     This file is merged with the generated Info.plist (GENERATE_INFOPLIST_FILE). -->
+	<key>DictionaryDownloadURL</key>
+	<string>https://github.com/denis-kremko/wordtrainer/releases/download/dict-v2/dictionary.sqlite.gz</string>
+	<!-- SHA256 of the *decompressed* dictionary.sqlite. Update together with the URL
+	     when publishing a new dictionary release. -->
+	<key>DictionarySHA256</key>
+	<string>cf90ca1c9d7ef11d535444631aca57f9f1a640ae4241d7d6987ff4836fe0b853</string>
+</dict>
+</plist>

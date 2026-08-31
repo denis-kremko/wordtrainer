@@ -7,6 +7,7 @@ struct QuizRunnerView: View {
 
     let questions: [QuizQuestion]
     let mode: QuizMode
+    let groupName: String
 
     @State private var index = 0
     @State private var userAnswer = ""
@@ -22,7 +23,14 @@ struct QuizRunnerView: View {
                     description: Text("The selected mode has no valid questions. For example, “Translation → EN” needs at least one sense to have a translation.")
                 )
             } else if index >= questions.count {
-                QuizSummaryView(results: results) { dismiss() }
+                QuizSummaryView(
+                    results: results,
+                    onSave: {
+                        saveStats()
+                        dismiss()
+                    },
+                    onDiscard: { dismiss() }
+                )
             } else {
                 questionView(questions[index])
             }
@@ -133,13 +141,11 @@ struct QuizRunnerView: View {
     private func submit(_ q: QuizQuestion) {
         let ok = QuizBuilder.isCorrect(userAnswer: userAnswer, expected: q.expectedAnswer)
         results.append(QuizAnswer(question: q, userAnswer: userAnswer, isCorrect: ok))
-        updateStats(for: q, ok: ok)
         revealed = true
     }
 
     private func recordSelfCheck(isCorrect: Bool, for q: QuizQuestion) {
         results.append(QuizAnswer(question: q, userAnswer: userAnswer, isCorrect: isCorrect))
-        updateStats(for: q, ok: isCorrect)
         advance()
     }
 
@@ -149,19 +155,38 @@ struct QuizRunnerView: View {
         index += 1
     }
 
-    private func updateStats(for q: QuizQuestion, ok: Bool) {
-        let wordID = q.wordID
-        var descriptor = FetchDescriptor<Word>(predicate: #Predicate { $0.id == wordID })
-        descriptor.fetchLimit = 1
-        guard let w = try? context.fetch(descriptor).first else { return }
-        w.timesSeen += 1
-        if ok { w.timesCorrect += 1 }
+    // Nothing is persisted during the run; stats are written only here, when the
+    // user chooses to keep this quiz.
+    private func saveStats() {
+        let session = QuizSession(
+            mode: mode.rawValue,
+            groupName: groupName,
+            totalCount: results.count,
+            correctCount: results.filter { $0.isCorrect }.count
+        )
+        context.insert(session)
+        for answer in results {
+            let q = answer.question
+            let result = QuizResult(
+                lemma: q.lemma,
+                senseDefinition: q.sense.definition,
+                prompt: q.prompt,
+                expected: q.expectedAnswer,
+                userAnswer: answer.userAnswer,
+                isCorrect: answer.isCorrect
+            )
+            context.insert(result)
+            result.session = session
+            q.sense.timesSeen += 1
+            if answer.isCorrect { q.sense.timesCorrect += 1 }
+        }
     }
 }
 
 struct QuizSummaryView: View {
     let results: [QuizAnswer]
-    let onDone: () -> Void
+    let onSave: () -> Void
+    let onDiscard: () -> Void
 
     var body: some View {
         let correct = results.filter { $0.isCorrect }.count
@@ -193,9 +218,13 @@ struct QuizSummaryView: View {
                 }
             }
 
-            Button("Done") { onDone() }
-                .buttonStyle(.borderedProminent)
-                .padding(.bottom)
+            VStack(spacing: 8) {
+                BottomCTA(title: "Save to statistics", systemImage: "chart.bar.fill", action: onSave)
+
+                Button("Don't save") { onDiscard() }
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.bottom)
         }
         .padding(.top)
     }

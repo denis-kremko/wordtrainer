@@ -1,0 +1,2393 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "phrasal-essentials",
+      "name": "Phrasal Verbs: Essentials",
+      "icon": "arrow.triangle.branch",
+      "description": "The phrasal verbs you meet everywhere: news, work, small talk.",
+      "pos": "verb",
+      "words": [
+        "carry out",
+        {
+          "w": "come across",
+          "hint": [
+            "seem",
+            "find",
+            "accident",
+            "impression"
+          ]
+        },
+        "come up with",
+        "put up with",
+        "run into",
+        "break down",
+        "bring up",
+        "call off",
+        "figure out",
+        "get along",
+        "give up",
+        {
+          "w": "look after",
+          "hint": [
+            "care",
+            "safe"
+          ]
+        },
+        "look forward to",
+        "pass out",
+        "point out",
+        "pull over",
+        "put off",
+        "set up",
+        "show off",
+        "take after",
+        "take off",
+        "turn down",
+        "turn out",
+        "work out",
+        "back up",
+        "blow up",
+        "break up",
+        "bring about",
+        {
+          "w": "catch up",
+          "hint": [
+            "involve",
+            "embroil"
+          ]
+        },
+        "cheer up",
+        "calm down",
+        "come over",
+        "cut off",
+        "drop by",
+        "end up",
+        "fall apart",
+        "fall behind",
+        "fill out",
+        "find out",
+        "get away",
+        "get over",
+        "go over",
+        "hang out",
+        "hold on",
+        "let down",
+        "look into",
+        "look up",
+        "make up",
+        "move on",
+        "pick up",
+        "put away",
+        "run out",
+        "set off",
+        "sort out",
+        "take over",
+        "throw away",
+        "try on",
+        "warm up"
+      ]
+    },
+    {
+      "id": "phrasal-advanced",
+      "name": "Phrasal Verbs: Advanced",
+      "icon": "arrow.triangle.pull",
+      "description": "Less common, more precise: the ones that make you sound fluent.",
+      "pos": "verb",
+      "words": [
+        "account for",
+        "bail out",
+        "bank on",
+        "boil down",
+        "branch out",
+        "brush up",
+        "buckle down",
+        "carry on",
+        "chip in",
+        "come about",
+        "come by",
+        "crack down",
+        "cut back",
+        "die down",
+        "do away with",
+        "drag on",
+        "draw up",
+        "harp on",
+        "ease off",
+        "egg on",
+        "fall through",
+        "fend off",
+        "fizzle out",
+        "flare up",
+        "follow through",
+        "fork out",
+        "gear up",
+        "get by",
+        {
+          "w": "give in",
+          "hint": [
+            "yield",
+            "surrender",
+            "defeat"
+          ]
+        },
+        "gloss over",
+        {
+          "w": "hammer out",
+          "hint": [
+            "agreement",
+            "plan"
+          ]
+        },
+        "hold off",
+        "iron out",
+        "lash out",
+        "lay off",
+        "live up",
+        "look down on",
+        "mull over",
+        "opt out",
+        {
+          "w": "pan out",
+          "hint": [
+            "plan",
+            "outcome",
+            "result"
+          ]
+        },
+        "phase out",
+        "pin down",
+        "play down",
+        "put forward",
+        "ramp up",
+        "rule out",
+        "settle for",
+        "shrug off",
+        "single out",
+        "spell out",
+        "stamp out",
+        "step down",
+        "stick around",
+        "talk into",
+        "tone down",
+        "wear off",
+        "weigh in",
+        "wind down",
+        {
+          "w": "wind up",
+          "hint": [
+            "end"
+          ]
+        },
+        "write off"
+      ]
+    },
+    {
+      "id": "idioms-everyday",
+      "name": "Everyday Idioms",
+      "icon": "quote.bubble",
+      "description": "Idioms natives actually use, from small talk to the office.",
+      "words": [
+        "break the ice",
+        "hit the sack",
+        "piece of cake",
+        "an arm and a leg",
+        "under the weather",
+        "once in a blue moon",
+        "beat around the bush",
+        "bite the bullet",
+        "burn the midnight oil",
+        "cut corners",
+        "out of hand",
+        "hit the nail on the head",
+        "let the cat out of the bag",
+        "miss the boat",
+        "rain cats and dogs",
+        "see eye to eye",
+        "spill the beans",
+        "last straw",
+        "up in the air",
+        "call it a day",
+        "get cold feet",
+        "hot water",
+        "jump the gun",
+        "keep an eye on",
+        "off the hook",
+        "on thin ice",
+        "out of the blue",
+        {
+          "w": "red herring",
+          "hint": [
+            "misleading",
+            "diverting",
+            "clue"
+          ]
+        },
+        "silver lining",
+        "sit on the fence",
+        "take for granted",
+        "throw in the towel",
+        "tie the knot",
+        "turn a blind eye",
+        "white elephant",
+        "wild-goose chase",
+        "break a leg",
+        "hit the books",
+        "pull strings"
+      ]
+    },
+    {
+      "id": "fruits-berries",
+      "name": "Fruits & Berries",
+      "icon": "leaf",
+      "description": "Beyond apples: market fruits, berries, and fruit anatomy.",
+      "pos": "noun",
+      "words": [
+        "apricot",
+        "blackberry",
+        "blackcurrant",
+        "blueberry",
+        "cantaloupe",
+        "clementine",
+        "cranberry",
+        "currant",
+        "elderberry",
+        "fig",
+        "gooseberry",
+        "grapefruit",
+        "guava",
+        "lychee",
+        "mulberry",
+        "nectarine",
+        "papaya",
+        "passion fruit",
+        "persimmon",
+        "pomegranate",
+        "prune",
+        "quince",
+        "raspberry",
+        {
+          "w": "rhubarb",
+          "hint": [
+            "stalks"
+          ]
+        },
+        "tangerine",
+        {
+          "w": "mandarin",
+          "hint": [
+            "citrus",
+            "fruit"
+          ]
+        },
+        "zest",
+        {
+          "w": "rind",
+          "hint": [
+            "fruit"
+          ]
+        },
+        {
+          "w": "pulp",
+          "hint": [
+            "flesh"
+          ]
+        },
+        {
+          "w": "pit",
+          "hint": [
+            "fruit",
+            "seed",
+            "stone"
+          ]
+        },
+        {
+          "w": "kernel",
+          "hint": [
+            "edible",
+            "nut"
+          ]
+        },
+        "husk"
+      ]
+    },
+    {
+      "id": "vegetables-herbs",
+      "name": "Vegetables & Herbs",
+      "icon": "carrot",
+      "description": "Farmers-market vocabulary: greens, roots, and herbs.",
+      "pos": "noun",
+      "words": [
+        "artichoke",
+        "asparagus",
+        "beetroot",
+        "brussels sprout",
+        "cauliflower",
+        "celery",
+        "chard",
+        "chickpea",
+        "chive",
+        "cilantro",
+        "courgette",
+        "cress",
+        {
+          "w": "dill",
+          "hint": [
+            "herb"
+          ]
+        },
+        "eggplant",
+        "endive",
+        "fennel",
+        "horseradish",
+        "kale",
+        "leek",
+        "lentil",
+        "marjoram",
+        "oregano",
+        "parsley",
+        "parsnip",
+        "radish",
+        "rosemary",
+        "rutabaga",
+        {
+          "w": "sage",
+          "hint": [
+            "salvia",
+            "plant"
+          ]
+        },
+        "scallion",
+        "shallot",
+        "sorrel",
+        "spinach",
+        {
+          "w": "squash",
+          "hint": [
+            "edible fruit",
+            "squash"
+          ]
+        },
+        "tarragon",
+        "thyme",
+        "turnip",
+        "watercress",
+        "zucchini"
+      ]
+    },
+    {
+      "id": "cooking-kitchen",
+      "name": "Cooking & Kitchen",
+      "icon": "frying.pan",
+      "description": "Recipe verbs and kitchen tools that cookbooks assume you know.",
+      "words": [
+        {
+          "w": "simmer",
+          "pos": "verb"
+        },
+        {
+          "w": "braise",
+          "pos": "verb"
+        },
+        {
+          "w": "poach",
+          "pos": "verb"
+        },
+        {
+          "w": "sear",
+          "pos": "verb"
+        },
+        {
+          "w": "whisk",
+          "pos": "verb",
+          "hint": [
+            "cooking",
+            "whip",
+            "eggs",
+            "cream"
+          ]
+        },
+        {
+          "w": "knead",
+          "pos": "verb"
+        },
+        {
+          "w": "marinate",
+          "pos": "verb"
+        },
+        {
+          "w": "garnish",
+          "pos": "verb"
+        },
+        {
+          "w": "drizzle",
+          "pos": "verb",
+          "hint": [
+            "cooking",
+            "oil",
+            "honey"
+          ]
+        },
+        {
+          "w": "dice",
+          "pos": "verb",
+          "hint": [
+            "cut into",
+            "small cubes"
+          ]
+        },
+        {
+          "w": "mince",
+          "pos": "verb",
+          "hint": [
+            "chop finely",
+            "small pieces"
+          ]
+        },
+        {
+          "w": "grate",
+          "pos": "verb",
+          "hint": [
+            "grater",
+            "foodstuffs",
+            "shred"
+          ]
+        },
+        {
+          "w": "baste",
+          "pos": "verb",
+          "hint": [
+            "roasting",
+            "butter",
+            "meat"
+          ]
+        },
+        {
+          "w": "blanch",
+          "pos": "verb",
+          "hint": [
+            "boiling water",
+            "cold water",
+            "dipping"
+          ]
+        },
+        {
+          "w": "caramelize",
+          "pos": "verb"
+        },
+        {
+          "w": "stew",
+          "pos": "verb"
+        },
+        {
+          "w": "season",
+          "pos": "verb",
+          "hint": [
+            "flavour",
+            "spices",
+            "herbs"
+          ]
+        },
+        {
+          "w": "tenderize",
+          "pos": "verb"
+        },
+        {
+          "w": "broth",
+          "pos": "noun"
+        },
+        {
+          "w": "batter",
+          "pos": "noun"
+        },
+        {
+          "w": "dough",
+          "pos": "noun"
+        },
+        {
+          "w": "ladle",
+          "pos": "noun"
+        },
+        {
+          "w": "colander",
+          "pos": "noun"
+        },
+        {
+          "w": "skillet",
+          "pos": "noun"
+        },
+        {
+          "w": "spatula",
+          "pos": "noun"
+        },
+        {
+          "w": "sieve",
+          "pos": "noun"
+        },
+        {
+          "w": "tongs",
+          "pos": "noun"
+        },
+        {
+          "w": "brine",
+          "pos": "noun"
+        },
+        {
+          "w": "glaze",
+          "pos": "noun",
+          "hint": [
+            "edible",
+            "food"
+          ]
+        },
+        {
+          "w": "crumb",
+          "pos": "noun"
+        },
+        {
+          "w": "gravy",
+          "pos": "noun"
+        },
+        {
+          "w": "condiment",
+          "pos": "noun"
+        },
+        {
+          "w": "seasoning",
+          "pos": "noun"
+        },
+        {
+          "w": "leftover",
+          "pos": "noun"
+        },
+        {
+          "w": "cutlery",
+          "pos": "noun"
+        },
+        {
+          "w": "peeler",
+          "pos": "noun",
+          "hint": [
+            "vegetables",
+            "skins",
+            "peel"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "finance-money",
+      "name": "Finance & Money",
+      "icon": "chart.line.uptrend.xyaxis",
+      "description": "From personal banking to markets: the money vocabulary.",
+      "words": [
+        {
+          "w": "asset",
+          "pos": "noun"
+        },
+        {
+          "w": "liability",
+          "pos": "noun"
+        },
+        {
+          "w": "equity",
+          "pos": "noun",
+          "hint": [
+            "liens",
+            "encumbrances",
+            "property"
+          ]
+        },
+        {
+          "w": "dividend",
+          "pos": "noun"
+        },
+        {
+          "w": "collateral",
+          "pos": "noun"
+        },
+        {
+          "w": "mortgage",
+          "pos": "noun"
+        },
+        {
+          "w": "liquidity",
+          "pos": "noun",
+          "hint": [
+            "cash",
+            "asset"
+          ]
+        },
+        {
+          "w": "solvency",
+          "pos": "noun"
+        },
+        {
+          "w": "arrears",
+          "pos": "noun"
+        },
+        {
+          "w": "audit",
+          "pos": "noun",
+          "hint": [
+            "auditors",
+            "account"
+          ]
+        },
+        {
+          "w": "creditor",
+          "pos": "noun"
+        },
+        {
+          "w": "debtor",
+          "pos": "noun"
+        },
+        {
+          "w": "default",
+          "pos": "noun",
+          "hint": [
+            "obligation"
+          ]
+        },
+        {
+          "w": "depreciation",
+          "pos": "noun",
+          "hint": [
+            "assets",
+            "value"
+          ]
+        },
+        {
+          "w": "diversify",
+          "pos": "verb"
+        },
+        {
+          "w": "endowment",
+          "pos": "noun"
+        },
+        {
+          "w": "escrow",
+          "pos": "noun"
+        },
+        {
+          "w": "expenditure",
+          "pos": "noun"
+        },
+        {
+          "w": "foreclosure",
+          "pos": "noun"
+        },
+        {
+          "w": "hedge",
+          "pos": "verb",
+          "hint": [
+            "risk",
+            "offset"
+          ]
+        },
+        {
+          "w": "inflation",
+          "pos": "noun",
+          "hint": [
+            "money",
+            "devaluation"
+          ]
+        },
+        {
+          "w": "installment",
+          "pos": "noun"
+        },
+        {
+          "w": "invoice",
+          "pos": "noun",
+          "hint": [
+            "price",
+            "tax",
+            "receipt"
+          ]
+        },
+        {
+          "w": "ledger",
+          "pos": "noun"
+        },
+        {
+          "w": "leverage",
+          "pos": "noun",
+          "hint": [
+            "borrowed",
+            "invest",
+            "risk"
+          ]
+        },
+        {
+          "w": "lien",
+          "pos": "noun"
+        },
+        {
+          "w": "margin",
+          "pos": "noun",
+          "hint": [
+            "selling price"
+          ]
+        },
+        {
+          "w": "maturity",
+          "pos": "noun",
+          "hint": [
+            "debt",
+            "principal"
+          ]
+        },
+        {
+          "w": "overdraft",
+          "pos": "noun"
+        },
+        {
+          "w": "portfolio",
+          "pos": "noun",
+          "hint": [
+            "investments"
+          ]
+        },
+        {
+          "w": "premium",
+          "pos": "noun",
+          "hint": [
+            "price",
+            "payments",
+            "bonus"
+          ]
+        },
+        {
+          "w": "recession",
+          "pos": "noun"
+        },
+        {
+          "w": "reimburse",
+          "pos": "verb"
+        },
+        {
+          "w": "remittance",
+          "pos": "noun"
+        },
+        {
+          "w": "revenue",
+          "pos": "noun"
+        },
+        {
+          "w": "subsidy",
+          "pos": "noun"
+        },
+        {
+          "w": "surplus",
+          "pos": "noun"
+        },
+        {
+          "w": "tariff",
+          "pos": "noun"
+        },
+        {
+          "w": "treasury",
+          "pos": "noun"
+        },
+        {
+          "w": "underwrite",
+          "pos": "verb",
+          "hint": [
+            "pay"
+          ]
+        },
+        {
+          "w": "venture capital",
+          "pos": "noun"
+        },
+        {
+          "w": "windfall",
+          "pos": "noun",
+          "hint": [
+            "money",
+            "lottery",
+            "inheritance"
+          ]
+        },
+        {
+          "w": "yield",
+          "pos": "noun",
+          "hint": [
+            "investment"
+          ]
+        },
+        {
+          "w": "annuity",
+          "pos": "noun"
+        },
+        {
+          "w": "broker",
+          "pos": "noun"
+        },
+        {
+          "w": "compound interest",
+          "pos": "noun"
+        }
+      ]
+    },
+    {
+      "id": "business-office",
+      "name": "Business & Office",
+      "icon": "briefcase",
+      "description": "Meetings, HR, and corporate life without the buzzword fog.",
+      "words": [
+        {
+          "w": "agenda",
+          "pos": "noun"
+        },
+        {
+          "w": "appraisal",
+          "pos": "noun"
+        },
+        {
+          "w": "benchmark",
+          "pos": "noun"
+        },
+        {
+          "w": "brainstorm",
+          "pos": "verb"
+        },
+        {
+          "w": "delegate",
+          "pos": "verb"
+        },
+        {
+          "w": "downsize",
+          "pos": "verb"
+        },
+        {
+          "w": "entrepreneur",
+          "pos": "noun"
+        },
+        {
+          "w": "feasibility",
+          "pos": "noun"
+        },
+        {
+          "w": "freelance",
+          "pos": "adj"
+        },
+        {
+          "w": "headquarters",
+          "pos": "noun",
+          "hint": [
+            "organization",
+            "administration"
+          ]
+        },
+        {
+          "w": "incentive",
+          "pos": "noun"
+        },
+        {
+          "w": "layoff",
+          "pos": "noun"
+        },
+        {
+          "w": "memo",
+          "pos": "noun"
+        },
+        {
+          "w": "merger",
+          "pos": "noun"
+        },
+        {
+          "w": "milestone",
+          "pos": "noun",
+          "hint": [
+            "career",
+            "project"
+          ]
+        },
+        {
+          "w": "negotiate",
+          "pos": "verb"
+        },
+        {
+          "w": "outsource",
+          "pos": "verb"
+        },
+        {
+          "w": "overhead",
+          "pos": "noun"
+        },
+        {
+          "w": "payroll",
+          "pos": "noun"
+        },
+        {
+          "w": "procurement",
+          "pos": "noun"
+        },
+        {
+          "w": "quota",
+          "pos": "noun"
+        },
+        {
+          "w": "redundancy",
+          "pos": "noun",
+          "hint": [
+            "dismissal"
+          ]
+        },
+        {
+          "w": "retainer",
+          "pos": "noun",
+          "hint": [
+            "fee"
+          ]
+        },
+        {
+          "w": "stakeholder",
+          "pos": "noun",
+          "hint": [
+            "organisation",
+            "enterprise"
+          ]
+        },
+        {
+          "w": "subordinate",
+          "pos": "noun",
+          "hint": [
+            "authority",
+            "senior"
+          ]
+        },
+        {
+          "w": "supervisor",
+          "pos": "noun"
+        },
+        {
+          "w": "takeover",
+          "pos": "noun"
+        },
+        {
+          "w": "tender",
+          "pos": "noun",
+          "hint": [
+            "payment",
+            "buy or sell"
+          ]
+        },
+        {
+          "w": "turnover",
+          "pos": "noun"
+        },
+        {
+          "w": "workflow",
+          "pos": "noun"
+        },
+        {
+          "w": "workload",
+          "pos": "noun"
+        },
+        {
+          "w": "liaise",
+          "pos": "verb"
+        },
+        {
+          "w": "streamline",
+          "pos": "verb",
+          "hint": [
+            "process",
+            "efficiency"
+          ]
+        },
+        {
+          "w": "escalate",
+          "pos": "verb"
+        },
+        {
+          "w": "deliverable",
+          "pos": "noun"
+        },
+        {
+          "w": "pitch",
+          "pos": "noun",
+          "hint": [
+            "sell",
+            "promote"
+          ]
+        },
+        {
+          "w": "orientation",
+          "pos": "noun",
+          "hint": [
+            "introduction",
+            "newcomers"
+          ]
+        },
+        {
+          "w": "severance",
+          "pos": "noun"
+        }
+      ]
+    },
+    {
+      "id": "travel-airport",
+      "name": "Travel & Airport",
+      "icon": "airplane",
+      "description": "Airports, hotels, and getting around a foreign country.",
+      "pos": "noun",
+      "words": [
+        "itinerary",
+        "layover",
+        "boarding pass",
+        "carry-on",
+        "customs",
+        "excursion",
+        {
+          "w": "expedition",
+          "hint": [
+            "voyage",
+            "trip"
+          ]
+        },
+        "hostel",
+        "jet lag",
+        "landmark",
+        {
+          "w": "red-eye",
+          "hint": [
+            "flight"
+          ]
+        },
+        "round trip",
+        "stopover",
+        {
+          "w": "turbulence",
+          "hint": [
+            "aircraft"
+          ]
+        },
+        {
+          "w": "aisle",
+          "hint": [
+            "seating",
+            "passage"
+          ]
+        },
+        "baggage claim",
+        "check-in",
+        "duty-free",
+        "embassy",
+        "ferry",
+        "guide book",
+        "immigration",
+        "souvenir",
+        "transit",
+        "vaccination",
+        "voyage",
+        "wanderlust",
+        "concierge",
+        "cobblestone",
+        "detour",
+        "compartment",
+        "berth",
+        {
+          "w": "platform",
+          "hint": [
+            "railway",
+            "train"
+          ]
+        },
+        "commute",
+        "fare",
+        "toll",
+        "checkpoint",
+        "visa"
+      ]
+    },
+    {
+      "id": "fishing-outdoors",
+      "name": "Fishing & Outdoors",
+      "icon": "figure.fishing",
+      "description": "Rods, reels, camps, and trails: vocabulary for the wild.",
+      "words": [
+        {
+          "w": "angler",
+          "pos": "noun",
+          "hint": [
+            "hook",
+            "fishes"
+          ]
+        },
+        {
+          "w": "bait",
+          "pos": "noun"
+        },
+        {
+          "w": "cast",
+          "pos": "verb"
+        },
+        {
+          "w": "lure",
+          "pos": "noun"
+        },
+        {
+          "w": "reel",
+          "pos": "noun",
+          "hint": [
+            "fishing"
+          ]
+        },
+        {
+          "w": "sinker",
+          "pos": "noun"
+        },
+        {
+          "w": "tackle",
+          "pos": "noun",
+          "hint": [
+            "fishing"
+          ]
+        },
+        {
+          "w": "wader",
+          "pos": "noun"
+        },
+        {
+          "w": "bass",
+          "pos": "noun",
+          "hint": [
+            "fish",
+            "perciformes"
+          ]
+        },
+        {
+          "w": "carp",
+          "pos": "noun"
+        },
+        {
+          "w": "perch",
+          "pos": "noun"
+        },
+        {
+          "w": "pike",
+          "pos": "noun",
+          "hint": [
+            "fish",
+            "freshwater"
+          ]
+        },
+        {
+          "w": "trout",
+          "pos": "noun"
+        },
+        {
+          "w": "minnow",
+          "pos": "noun"
+        },
+        {
+          "w": "spawn",
+          "pos": "verb"
+        },
+        {
+          "w": "campfire",
+          "pos": "noun"
+        },
+        {
+          "w": "compass",
+          "pos": "noun"
+        },
+        {
+          "w": "trail",
+          "pos": "noun"
+        },
+        {
+          "w": "wilderness",
+          "pos": "noun"
+        },
+        {
+          "w": "backpacking",
+          "pos": "noun"
+        },
+        {
+          "w": "kayak",
+          "pos": "noun"
+        },
+        {
+          "w": "canoe",
+          "pos": "noun",
+          "hint": [
+            "boat"
+          ]
+        },
+        {
+          "w": "paddle",
+          "pos": "noun"
+        },
+        {
+          "w": "rapid",
+          "pos": "noun"
+        },
+        {
+          "w": "summit",
+          "pos": "noun"
+        },
+        {
+          "w": "trek",
+          "pos": "noun",
+          "hint": [
+            "difficult journey"
+          ]
+        },
+        {
+          "w": "bonfire",
+          "pos": "noun"
+        },
+        {
+          "w": "lantern",
+          "pos": "noun"
+        },
+        {
+          "w": "thermos",
+          "pos": "noun"
+        },
+        {
+          "w": "hatchet",
+          "pos": "noun"
+        },
+        {
+          "w": "kindling",
+          "pos": "noun"
+        },
+        {
+          "w": "tarpaulin",
+          "pos": "noun"
+        },
+        {
+          "w": "flask",
+          "pos": "noun"
+        },
+        {
+          "w": "burrow",
+          "pos": "noun"
+        },
+        {
+          "w": "undergrowth",
+          "pos": "noun"
+        }
+      ]
+    },
+    {
+      "id": "weather-nature",
+      "name": "Weather & Nature",
+      "icon": "cloud.bolt.rain",
+      "description": "Forecast words and landscape features past the basics.",
+      "words": [
+        {
+          "w": "blizzard",
+          "pos": "noun"
+        },
+        {
+          "w": "breeze",
+          "pos": "noun"
+        },
+        {
+          "w": "downpour",
+          "pos": "noun"
+        },
+        {
+          "w": "drizzle",
+          "pos": "noun"
+        },
+        {
+          "w": "drought",
+          "pos": "noun"
+        },
+        {
+          "w": "frost",
+          "pos": "noun"
+        },
+        {
+          "w": "gale",
+          "pos": "noun"
+        },
+        {
+          "w": "gust",
+          "pos": "noun"
+        },
+        {
+          "w": "hail",
+          "pos": "noun"
+        },
+        {
+          "w": "haze",
+          "pos": "noun"
+        },
+        {
+          "w": "heatwave",
+          "pos": "noun"
+        },
+        {
+          "w": "humidity",
+          "pos": "noun"
+        },
+        {
+          "w": "mist",
+          "pos": "noun"
+        },
+        {
+          "w": "monsoon",
+          "pos": "noun"
+        },
+        {
+          "w": "overcast",
+          "pos": "adj"
+        },
+        {
+          "w": "precipitation",
+          "pos": "noun"
+        },
+        {
+          "w": "scorching",
+          "pos": "adj"
+        },
+        {
+          "w": "sleet",
+          "pos": "noun"
+        },
+        {
+          "w": "slush",
+          "pos": "noun"
+        },
+        {
+          "w": "smog",
+          "pos": "noun"
+        },
+        {
+          "w": "thaw",
+          "pos": "noun"
+        },
+        {
+          "w": "torrential",
+          "pos": "adj"
+        },
+        {
+          "w": "avalanche",
+          "pos": "noun"
+        },
+        {
+          "w": "canyon",
+          "pos": "noun"
+        },
+        {
+          "w": "cliff",
+          "pos": "noun"
+        },
+        {
+          "w": "dune",
+          "pos": "noun"
+        },
+        {
+          "w": "glacier",
+          "pos": "noun"
+        },
+        {
+          "w": "gorge",
+          "pos": "noun",
+          "hint": [
+            "valley"
+          ]
+        },
+        {
+          "w": "marsh",
+          "pos": "noun"
+        },
+        {
+          "w": "meadow",
+          "pos": "noun"
+        },
+        {
+          "w": "plateau",
+          "pos": "noun"
+        },
+        {
+          "w": "ravine",
+          "pos": "noun"
+        },
+        {
+          "w": "swamp",
+          "pos": "noun",
+          "hint": [
+            "wetland"
+          ]
+        },
+        {
+          "w": "tide",
+          "pos": "noun"
+        },
+        {
+          "w": "tundra",
+          "pos": "noun"
+        },
+        {
+          "w": "foliage",
+          "pos": "noun"
+        },
+        {
+          "w": "underbrush",
+          "pos": "noun"
+        },
+        {
+          "w": "estuary",
+          "pos": "noun"
+        }
+      ]
+    },
+    {
+      "id": "health-body",
+      "name": "Health & Body",
+      "icon": "cross.case",
+      "description": "Doctor visits, symptoms, and anatomy beyond arm and leg.",
+      "pos": "noun",
+      "words": [
+        "ailment",
+        "antibiotic",
+        "bruise",
+        "checkup",
+        "concussion",
+        "diagnosis",
+        "dizziness",
+        "dosage",
+        "fatigue",
+        {
+          "w": "fracture",
+          "hint": [
+            "bone",
+            "cartilage"
+          ]
+        },
+        "hiccup",
+        "immunity",
+        "inflammation",
+        "injection",
+        "insomnia",
+        "itch",
+        "migraine",
+        "nausea",
+        "numbness",
+        "ointment",
+        "painkiller",
+        "prescription",
+        {
+          "w": "rash",
+          "hint": [
+            "skin"
+          ]
+        },
+        {
+          "w": "remedy",
+          "hint": [
+            "medicine",
+            "disease",
+            "cure"
+          ]
+        },
+        "sneeze",
+        "sprain",
+        "swelling",
+        "symptom",
+        "syringe",
+        {
+          "w": "transplant",
+          "hint": [
+            "organ",
+            "tissue",
+            "surgical"
+          ]
+        },
+        "vaccine",
+        "vein",
+        "vertigo",
+        "wound",
+        "ligament",
+        "tendon",
+        "spine",
+        "kidney",
+        "gut",
+        "rib",
+        "scar",
+        "blister"
+      ]
+    },
+    {
+      "id": "emotions-character",
+      "name": "Emotions & Character",
+      "icon": "face.smiling",
+      "description": "Precise adjectives for feelings and personality.",
+      "pos": "adj",
+      "words": [
+        "aloof",
+        "arrogant",
+        "bewildered",
+        "compassionate",
+        "complacent",
+        "conceited",
+        "content",
+        {
+          "w": "cranky",
+          "hint": [
+            "grumpy",
+            "irritable",
+            "upset"
+          ]
+        },
+        {
+          "w": "devastated",
+          "hint": [
+            "upset",
+            "shocked"
+          ]
+        },
+        "ecstatic",
+        "envious",
+        "exasperated",
+        "furious",
+        {
+          "w": "gloomy",
+          "hint": [
+            "sadness",
+            "melancholy",
+            "dejected"
+          ]
+        },
+        "gullible",
+        "humble",
+        "indifferent",
+        "irritable",
+        "melancholy",
+        "miserable",
+        "overwhelmed",
+        {
+          "w": "petty",
+          "hint": [
+            "small-minded",
+            "unimportant"
+          ]
+        },
+        "pompous",
+        "resentful",
+        {
+          "w": "restless",
+          "hint": [
+            "uneasy",
+            "discontented",
+            "repose"
+          ]
+        },
+        "ruthless",
+        "spiteful",
+        "stubborn",
+        "sympathetic",
+        {
+          "w": "tenacious",
+          "hint": [
+            "dogged",
+            "give up"
+          ]
+        },
+        "thrilled",
+        "timid",
+        "vain",
+        "vindictive",
+        "witty",
+        "apathetic",
+        "candid",
+        "meticulous",
+        "obnoxious",
+        {
+          "w": "resilient",
+          "hint": [
+            "damaging",
+            "organisms",
+            "people"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "legal-contracts",
+      "name": "Legal & Contracts",
+      "icon": "text.book.closed",
+      "description": "Contracts, courts, and the fine print.",
+      "pos": "noun",
+      "words": [
+        "acquittal",
+        "affidavit",
+        "child support",
+        "appeal",
+        "arbitration",
+        "attorney",
+        "bail",
+        {
+          "w": "breach",
+          "hint": [
+            "infraction",
+            "obligation",
+            "violation"
+          ]
+        },
+        "claimant",
+        {
+          "w": "clause",
+          "hint": [
+            "contract",
+            "document",
+            "will"
+          ]
+        },
+        "custody",
+        "damages",
+        "defendant",
+        {
+          "w": "deposition",
+          "hint": [
+            "sworn",
+            "testimony"
+          ]
+        },
+        "disclosure",
+        "embezzlement",
+        "felony",
+        "indemnity",
+        "injunction",
+        "jurisdiction",
+        "lawsuit",
+        "liability",
+        "litigation",
+        {
+          "w": "misdemeanor",
+          "hint": [
+            "criminal",
+            "felony",
+            "legal"
+          ]
+        },
+        "negligence",
+        "notary",
+        "perjury",
+        "plaintiff",
+        "plea",
+        "precedent",
+        "probate",
+        "prosecution",
+        {
+          "w": "settlement",
+          "hint": [
+            "dispute"
+          ]
+        },
+        "statute",
+        "subpoena",
+        "testimony",
+        "tort",
+        "verdict",
+        "warrant",
+        "waiver"
+      ]
+    },
+    {
+      "id": "tech-programming",
+      "name": "Tech & Programming",
+      "icon": "chevron.left.forwardslash.chevron.right",
+      "description": "Engineering English: what the docs and standups assume.",
+      "pos": "noun",
+      "words": [
+        {
+          "w": "algorithm",
+          "hint": [
+            "software"
+          ]
+        },
+        "back end",
+        "bandwidth",
+        "breakpoint",
+        {
+          "w": "cache",
+          "hint": [
+            "storage"
+          ]
+        },
+        "compiler",
+        "concurrency",
+        "debugger",
+        {
+          "w": "dependency",
+          "hint": [
+            "subordinate"
+          ]
+        },
+        {
+          "w": "deployment",
+          "hint": [
+            "implementation"
+          ]
+        },
+        "encryption",
+        {
+          "w": "endpoint",
+          "hint": [
+            "network",
+            "service"
+          ]
+        },
+        {
+          "w": "firewall",
+          "hint": [
+            "software"
+          ]
+        },
+        {
+          "w": "framework",
+          "hint": [
+            "code"
+          ]
+        },
+        "front end",
+        {
+          "w": "latency",
+          "hint": [
+            "delay",
+            "interval"
+          ]
+        },
+        "middleware",
+        {
+          "w": "migration",
+          "hint": [
+            "data"
+          ]
+        },
+        "parser",
+        {
+          "w": "payload",
+          "hint": [
+            "data"
+          ]
+        },
+        {
+          "w": "pipeline",
+          "hint": [
+            "logical",
+            "transmitted"
+          ]
+        },
+        "query",
+        "repository",
+        "rollback",
+        "recursion",
+        {
+          "w": "sandbox",
+          "hint": [
+            "isolated"
+          ]
+        },
+        "scalability",
+        {
+          "w": "schema",
+          "hint": [
+            "data"
+          ]
+        },
+        "snippet",
+        "throughput",
+        "timeout",
+        "token",
+        "vulnerability",
+        "workaround",
+        "kernel",
+        "refactoring",
+        "throttling",
+        {
+          "w": "bottleneck",
+          "hint": [
+            "traffic",
+            "delay"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cars-driving",
+      "name": "Cars & Driving",
+      "icon": "car",
+      "description": "Behind the wheel: parts, road features, and traffic.",
+      "words": [
+        {
+          "w": "accelerator",
+          "pos": "noun"
+        },
+        {
+          "w": "bumper",
+          "pos": "noun",
+          "hint": [
+            "vehicle",
+            "fender"
+          ]
+        },
+        {
+          "w": "carpool",
+          "pos": "verb"
+        },
+        {
+          "w": "clutch",
+          "pos": "noun",
+          "hint": [
+            "engine",
+            "gearbox"
+          ]
+        },
+        {
+          "w": "dashboard",
+          "pos": "noun"
+        },
+        {
+          "w": "detour",
+          "pos": "noun"
+        },
+        {
+          "w": "exhaust",
+          "pos": "noun"
+        },
+        {
+          "w": "fender",
+          "pos": "noun"
+        },
+        {
+          "w": "gearbox",
+          "pos": "noun"
+        },
+        {
+          "w": "headlight",
+          "pos": "noun"
+        },
+        {
+          "w": "hood",
+          "pos": "noun",
+          "hint": [
+            "engine"
+          ]
+        },
+        {
+          "w": "ignition",
+          "pos": "noun"
+        },
+        {
+          "w": "intersection",
+          "pos": "noun"
+        },
+        {
+          "w": "jaywalk",
+          "pos": "verb"
+        },
+        {
+          "w": "lane",
+          "pos": "noun"
+        },
+        {
+          "w": "mileage",
+          "pos": "noun"
+        },
+        {
+          "w": "muffler",
+          "pos": "noun"
+        },
+        {
+          "w": "odometer",
+          "pos": "noun"
+        },
+        {
+          "w": "overtake",
+          "pos": "verb"
+        },
+        {
+          "w": "pedestrian",
+          "pos": "noun"
+        },
+        {
+          "w": "pothole",
+          "pos": "noun"
+        },
+        {
+          "w": "roundabout",
+          "pos": "noun"
+        },
+        {
+          "w": "rush hour",
+          "pos": "noun"
+        },
+        {
+          "w": "seat belt",
+          "pos": "noun"
+        },
+        {
+          "w": "skid",
+          "pos": "verb"
+        },
+        {
+          "w": "steering wheel",
+          "pos": "noun"
+        },
+        {
+          "w": "tailgate",
+          "pos": "verb"
+        },
+        {
+          "w": "toll",
+          "pos": "noun"
+        },
+        {
+          "w": "tow",
+          "pos": "verb"
+        },
+        {
+          "w": "transmission",
+          "pos": "noun",
+          "hint": [
+            "gears"
+          ]
+        },
+        {
+          "w": "trunk",
+          "pos": "noun",
+          "hint": [
+            "luggage"
+          ]
+        },
+        {
+          "w": "windshield",
+          "pos": "noun"
+        },
+        {
+          "w": "wiper",
+          "pos": "noun",
+          "hint": [
+            "windscreen"
+          ]
+        },
+        {
+          "w": "swerve",
+          "pos": "verb"
+        },
+        {
+          "w": "stall",
+          "pos": "verb",
+          "hint": [
+            "standstill"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "home-furniture",
+      "name": "Home & Furniture",
+      "icon": "sofa",
+      "description": "Around the house: rooms, fixtures, and furniture names.",
+      "pos": "noun",
+      "words": [
+        "attic",
+        "banister",
+        "venetian blind",
+        "cabinet",
+        "chandelier",
+        "cradle",
+        "cupboard",
+        "cushion",
+        "doormat",
+        "drawer",
+        "dresser",
+        "faucet",
+        "fireplace",
+        "footstool",
+        "hallway",
+        "hamper",
+        "headboard",
+        "nightstand",
+        "ottoman",
+        "pantry",
+        "porch",
+        "quilt",
+        {
+          "w": "recliner",
+          "hint": [
+            "chair",
+            "hinged"
+          ]
+        },
+        "shutter",
+        "sideboard",
+        "stool",
+        "threshold",
+        "upholstery",
+        {
+          "w": "wardrobe",
+          "hint": [
+            "cabinet"
+          ]
+        },
+        "windowsill",
+        "awning",
+        {
+          "w": "gutter",
+          "hint": [
+            "eaves",
+            "eavestrough",
+            "rain water"
+          ]
+        },
+        "hinge",
+        "latch",
+        "ledge",
+        "mantel",
+        "wallpaper",
+        {
+          "w": "coaster",
+          "hint": [
+            "table surface",
+            "drink spills",
+            "condensation"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "clothes-fashion",
+      "name": "Clothes & Fashion",
+      "icon": "tshirt",
+      "description": "Fabrics, cuts, and garments beyond the basics.",
+      "pos": "noun",
+      "words": [
+        "apparel",
+        {
+          "w": "blazer",
+          "hint": [
+            "jacket"
+          ]
+        },
+        "buckle",
+        "cardigan",
+        "collar",
+        "corduroy",
+        "cuff",
+        {
+          "w": "fabric",
+          "hint": [
+            "fibers",
+            "woven"
+          ]
+        },
+        "garment",
+        {
+          "w": "hem",
+          "hint": [
+            "clothing",
+            "stitched"
+          ]
+        },
+        "lace",
+        "lapel",
+        "linen",
+        "lining",
+        "mitten",
+        "overalls",
+        "plaid",
+        {
+          "w": "pleat",
+          "hint": [
+            "fold"
+          ]
+        },
+        "seam",
+        "sequin",
+        {
+          "w": "stiletto",
+          "hint": [
+            "shoe",
+            "heel"
+          ]
+        },
+        "suede",
+        "tailor",
+        "tartan",
+        "trousers",
+        "tuxedo",
+        "tweed",
+        "velvet",
+        "vest",
+        "zipper",
+        "attire",
+        "drawstring",
+        "insole",
+        "turtleneck",
+        "waistcoat",
+        {
+          "w": "wardrobe",
+          "hint": [
+            "owns"
+          ]
+        },
+        "garter",
+        "poncho"
+      ]
+    },
+    {
+      "id": "sports-fitness",
+      "name": "Sports & Fitness",
+      "icon": "figure.run",
+      "description": "Gym, track, and game-day vocabulary.",
+      "words": [
+        {
+          "w": "agility",
+          "pos": "noun"
+        },
+        {
+          "w": "dumbbell",
+          "pos": "noun"
+        },
+        {
+          "w": "endurance",
+          "pos": "noun"
+        },
+        {
+          "w": "forfeit",
+          "pos": "verb",
+          "hint": [
+            "rule",
+            "lose"
+          ]
+        },
+        {
+          "w": "grip",
+          "pos": "noun"
+        },
+        {
+          "w": "hurdle",
+          "pos": "noun"
+        },
+        {
+          "w": "javelin",
+          "pos": "noun",
+          "hint": [
+            "athletic",
+            "field event"
+          ]
+        },
+        {
+          "w": "lap",
+          "pos": "noun",
+          "hint": [
+            "circuit"
+          ]
+        },
+        {
+          "w": "offside",
+          "pos": "adj"
+        },
+        {
+          "w": "opponent",
+          "pos": "noun"
+        },
+        {
+          "w": "plank",
+          "pos": "noun",
+          "hint": [
+            "exercise"
+          ]
+        },
+        {
+          "w": "playoff",
+          "pos": "noun"
+        },
+        {
+          "w": "push-up",
+          "pos": "noun"
+        },
+        {
+          "w": "referee",
+          "pos": "noun"
+        },
+        {
+          "w": "relay",
+          "pos": "noun",
+          "hint": [
+            "competition",
+            "team",
+            "course"
+          ]
+        },
+        {
+          "w": "rookie",
+          "pos": "noun",
+          "hint": [
+            "athlete",
+            "sport"
+          ]
+        },
+        {
+          "w": "sprint",
+          "pos": "verb"
+        },
+        {
+          "w": "squat",
+          "pos": "noun"
+        },
+        {
+          "w": "stamina",
+          "pos": "noun"
+        },
+        {
+          "w": "stopwatch",
+          "pos": "noun"
+        },
+        {
+          "w": "tackle",
+          "pos": "verb"
+        },
+        {
+          "w": "tiebreaker",
+          "pos": "noun"
+        },
+        {
+          "w": "tournament",
+          "pos": "noun"
+        },
+        {
+          "w": "treadmill",
+          "pos": "noun"
+        },
+        {
+          "w": "umpire",
+          "pos": "noun"
+        },
+        {
+          "w": "underdog",
+          "pos": "noun"
+        },
+        {
+          "w": "warm-up",
+          "pos": "noun"
+        },
+        {
+          "w": "weightlifting",
+          "pos": "noun"
+        },
+        {
+          "w": "wrestling",
+          "pos": "noun"
+        },
+        {
+          "w": "comeback",
+          "pos": "noun",
+          "hint": [
+            "athlete",
+            "sports team",
+            "competition"
+          ]
+        },
+        {
+          "w": "dribble",
+          "pos": "verb"
+        },
+        {
+          "w": "rebound",
+          "pos": "noun"
+        },
+        {
+          "w": "streak",
+          "pos": "noun",
+          "hint": [
+            "series",
+            "events"
+          ]
+        },
+        {
+          "w": "lunge",
+          "pos": "noun",
+          "hint": [
+            "exercise",
+            "kneeling"
+          ]
+        },
+        {
+          "w": "pull-up",
+          "pos": "noun"
+        }
+      ]
+    },
+    {
+      "id": "animals-birds",
+      "name": "Animals & Birds",
+      "icon": "bird",
+      "description": "Wildlife beyond cat and dog: forest animals and backyard birds.",
+      "pos": "noun",
+      "words": [
+        "badger",
+        "beaver",
+        "boar",
+        "buzzard",
+        "crane",
+        "cuckoo",
+        "doe",
+        "ewe",
+        "falcon",
+        "fawn",
+        "ferret",
+        "finch",
+        "gosling",
+        "hare",
+        "hawk",
+        "hedgehog",
+        "heron",
+        "hive",
+        "lark",
+        "magpie",
+        "mallard",
+        "mare",
+        {
+          "w": "mole",
+          "hint": [
+            "burrowing",
+            "mammal",
+            "rodent"
+          ]
+        },
+        "moose",
+        "otter",
+        "partridge",
+        "peacock",
+        "pheasant",
+        "porcupine",
+        "raccoon",
+        "raven",
+        "rooster",
+        "sparrow",
+        "stag",
+        "starling",
+        "stork",
+        {
+          "w": "swallow",
+          "hint": [
+            "bird",
+            "wings",
+            "migratory"
+          ]
+        },
+        "vixen",
+        "weasel",
+        "woodpecker",
+        "wren",
+        "antler",
+        "talon",
+        "plumage"
+      ]
+    }
+  ]
+}

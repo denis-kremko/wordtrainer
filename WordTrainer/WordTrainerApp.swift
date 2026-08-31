@@ -6,10 +6,11 @@ struct WordTrainerApp: App {
     @State private var dictionaryReady: Bool = !DictionaryDownloader.isConfigured
         || DictionaryDownloader.isInstalled
 
-    // Built by hand so a broken schema fails loudly instead of silently
-    // falling back to an empty in-memory store (as `.modelContainer(for:)` does).
     let container: ModelContainer = {
-        let schema = Schema([WordGroup.self, Word.self, WordSense.self])
+        let schema = Schema([
+            WordGroup.self, Word.self, WordSense.self, CustomSense.self,
+            QuizSession.self, QuizResult.self,
+        ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [config])
@@ -27,6 +28,26 @@ struct WordTrainerApp: App {
             #endif
         }
     }()
+
+    init() {
+        Self.repairDuplicateCustomSenseIDs(container)
+    }
+
+    // Pre-existing rows get one shared UUID backfilled by the migration.
+    private static func repairDuplicateCustomSenseIDs(_ container: ModelContainer) {
+        let context = ModelContext(container)
+        guard let all = try? context.fetch(FetchDescriptor<CustomSense>()) else { return }
+        var seen = Set<UUID>()
+        var changed = false
+        for sense in all {
+            if seen.contains(sense.id) {
+                sense.id = UUID()
+                changed = true
+            }
+            seen.insert(sense.id)
+        }
+        if changed { try? context.save() }
+    }
 
     var body: some Scene {
         WindowGroup {

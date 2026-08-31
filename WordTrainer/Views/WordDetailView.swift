@@ -13,11 +13,6 @@ struct WordDetailView: View {
         Form {
             Section("Word") {
                 Text(word.lemma).font(.largeTitle).bold()
-                if word.timesSeen > 0 {
-                    Text("Seen \(word.timesSeen) times, correct \(word.timesCorrect)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
             }
 
             ForEach(word.senses.sorted(by: { $0.order < $1.order })) { sense in
@@ -57,16 +52,13 @@ struct WordDetailView: View {
                     }
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Add") {
-                            let order = (word.senses.map { $0.order }.max() ?? -1) + 1
-                            let sense = WordSense(
-                                partOfSpeech: WordSense.customPartOfSpeech,
+                            let custom = CustomSense.findOrInsert(
+                                lemma: word.lemma,
                                 definition: newDefinition.trimmingCharacters(in: .whitespacesAndNewlines),
                                 example: newExample.trimmingCharacters(in: .whitespacesAndNewlines),
-                                isCustom: true,
-                                order: order
+                                in: context
                             )
-                            context.insert(sense)
-                            sense.word = word
+                            word.appendSenses(entries: [], customs: [custom], in: context)
                             showingAddSense = false
                         }
                         .disabled(newDefinition.isBlank)
@@ -85,7 +77,8 @@ private struct SenseSection: View {
     var body: some View {
         Section {
             Toggle("Learn this sense", isOn: $sense.isEnabled)
-            LabeledContent("Part of speech", value: sense.partOfSpeech)
+            LabeledContent("Part of speech",
+                           value: PartOfSpeech.displayName(sense.partOfSpeech, lemma: sense.word?.lemma ?? ""))
             VStack(alignment: .leading, spacing: 4) {
                 Text("Definition").font(.caption).foregroundStyle(.secondary)
                 Text(sense.definition)
@@ -106,12 +99,7 @@ private struct SenseSection: View {
             HStack {
                 Text("Sense \(sense.order + 1)")
                 if sense.isCustom {
-                    Text("CUSTOM")
-                        .font(.caption2).bold()
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(Color.accentColor.opacity(0.15))
-                        .foregroundStyle(Color.accentColor)
-                        .clipShape(Capsule())
+                    TagBadge(text: "CUSTOM", tint: .accentColor)
                 }
             }
         }

@@ -34,7 +34,8 @@ enum QuizMode: String, CaseIterable, Identifiable {
 
 struct QuizQuestion: Identifiable {
     let id = UUID()
-    let wordID: UUID
+    let lemma: String
+    let sense: WordSense
     let prompt: String
     let expectedAnswer: String
     let hint: String
@@ -56,25 +57,27 @@ enum QuizBuilder {
 
             let enabledSenses = word.senses.filter { $0.isEnabled }
             let candidates = mode == .translationToEn
-                ? enabledSenses.filter { !$0.translation.isEmpty }
+                ? enabledSenses.filter { !$0.translation.isBlank }
                 : enabledSenses
             guard let sense = candidates.randomElement() else { continue }
 
             let (prompt, expected): (String, String)
             switch mode {
             case .enToTranslation:
-                (prompt, expected) = (word.lemma, sense.translation.isEmpty ? sense.definition : sense.translation)
+                (prompt, expected) = (word.lemma, sense.translation.isBlank ? sense.definition : sense.translation)
             case .translationToEn:
                 (prompt, expected) = (sense.translation, word.lemma)
             case .definitionToEn:
                 (prompt, expected) = (sense.definition, word.lemma)
             }
 
+            let hintLemma = mode == .enToTranslation ? word.lemma : ""
             questions.append(QuizQuestion(
-                wordID: word.id,
+                lemma: word.lemma,
+                sense: sense,
                 prompt: prompt,
                 expectedAnswer: expected,
-                hint: sense.partOfSpeech
+                hint: PartOfSpeech.displayName(sense.partOfSpeech, lemma: hintLemma)
             ))
         }
 

@@ -15,13 +15,16 @@
 		A1000004000000000000A001 /* QuizEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000004000000000000A001 /* QuizEngine.swift */; };
 		A1000005000000000000A001 /* GroupsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000005000000000000A001 /* GroupsListView.swift */; };
 		A1000006000000000000A001 /* GroupDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000006000000000000A001 /* GroupDetailView.swift */; };
-		A1000007000000000000A001 /* AddWordSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000007000000000000A001 /* AddWordSheet.swift */; };
+		A1000007000000000000A001 /* WordLookupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000007000000000000A001 /* WordLookupView.swift */; };
 		A1000008000000000000A001 /* WordDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000008000000000000A001 /* WordDetailView.swift */; };
 		A1000009000000000000A001 /* QuizConfigSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000009000000000000A001 /* QuizConfigSheet.swift */; };
 		A100000A000000000000A001 /* QuizRunnerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100000A000000000000A001 /* QuizRunnerView.swift */; };
 		A100000B000000000000A001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B100000B000000000000A001 /* Assets.xcassets */; };
 		A100000C000000000000A001 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B100000C000000000000A001 /* Preview Assets.xcassets */; };
 		A100000D000000000000A001 /* dictionary.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = B100000D000000000000A001 /* dictionary.sqlite */; };
+		A1000011000000000000A001 /* ReadyGroupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000011000000000000A001 /* ReadyGroupsView.swift */; };
+		A1000013000000000000A001 /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000013000000000000A001 /* SharedViews.swift */; };
+		A1000012000000000000A001 /* ready_groups.json in Resources */ = {isa = PBXBuildFile; fileRef = B1000012000000000000A001 /* ready_groups.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,13 +37,17 @@
 		B1000004000000000000A001 /* QuizEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizEngine.swift; sourceTree = "<group>"; };
 		B1000005000000000000A001 /* GroupsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsListView.swift; sourceTree = "<group>"; };
 		B1000006000000000000A001 /* GroupDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupDetailView.swift; sourceTree = "<group>"; };
-		B1000007000000000000A001 /* AddWordSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWordSheet.swift; sourceTree = "<group>"; };
+		B1000007000000000000A001 /* WordLookupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordLookupView.swift; sourceTree = "<group>"; };
 		B1000008000000000000A001 /* WordDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordDetailView.swift; sourceTree = "<group>"; };
 		B1000009000000000000A001 /* QuizConfigSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizConfigSheet.swift; sourceTree = "<group>"; };
 		B100000A000000000000A001 /* QuizRunnerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizRunnerView.swift; sourceTree = "<group>"; };
 		B100000B000000000000A001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B100000C000000000000A001 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B100000D000000000000A001 /* dictionary.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = dictionary.sqlite; sourceTree = "<group>"; };
+		B1000010000000000000A001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B1000011000000000000A001 /* ReadyGroupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadyGroupsView.swift; sourceTree = "<group>"; };
+		B1000013000000000000A001 /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
+		B1000012000000000000A001 /* ready_groups.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ready_groups.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				B1000001000000000000A001 /* WordTrainerApp.swift */,
+				B1000010000000000000A001 /* Info.plist */,
 				D0000004000000000000A001 /* Models */,
 				D0000005000000000000A001 /* Dictionary */,
 				D0000006000000000000A001 /* Quiz */,
@@ -81,6 +89,7 @@
 			isa = PBXGroup;
 			children = (
 				B100000D000000000000A001 /* dictionary.sqlite */,
+				B1000012000000000000A001 /* ready_groups.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -123,8 +132,10 @@
 			children = (
 				B1000005000000000000A001 /* GroupsListView.swift */,
 				B100000F000000000000A001 /* DictionaryLoaderView.swift */,
+				B1000011000000000000A001 /* ReadyGroupsView.swift */,
+				B1000013000000000000A001 /* SharedViews.swift */,
 				B1000006000000000000A001 /* GroupDetailView.swift */,
-				B1000007000000000000A001 /* AddWordSheet.swift */,
+				B1000007000000000000A001 /* WordLookupView.swift */,
 				B1000008000000000000A001 /* WordDetailView.swift */,
 				B1000009000000000000A001 /* QuizConfigSheet.swift */,
 				B100000A000000000000A001 /* QuizRunnerView.swift */,
@@ -201,6 +212,7 @@
 				A100000C000000000000A001 /* Preview Assets.xcassets in Resources */,
 				A100000B000000000000A001 /* Assets.xcassets in Resources */,
 				A100000D000000000000A001 /* dictionary.sqlite in Resources */,
+				A1000012000000000000A001 /* ready_groups.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,10 +228,12 @@
 				A1000003000000000000A001 /* DictionaryService.swift in Sources */,
 				A100000E000000000000A001 /* DictionaryDownloader.swift in Sources */,
 				A100000F000000000000A001 /* DictionaryLoaderView.swift in Sources */,
+				A1000011000000000000A001 /* ReadyGroupsView.swift in Sources */,
+				A1000013000000000000A001 /* SharedViews.swift in Sources */,
 				A1000004000000000000A001 /* QuizEngine.swift in Sources */,
 				A1000005000000000000A001 /* GroupsListView.swift in Sources */,
 				A1000006000000000000A001 /* GroupDetailView.swift in Sources */,
-				A1000007000000000000A001 /* AddWordSheet.swift in Sources */,
+				A1000007000000000000A001 /* WordLookupView.swift in Sources */,
 				A1000008000000000000A001 /* WordDetailView.swift in Sources */,
 				A1000009000000000000A001 /* QuizConfigSheet.swift in Sources */,
 				A100000A000000000000A001 /* QuizRunnerView.swift in Sources */,
@@ -244,7 +258,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_DictionaryDownloadURL = "https://github.com/denis-kremko/wordtrainer/releases/download/dict-v1/dictionary.sqlite.gz";
+				INFOPLIST_FILE = WordTrainer/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -278,7 +292,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_DictionaryDownloadURL = "https://github.com/denis-kremko/wordtrainer/releases/download/dict-v1/dictionary.sqlite.gz";
+				INFOPLIST_FILE = WordTrainer/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

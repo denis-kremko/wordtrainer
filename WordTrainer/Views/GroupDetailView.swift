@@ -49,7 +49,7 @@ struct GroupDetailView: View {
             WordDetailView(word: word)
         }
         .sheet(isPresented: $showingAddWord) {
-            AddWordSheet(group: group)
+            WordLookupView(addingTo: group)
         }
         .sheet(isPresented: $showingQuizConfig) {
             QuizConfigSheet(group: group)
