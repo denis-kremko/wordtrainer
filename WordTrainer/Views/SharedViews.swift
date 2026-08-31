@@ -207,9 +207,10 @@ struct SenseStatsLine: View {
 
     var body: some View {
         if let stats, stats.timesSeen > 0 {
-            Text("asked \(stats.timesSeen) · correct \(stats.timesCorrect)")
+            let rate = 100 * stats.timesCorrect / stats.timesSeen
+            Text("asked \(stats.timesSeen) · correct \(stats.timesCorrect) · \(rate)%")
                 .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.primary)
         }
     }
 }
