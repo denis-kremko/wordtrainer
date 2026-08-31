@@ -12,13 +12,16 @@ struct WordLookupView: View {
     @Environment(\.dismiss) private var dismiss
 
     let mode: Mode
+    // Senses to mark with a star (e.g. the ready-group-relevant ones).
+    var starredIDs: Set<Int64> = []
 
     init(addingTo group: WordGroup) {
         mode = .addTo(group)
     }
 
-    init(browsing lemma: String) {
+    init(browsing lemma: String, starring: Set<Int64> = []) {
         mode = .browse(lemma)
+        starredIDs = starring
         _lemma = State(initialValue: lemma)
         _picked = State(initialValue: DictionaryService.normalize(lemma))
     }
@@ -345,8 +348,16 @@ struct WordLookupView: View {
     private func senseRow(_ entry: DictionaryService.Entry) -> some View {
         HStack(alignment: .top, spacing: 8) {
             if !showsSelection {
-                senseText(definition: entry.definition, example: entry.example)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack(alignment: .top, spacing: 6) {
+                    if starredIDs.contains(entry.id) {
+                        Image(systemName: "star.fill")
+                            .font(.caption)
+                            .foregroundStyle(.yellow)
+                            .padding(.top, 5)
+                    }
+                    senseText(definition: entry.definition, example: entry.example)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 Button {
                     if selected.contains(entry.id) { selected.remove(entry.id) }

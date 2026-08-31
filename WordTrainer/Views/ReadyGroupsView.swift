@@ -164,8 +164,15 @@ struct ReadyGroupDetailView: View {
             }
         }
         .sheet(item: $browsingWord) { word in
-            WordLookupView(browsing: word.w)
+            WordLookupView(browsing: word.w, starring: starredSenseIDs(for: word))
         }
+    }
+
+    // The senses conversion would enable for this list: star them on the word page.
+    private func starredSenseIDs(for word: ReadyWord) -> Set<Int64> {
+        Set(enabledSenses(of: word, in: entriesByWord ?? [:], group: ready)
+            .filter { $0.isEnabled }
+            .map { $0.entry.id })
     }
 
     private func firstDefinition(for word: ReadyWord) -> String? {
