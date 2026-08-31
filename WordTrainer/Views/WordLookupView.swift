@@ -265,7 +265,7 @@ struct WordLookupView: View {
                 } label: {
                     Image(systemName: "chevron.backward.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.tint)
                 }
                 .buttonStyle(.borderless)
             }
