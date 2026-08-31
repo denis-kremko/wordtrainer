@@ -29,15 +29,17 @@ struct GroupDetailView: View {
                                 && word.senses.allSatisfy { done.contains($0.definition) }
                             NavigationLink(value: word) {
                                 VStack(alignment: .leading, spacing: 3) {
-                                    Text(word.lemma)
-                                        .font(.headline)
-                                        .foregroundStyle(learned ? Color.green : Color.primary)
+                                    Text(word.lemma).font(.headline)
                                     let enabled = word.senses.lazy.filter { $0.isEnabled }.count
                                     Text("\(enabled) of \(word.senses.count) senses enabled")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
                             }
+                            .listRowBackground(ZStack {
+                                Color(.secondarySystemGroupedBackground)
+                                if learned { Color.green.opacity(0.12) }
+                            })
                         }
                         .onDelete(perform: deleteWords)
                     }
