@@ -1,15 +1,15 @@
 import Foundation
 
 enum QuizMode: String, CaseIterable, Identifiable {
-    case enToTranslation
-    case translationToEn
     case definitionToEn
+    case translationToEn
+    case enToTranslation
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .enToTranslation: return "EN → translation (self-check)"
+        case .enToTranslation: return "EN → translation"
         case .translationToEn: return "Translation → EN"
         case .definitionToEn:  return "Definition → EN"
         }
