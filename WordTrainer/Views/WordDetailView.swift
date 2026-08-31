@@ -53,6 +53,9 @@ struct WordDetailView: View {
                     onSetStatus: { status in
                         SenseStats.findOrInsert(lemma: word.lemma, definition: sense.definition,
                                                 in: context).learnStatus = status
+                        // A learned/known sense leaves the quiz rotation;
+                        // clearing the status puts it back.
+                        sense.isEnabled = status == .none
                     }
                 )
             }
