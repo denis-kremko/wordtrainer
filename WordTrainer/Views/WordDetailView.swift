@@ -149,6 +149,8 @@ private struct SenseGlow: View {
             Color(.secondarySystemGroupedBackground)
             if let color {
                 color.opacity(0.10)
+                ContainerRelativeShape()
+                    .strokeBorder(color, lineWidth: 2)
             }
         }
     }
@@ -194,11 +196,11 @@ private struct SenseSection: View {
         .scaleEffect(isOn && !isDisabled ? 0.94 : 1)
         .animation(.spring(duration: 0.25), value: isOn)
         .disabled(isDisabled)
-        .listRowSeparator(.hidden)
     }
 
     var body: some View {
         Section {
+            VStack(alignment: .leading, spacing: 14) {
             capsuleButton("Learn this sense",
                           isOn: sense.isEnabled,
                           color: .orange) {
@@ -240,6 +242,7 @@ private struct SenseSection: View {
                 capsuleButton("Reset statistics", isOn: false, color: .blue, action: onResetStats)
             }
             capsuleButton("Delete sense", isOn: false, color: .red, action: onDelete)
+            }
         } header: {
             HStack {
                 Text("Sense \(sense.order + 1)")
