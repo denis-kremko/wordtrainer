@@ -44,6 +44,33 @@ struct WordDetailView: View {
                 Text(word.lemma).font(.largeTitle).bold()
             }
 
+            Section {
+                let total = word.senses.count
+                let learned = word.senses.filter {
+                    statsByDefinition[$0.definition]?.learnStatus != LearnStatus.none
+                        && statsByDefinition[$0.definition] != nil
+                }.count
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Progress").font(.headline)
+                        Spacer()
+                        Text("\(learned)/\(total) learned")
+                            .font(.subheadline)
+                            .foregroundStyle(learned > 0 ? Color.green : Color.secondary)
+                    }
+                    ProgressView(value: Double(learned), total: Double(max(total, 1)))
+                        .tint(.green)
+                }
+                .listRowBackground(ZStack {
+                    Color(.secondarySystemGroupedBackground)
+                    if learned == total && total > 0 {
+                        Color.green.opacity(0.12)
+                        RoundedRectangle(cornerRadius: 26, style: .continuous)
+                            .strokeBorder(Color.green, lineWidth: 2)
+                    }
+                })
+            }
+
             ForEach(word.senses.sorted(by: { $0.order < $1.order })) { sense in
                 SenseSection(
                     sense: sense,
