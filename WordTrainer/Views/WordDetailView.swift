@@ -61,23 +61,21 @@ struct WordDetailView: View {
             }
 
             Section {
-                Button {
+                CapsuleButton(title: "Add senses", systemImage: "plus", isOn: false) {
                     showingAddSense = true
-                } label: {
-                    Label("Add senses", systemImage: "plus")
                 }
+                .listRowSeparator(.hidden)
             }
 
             Section {
-                Button("Reset statistics for all senses") {
+                CapsuleButton(title: "Reset statistics for all senses",
+                              isOn: false,
+                              color: .blue,
+                              isDisabled: !word.senses.contains { (statsByDefinition[$0.definition]?.timesSeen ?? 0) > 0 }) {
                     resetTarget = .all
                 }
-                .disabled(!word.senses.contains { (statsByDefinition[$0.definition]?.timesSeen ?? 0) > 0 })
-                Button("Delete word from group", role: .destructive) {
-                    isDeletingWord = true
-                    context.delete(word)
-                    dismiss()
-                }
+                .listRowSeparator(.hidden)
+                deleteWordButton
             }
         }
         .navigationTitle(word.lemma)
@@ -127,6 +125,15 @@ extension WordDetailView {
     // Zero the counters instead of deleting the row: launch-time
     // backfillSenseStats treats an empty SenseStats table as a pre-migration
     // store and would rebuild every deleted counter from saved QuizResults.
+    private var deleteWordButton: some View {
+        CapsuleButton(title: "Delete word from group", isOn: false, color: .red) {
+            isDeletingWord = true
+            context.delete(word)
+            dismiss()
+        }
+        .listRowSeparator(.hidden)
+    }
+
     private func resetStats(for sense: WordSense, in statsByDefinition: [String: SenseStats]) {
         if let stats = statsByDefinition[sense.definition] {
             context.delete(stats)
