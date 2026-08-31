@@ -65,6 +65,8 @@ struct WordDetailView: View {
                     showingAddSense = true
                 }
                 .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
             }
 
             Section {
