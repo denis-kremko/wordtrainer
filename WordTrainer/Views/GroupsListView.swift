@@ -30,7 +30,7 @@ struct GroupsListView: View {
 
                 TabView(selection: $tab) {
                     myGroupsTab.tag(Tab.my)
-                    ReadyGroupsListView().tag(Tab.ready)
+                    ReadyThemesView().tag(Tab.ready)
                     WordLookupView().tag(Tab.dict)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
@@ -42,6 +42,9 @@ struct GroupsListView: View {
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: WordGroup.self) { group in
                 GroupDetailView(group: group)
+            }
+            .navigationDestination(for: ReadyTheme.self) { theme in
+                ReadyThemeView(theme: theme)
             }
             .navigationDestination(for: ReadyGroup.self) { ready in
                 ReadyGroupDetailView(ready: ready) { created in
@@ -80,8 +83,9 @@ struct GroupsListView: View {
                     )
                 } else {
                     List {
-                        Section {
-                            ForEach(groups) { group in
+                        ForEach(groups) { group in
+                            let learned = learnedWordCount(in: group)
+                            Section {
                                 NavigationLink(value: group) {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(group.name).font(.headline)
@@ -90,7 +94,6 @@ struct GroupsListView: View {
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
                                             if !group.words.isEmpty {
-                                                let learned = learnedWordCount(in: group)
                                                 Text("•").foregroundStyle(.secondary)
                                                 Text("\(learned)/\(group.words.count) learned")
                                                     .font(.caption)
@@ -107,12 +110,22 @@ struct GroupsListView: View {
                                     }
                                     .padding(.vertical, 2)
                                 }
+                                .listRowBackground(RowGlow(
+                                    color: !group.words.isEmpty && learned == group.words.count ? .green : nil))
+                                .swipeActions {
+                                    Button {
+                                        groupPendingDelete = group
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                    .tint(.red)
+                                }
                             }
-                            .onDelete(perform: delete)
                         }
 
                         ListBottomSpacer()
                     }
+                    .listSectionSpacing(12)
                 }
             }
 
@@ -171,11 +184,5 @@ struct GroupsListView: View {
         return group.words.filter { word in
             !word.senses.isEmpty && word.senses.allSatisfy { done.contains($0.definition) }
         }.count
-    }
-
-    private func delete(at offsets: IndexSet) {
-        if let i = offsets.first {
-            groupPendingDelete = groups[i]
-        }
     }
 }

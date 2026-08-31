@@ -22,31 +22,56 @@ struct GroupDetailView: View {
                         )
                     }
                 } else {
-                    Section("Words (\(group.words.count))") {
-                        let done = Set(progressed.map { $0.definition })
-                        ForEach(sortedWords) { word in
-                            let learned = !word.senses.isEmpty
-                                && word.senses.allSatisfy { done.contains($0.definition) }
+                    let done = Set(progressed.map { $0.definition })
+                    let learnedCount = group.words.filter { word in
+                        !word.senses.isEmpty && word.senses.allSatisfy { done.contains($0.definition) }
+                    }.count
+
+                    Section {
+                        let total = group.words.count
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Progress").font(.headline)
+                                Spacer()
+                                Text("\(learnedCount)/\(total) learned")
+                                    .font(.subheadline)
+                                    .foregroundStyle(learnedCount > 0 ? Color.green : Color.secondary)
+                            }
+                            ProgressView(value: Double(learnedCount), total: Double(max(total, 1)))
+                                .tint(.green)
+                        }
+                        .listRowBackground(RowGlow(color: learnedCount == total ? .green : nil))
+                    }
+
+                    ForEach(Array(sortedWords.enumerated()), id: \.element.id) { index, word in
+                        let learned = !word.senses.isEmpty
+                            && word.senses.allSatisfy { done.contains($0.definition) }
+                        Section {
                             NavigationLink(value: word) {
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(word.lemma).font(.headline)
+                                    let total = word.senses.count
                                     let enabled = word.senses.lazy.filter { $0.isEnabled }.count
-                                    Text("\(enabled) of \(word.senses.count) senses enabled")
+                                    let learnedSenses = word.senses.lazy.filter { done.contains($0.definition) }.count
+                                    (Text("\(enabled)/\(total) senses enabled · ").foregroundStyle(Color.secondary)
+                                        + Text("\(learnedSenses)/\(total) learned")
+                                            .foregroundStyle(learnedSenses > 0 ? Color.green : Color.secondary))
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
                                 }
                             }
-                            .listRowBackground(ZStack {
-                                Color(.secondarySystemGroupedBackground)
-                                if learned {
-                                    Color.green.opacity(0.12)
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .strokeBorder(Color.green, lineWidth: 2)
-                                        .padding(4)
+                            .listRowBackground(RowGlow(color: learned ? .green : nil))
+                            .swipeActions {
+                                Button(role: .destructive) {
+                                    context.delete(word)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
                                 }
-                            })
+                            }
+                        } header: {
+                            if index == 0 {
+                                Text("Words")
+                            }
                         }
-                        .onDelete(perform: deleteWords)
                     }
                 }
 
@@ -55,6 +80,7 @@ struct GroupDetailView: View {
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
             }
+            .listSectionSpacing(12)
 
             bottomCTAs
         }
@@ -96,12 +122,5 @@ struct GroupDetailView: View {
 
     private var sortedWords: [Word] {
         group.words.sorted { $0.lemma.localizedCaseInsensitiveCompare($1.lemma) == .orderedAscending }
-    }
-
-    private func deleteWords(at offsets: IndexSet) {
-        let items = sortedWords
-        for i in offsets {
-            context.delete(items[i])
-        }
     }
 }

@@ -41,7 +41,11 @@ struct WordDetailView: View {
         let statsByDefinition = SenseStats.byDefinition(allSenseStats, lemma: word.lemma)
         Form {
             Section("Word") {
-                Text(word.lemma).font(.largeTitle).bold()
+                HStack(spacing: 12) {
+                    Text(word.lemma).font(.largeTitle).bold()
+                    SpeakButton(text: word.lemma)
+                    Spacer()
+                }
             }
 
             Section {
@@ -61,14 +65,7 @@ struct WordDetailView: View {
                     ProgressView(value: Double(learned), total: Double(max(total, 1)))
                         .tint(.green)
                 }
-                .listRowBackground(ZStack {
-                    Color(.secondarySystemGroupedBackground)
-                    if learned == total && total > 0 {
-                        Color.green.opacity(0.12)
-                        RoundedRectangle(cornerRadius: 26, style: .continuous)
-                            .strokeBorder(Color.green, lineWidth: 2)
-                    }
-                })
+                .listRowBackground(RowGlow(color: learned == total && total > 0 ? .green : nil))
             }
 
             ForEach(word.senses.sorted(by: { $0.order < $1.order })) { sense in

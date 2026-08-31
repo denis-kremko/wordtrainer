@@ -10,8 +10,6 @@
 		A1000001000000000000A001 /* WordTrainerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000001000000000000A001 /* WordTrainerApp.swift */; };
 		A1000002000000000000A001 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000002000000000000A001 /* Models.swift */; };
 		A1000003000000000000A001 /* DictionaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000003000000000000A001 /* DictionaryService.swift */; };
-		A100000E000000000000A001 /* DictionaryDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100000E000000000000A001 /* DictionaryDownloader.swift */; };
-		A100000F000000000000A001 /* DictionaryLoaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100000F000000000000A001 /* DictionaryLoaderView.swift */; };
 		A1000004000000000000A001 /* QuizEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000004000000000000A001 /* QuizEngine.swift */; };
 		A1000005000000000000A001 /* GroupsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000005000000000000A001 /* GroupsListView.swift */; };
 		A1000006000000000000A001 /* GroupDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000006000000000000A001 /* GroupDetailView.swift */; };
@@ -22,10 +20,12 @@
 		A100000B000000000000A001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B100000B000000000000A001 /* Assets.xcassets */; };
 		A100000C000000000000A001 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B100000C000000000000A001 /* Preview Assets.xcassets */; };
 		A100000D000000000000A001 /* dictionary.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = B100000D000000000000A001 /* dictionary.sqlite */; };
+		A100000E000000000000A001 /* DictionaryDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100000E000000000000A001 /* DictionaryDownloader.swift */; };
+		A100000F000000000000A001 /* DictionaryLoaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B100000F000000000000A001 /* DictionaryLoaderView.swift */; };
 		A1000011000000000000A001 /* ReadyGroupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000011000000000000A001 /* ReadyGroupsView.swift */; };
+		A1000012000000000000A001 /* ready_groups.json in Resources */ = {isa = PBXBuildFile; fileRef = B1000012000000000000A001 /* ready_groups.json */; };
 		A1000013000000000000A001 /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000013000000000000A001 /* SharedViews.swift */; };
 		A1000014000000000000A001 /* GroupStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000014000000000000A001 /* GroupStatsView.swift */; };
-		A1000012000000000000A001 /* ready_groups.json in Resources */ = {isa = PBXBuildFile; fileRef = B1000012000000000000A001 /* ready_groups.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,8 +33,6 @@
 		B1000001000000000000A001 /* WordTrainerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordTrainerApp.swift; sourceTree = "<group>"; };
 		B1000002000000000000A001 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		B1000003000000000000A001 /* DictionaryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryService.swift; sourceTree = "<group>"; };
-		B100000E000000000000A001 /* DictionaryDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryDownloader.swift; sourceTree = "<group>"; };
-		B100000F000000000000A001 /* DictionaryLoaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryLoaderView.swift; sourceTree = "<group>"; };
 		B1000004000000000000A001 /* QuizEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizEngine.swift; sourceTree = "<group>"; };
 		B1000005000000000000A001 /* GroupsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsListView.swift; sourceTree = "<group>"; };
 		B1000006000000000000A001 /* GroupDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupDetailView.swift; sourceTree = "<group>"; };
@@ -45,11 +43,13 @@
 		B100000B000000000000A001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B100000C000000000000A001 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B100000D000000000000A001 /* dictionary.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = dictionary.sqlite; sourceTree = "<group>"; };
+		B100000E000000000000A001 /* DictionaryDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryDownloader.swift; sourceTree = "<group>"; };
+		B100000F000000000000A001 /* DictionaryLoaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryLoaderView.swift; sourceTree = "<group>"; };
 		B1000010000000000000A001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B1000011000000000000A001 /* ReadyGroupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadyGroupsView.swift; sourceTree = "<group>"; };
+		B1000012000000000000A001 /* ready_groups.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ready_groups.json; sourceTree = "<group>"; };
 		B1000013000000000000A001 /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
 		B1000014000000000000A001 /* GroupStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStatsView.swift; sourceTree = "<group>"; };
-		B1000012000000000000A001 /* ready_groups.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ready_groups.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,15 +85,6 @@
 				D0000008000000000000A001 /* Preview Content */,
 			);
 			path = WordTrainer;
-			sourceTree = "<group>";
-		};
-		D0000009000000000000A001 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				B100000D000000000000A001 /* dictionary.sqlite */,
-				B1000012000000000000A001 /* ready_groups.json */,
-			);
-			path = Resources;
 			sourceTree = "<group>";
 		};
 		D0000003000000000000A001 /* Products */ = {
@@ -152,6 +143,15 @@
 				B100000C000000000000A001 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		D0000009000000000000A001 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B100000D000000000000A001 /* dictionary.sqlite */,
+				B1000012000000000000A001 /* ready_groups.json */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -259,7 +259,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"WordTrainer/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Z82ATH7DYQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WordTrainer/Info.plist;
@@ -271,7 +271,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.WordTrainer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.deniskremko.wordtrainer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -293,7 +293,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"WordTrainer/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Z82ATH7DYQ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WordTrainer/Info.plist;
@@ -305,7 +305,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.WordTrainer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.deniskremko.wordtrainer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";

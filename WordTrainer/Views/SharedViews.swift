@@ -1,4 +1,42 @@
 import SwiftUI
+import AVFoundation
+
+@MainActor
+final class SpeechService {
+    static let shared = SpeechService()
+    private let synthesizer = AVSpeechSynthesizer()
+    private var sessionConfigured = false
+
+    func speak(_ text: String) {
+        if !sessionConfigured {
+            // .playback so words are audible with the silent switch on.
+            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio,
+                                                             options: .duckOthers)
+            try? AVAudioSession.sharedInstance().setActive(true)
+            sessionConfigured = true
+        }
+        synthesizer.stopSpeaking(at: .immediate)
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = 0.45
+        synthesizer.speak(utterance)
+    }
+}
+
+struct SpeakButton: View {
+    let text: String
+
+    var body: some View {
+        Button {
+            SpeechService.shared.speak(text)
+        } label: {
+            Image(systemName: "speaker.wave.2.fill")
+                .font(.title3)
+                .foregroundStyle(.tint)
+        }
+        .buttonStyle(.borderless)
+    }
+}
 
 enum WordLink {
     static let scheme = "wordtrainer"
@@ -137,6 +175,23 @@ struct LinkedText: View {
     }
 }
 
+// Backdrop for a single-row section card; the glow only lines up with the
+// card edge when the row is alone in its section.
+struct RowGlow: View {
+    let color: Color?
+
+    var body: some View {
+        ZStack {
+            Color(.secondarySystemGroupedBackground)
+            if let color {
+                color.opacity(0.12)
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .strokeBorder(color, lineWidth: 2)
+            }
+        }
+    }
+}
+
 struct TagBadge: View {
     let text: String
     let tint: Color
@@ -215,7 +270,6 @@ struct DisclosureRow: View {
                         Text(subtitle)
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                            .lineLimit(2)
                     }
                 }
                 Spacer()

@@ -30,7 +30,6 @@ final class DictionaryService: @unchecked Sendable {
     private let queue = DispatchQueue(label: "DictionaryService", qos: .userInitiated)
     private var db: OpaquePointer?
     private var hasFormsTable: Bool = false
-    private var hasRankColumn: Bool = false
     private var resolveCache: [String: String?] = [:]
     // Guarded by sourceLock, not the queue: view bodies read `isAvailable` on the
     // main thread, and queue.sync would block them behind any in-flight query
@@ -88,7 +87,6 @@ final class DictionaryService: @unchecked Sendable {
         if sqlite3_open_v2(url.path, &handle, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK {
             db = handle
             hasFormsTable = tableExistsLocked("forms")
-            hasRankColumn = columnExistsLocked(table: "entries", column: "rank")
             return true
         } else {
             sqlite3_close(handle)
@@ -100,15 +98,8 @@ final class DictionaryService: @unchecked Sendable {
         if let db { sqlite3_close(db) }
         db = nil
         hasFormsTable = false
-        hasRankColumn = false
         resolveCache = [:]
         setSource(.none)
-    }
-
-    private func columnExistsLocked(table: String, column: String) -> Bool {
-        // pragma_table_info lists one row per column; empty for a missing table too.
-        let sql = "SELECT name FROM pragma_table_info(?) WHERE name = ? LIMIT 1"
-        return !stringColumnLocked(sql, binds: [table, column]).isEmpty
     }
 
     private func tableExistsLocked(_ name: String) -> Bool {
@@ -161,9 +152,7 @@ final class DictionaryService: @unchecked Sendable {
     // queue.sync inside the queue deadlocks.
     private func lookupLocked(_ key: String) -> [Entry] {
         guard let db else { return [] }
-        // Older dictionary releases have no rank column; prepare would fail.
-        let order = hasRankColumn ? "rank, id" : "id"
-        let sql = "SELECT id, pos, definition, example FROM entries WHERE lemma = ? ORDER BY \(order)"
+        let sql = "SELECT id, pos, definition, example FROM entries WHERE lemma = ? ORDER BY rank, id"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
         defer { sqlite3_finalize(stmt) }

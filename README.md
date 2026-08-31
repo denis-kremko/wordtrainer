@@ -5,7 +5,7 @@
 ## Что уже работает
 
 - Приложение целиком на английском — чтобы погружаться в язык пока им пользуешься.
-- **Три вкладки**: My Groups (свои колоды), Ready Groups (20 готовых тематических листов, ~800 слов уровня B1+), Dict (просто словарь с поиском).
+- **Три вкладки**: My Groups (свои колоды), Ready Groups (19 тем × уровни A1–A2/B1–B2/C1–C2 — 45 листов, 2 250+ слов, каждое привязано к одному конкретному значению), Dict (просто словарь с поиском).
 - **Двухэтапный поиск** — печатаешь по мере ввода (debounce ~250 мс, запросы вне main-потока), выбираешь слово из кандидатов (`came` → `come`; `up with` → `come up with`, `put up with`), потом видишь значения по частям речи и фразы, содержащие слово.
 - **Ready Groups** — тематический лист конвертируется в свою группу через фильтр «сними то, что знаешь»; тематичные значения включаются автоматически (hint-ключи в `ready_groups.json`), нетематичные импортируются выключенными.
 - **Значения (senses)** — у каждого слова любое число значений с отдельным чекбоксом «учить это значение» и полем свободной заметки.
@@ -40,7 +40,7 @@
 
 1. Подключи iPhone кабелем, разблокируй, разреши «Доверять этому компьютеру».
 2. В Xcode: выбор target `WordTrainer` → таб **Signing & Capabilities** → поставь свой Apple ID в **Team** (если ID ещё нет — «Add an Account…» с обычным Apple ID, платить не надо).
-3. Смени **Bundle Identifier** с `com.example.WordTrainer` на что-то уникальное, например `com.denis.WordTrainer` — иначе получишь конфликт, если такой id уже занят.
+3. Bundle Identifier уже задан: `com.deniskremko.wordtrainer`. Для своего форка смени на свой.
 4. Выбери сверху свой iPhone как target, `Cmd+R`.
 5. На iPhone: `Настройки → Основные → VPN и управление устройством` → доверься своему разработчику один раз.
 6. С бесплатным Apple ID сборка живёт **7 дней** — потом пересобрать. С [Apple Developer Program](https://developer.apple.com/programs/) (99 USD/год) — год без пересборок, плюс возможность выложить в App Store.
@@ -52,7 +52,7 @@
 URL и контрольная сумма зашиты в `WordTrainer/Info.plist` (ключи `DictionaryDownloadURL` и `DictionarySHA256`). Именно файл, а не build setting: механизм `INFOPLIST_KEY_*` работает только для известных системных ключей — кастомные Xcode молча выбрасывает. Сейчас там:
 
 ```
-https://github.com/denis-kremko/wordtrainer/releases/download/dict-v2/dictionary.sqlite.gz
+https://github.com/denis-kremko/wordtrainer/releases/download/dict-v3/dictionary-v3.sqlite.gz
 ```
 
 ### Как выложить релиз (один раз)
@@ -68,11 +68,11 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v2/dictionary
      --norvig ../count_1w.txt --subs ../en_full.txt --review-queue /tmp/review_queue.jsonl
    gzip -9 /tmp/dictionary.sqlite   # приложение ждёт .gz — разжимает при первом запуске
    ```
-   Фильтры: частотник (Norvig top-100k ∪ OpenSubtitles top-250k по каждому content-слову леммы), 3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare (vulgar/derogatory-лексика включена намеренно — сериальный английский; offensive/slur исключены), без инфлекционных кросс-рефов и словообразовательных заглушек. Подозрительные определения (самоссылки, циркулярные, сложные) не выбрасываются, а пишутся в `review_queue.jsonl` — их прогоняет LLM-ревью (`review_tools.py split/validate/apply`). dict-v2: 310k senses, 178k лемм, ~26 МБ в gzip; ~85k определений переписаны LLM на простой язык.
+   Фильтры: частотник (Norvig top-100k ∪ OpenSubtitles top-250k по каждому content-слову леммы), 3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare (vulgar/derogatory-лексика включена намеренно — сериальный английский; offensive/slur исключены), без инфлекционных кросс-рефов и словообразовательных заглушек. Подозрительные определения (самоссылки, циркулярные, сложные) не выбрасываются, а пишутся в `review_queue.jsonl` — их прогоняет LLM-ревью (`review_tools.py split/validate/apply`). dict-v3: 280.5k senses, 181k лемм, ~27 МБ в gzip; ~85k определений переписаны LLM на простой язык, значения ранжированы по употребимости (колонка rank, near-дубли удалены), 99.9% значений с примером употребления.
 
 2. Залей файл релизом. Через `gh`:
    ```bash
-   gh release create dict-v2 /tmp/dictionary.sqlite.gz \
+   gh release create dict-v3 /tmp/dictionary-v3.sqlite.gz \
      --repo denis-kremko/wordtrainer \
      --title "Dictionary v2" \
      --notes "Curated English dictionary (~26 MB gzipped)."
@@ -80,7 +80,7 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v2/dictionary
 
 3. Проверь URL:
    ```bash
-   curl -IL https://github.com/denis-kremko/wordtrainer/releases/download/dict-v2/dictionary.sqlite.gz
+   curl -IL https://github.com/denis-kremko/wordtrainer/releases/download/dict-v3/dictionary-v3.sqlite.gz
    # HTTP/2 200
    ```
 

@@ -34,6 +34,8 @@ struct ReadyWord: Decodable, Hashable, Identifiable {
 
 struct ReadyGroup: Decodable, Identifiable, Hashable {
     let id: String
+    let level: String
+    let levelSubtitle: String
     let name: String
     let icon: String
     let description: String
@@ -48,11 +50,22 @@ struct ReadyGroup: Decodable, Identifiable, Hashable {
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
+struct ReadyTheme: Decodable, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let icon: String
+    let description: String
+    let levels: [ReadyGroup]
+
+    static func == (lhs: ReadyTheme, rhs: ReadyTheme) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+}
+
 enum ReadyGroupsCatalog {
-    static let groups: [ReadyGroup] = {
+    static let themes: [ReadyTheme] = {
         struct File: Decodable {
             let version: Int
-            let groups: [ReadyGroup]
+            let themes: [ReadyTheme]
         }
         guard let url = Bundle.main.url(forResource: "ready_groups", withExtension: "json"),
               let data = try? Data(contentsOf: url),
@@ -61,13 +74,101 @@ enum ReadyGroupsCatalog {
             NSLog("[WordTrainer] ready_groups.json missing or invalid")
             return []
         }
-        return file.groups
+        return file.themes
     }()
+}
+
+// A list word counts as closed once any sense of its lemma has a status;
+// words swiped as "knew already" drop out of the denominator entirely.
+struct ReadyProgress {
+    private let known: Set<String>
+    private let closed: Set<String>
+
+    init(_ progressed: [SenseStats]) {
+        known = Set(progressed.filter { $0.learnStatus == .knew }.map { $0.lemma })
+        closed = Set(progressed.map { $0.lemma })
+    }
+
+    func of(_ ready: ReadyGroup) -> (done: Int, remaining: Int) {
+        count(Set(ready.words.map { DictionaryService.normalize($0.w) }))
+    }
+
+    // Theme progress runs over the UNIQUE lemmas of all its levels: overlaps
+    // between levels count once.
+    func of(_ theme: ReadyTheme) -> (done: Int, remaining: Int) {
+        count(Set(theme.levels.flatMap { $0.words.map { DictionaryService.normalize($0.w) } }))
+    }
+
+    private func count(_ lemmas: Set<String>) -> (done: Int, remaining: Int) {
+        var done = 0
+        var remaining = 0
+        for lemma in lemmas {
+            if known.contains(lemma) { continue }
+            remaining += 1
+            if closed.contains(lemma) { done += 1 }
+        }
+        return (done, remaining)
+    }
+}
+
+// MARK: - Themes
+
+struct ReadyThemesView: View {
+    @Query(filter: #Predicate<SenseStats> { $0.status != "" }) private var progressed: [SenseStats]
+
+    var body: some View {
+        let progress = ReadyProgress(progressed)
+        List {
+            ForEach(ReadyGroupsCatalog.themes) { theme in
+                let prog = progress.of(theme)
+                Section {
+                    NavigationLink(value: theme) {
+                        HStack(spacing: 12) {
+                            Image(systemName: theme.icon)
+                                .font(.title3)
+                                .foregroundStyle(.tint)
+                                .frame(width: 34, height: 34)
+                                .background(Color.accentColor.opacity(0.12))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(theme.name).font(.headline)
+                                HStack(spacing: 6) {
+                                    ForEach(theme.levels) { level in
+                                        TagBadge(text: level.level, tint: .accentColor)
+                                    }
+                                }
+                                Text(theme.description)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+                                if prog.done > 0 && prog.remaining > 0 {
+                                    HStack(spacing: 6) {
+                                        ProgressView(value: Double(prog.done), total: Double(prog.remaining))
+                                            .tint(.green)
+                                        Text("\(prog.done)/\(prog.remaining)")
+                                            .font(.caption2)
+                                            .foregroundStyle(.secondary)
+                                            .fixedSize()
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                    .listRowBackground(RowGlow(
+                        color: !theme.levels.isEmpty && prog.done == prog.remaining ? .green : nil))
+                }
+            }
+        }
+        .listSectionSpacing(12)
+    }
 }
 
 // MARK: - List
 
-struct ReadyGroupsListView: View {
+struct ReadyThemeView: View {
+    let theme: ReadyTheme
+
     @Query private var groups: [WordGroup]
     @Query(filter: #Predicate<SenseStats> { $0.status != "" }) private var progressed: [SenseStats]
 
@@ -75,28 +176,18 @@ struct ReadyGroupsListView: View {
         Set(groups.compactMap { $0.sourceReadyGroupID })
     }
 
-    // A list word counts as closed once any sense of its lemma has a status.
-    private func progress(for ready: ReadyGroup) -> (Int, Int)? {
-        let lemmas = Set(progressed.map { $0.lemma })
-        let done = ready.words.filter { lemmas.contains(DictionaryService.normalize($0.w)) }.count
-        return done > 0 ? (done, ready.words.count) : nil
-    }
-
     var body: some View {
         let added = addedIDs  // one Set for the whole list, not one per row
+        let progress = ReadyProgress(progressed)
         List {
-            ForEach(ReadyGroupsCatalog.groups) { ready in
-                NavigationLink(value: ready) {
-                    HStack(spacing: 12) {
-                        Image(systemName: ready.icon)
-                            .font(.title3)
-                            .foregroundStyle(.tint)
-                            .frame(width: 34, height: 34)
-                            .background(Color.accentColor.opacity(0.12))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+            ForEach(theme.levels) { ready in
+                let prog = progress.of(ready)
+                Section {
+                    NavigationLink(value: ready) {
                         VStack(alignment: .leading, spacing: 3) {
                             HStack(spacing: 6) {
-                                Text(ready.name).font(.headline)
+                                Text(ready.level).font(.headline)
+                                TagBadge(text: ready.levelSubtitle.uppercased(), tint: .accentColor)
                                 if added.contains(ready.id) {
                                     TagBadge(text: "ADDED", tint: .green)
                                 }
@@ -105,22 +196,27 @@ struct ReadyGroupsListView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(2)
-                            if let (done, total) = progress(for: ready) {
+                            if prog.done > 0 && prog.remaining > 0 {
                                 HStack(spacing: 6) {
-                                    ProgressView(value: Double(done), total: Double(total))
+                                    ProgressView(value: Double(prog.done), total: Double(prog.remaining))
                                         .tint(.green)
-                                    Text("\(done)/\(total)")
+                                    Text("\(prog.done)/\(prog.remaining)")
                                         .font(.caption2)
                                         .foregroundStyle(.secondary)
                                         .fixedSize()
                                 }
                             }
                         }
+                        .padding(.vertical, 2)
                     }
-                    .padding(.vertical, 2)
+                    .listRowBackground(RowGlow(
+                        color: !ready.words.isEmpty && prog.done == prog.remaining ? .green : nil))
                 }
             }
         }
+        .listSectionSpacing(12)
+        .navigationTitle(theme.name)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -130,11 +226,14 @@ struct ReadyGroupDetailView: View {
     let ready: ReadyGroup
     let onCreated: (WordGroup) -> Void
 
+    @Environment(\.modelContext) private var context
     @State private var entriesByWord: [String: [DictionaryService.Entry]]? = nil
     @Query(filter: #Predicate<SenseStats> { $0.status != "" }) private var progressed: [SenseStats]
+    @Query private var allWords: [Word]
     @State private var showingConvert = false
     @State private var browsingWord: ReadyWord? = nil
     @State private var createdGroup: WordGroup? = nil
+    @State private var blockedLemma: String? = nil
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -144,26 +243,48 @@ struct ReadyGroupDetailView: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
-                Section("Words (\(ready.words.count))") {
-                    let progressedLemmas = Set(progressed.map { $0.lemma })
-                    ForEach(ready.words) { word in
-                        HStack(spacing: 8) {
-                            DisclosureRow(title: word.w,
-                                          subtitle: firstDefinition(for: word) ?? "—",
-                                          titleIsHeadline: true) {
-                                browsingWord = word
-                            }
-                            if progressedLemmas.contains(DictionaryService.normalize(word.w)) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(.green)
-                            }
+                let progressedLemmas = Set(progressed.map { $0.lemma })
+                let knownLemmas = Set(progressed.filter { $0.learnStatus == .knew }.map { $0.lemma })
+                ForEach(Array(ready.words.enumerated()), id: \.element.id) { index, word in
+                    let lemma = DictionaryService.normalize(word.w)
+                    let known = knownLemmas.contains(lemma)
+                    Section {
+                        DisclosureRow(title: word.w,
+                                      subtitle: firstDefinition(for: word) ?? "—",
+                                      titleIsHeadline: true) {
+                            browsingWord = word
                         }
                         .padding(.vertical, 1)
+                        .listRowBackground(RowGlow(
+                            color: known ? .orange
+                                 : progressedLemmas.contains(lemma) ? .green : nil))
+                        .swipeActions(edge: .leading) {
+                            if known {
+                                Button {
+                                    setKnown(word, false)
+                                } label: {
+                                    Label("Unmark", systemImage: "arrow.uturn.backward")
+                                }
+                                .tint(.gray)
+                            } else {
+                                Button {
+                                    setKnown(word, true)
+                                } label: {
+                                    Label("Knew already", systemImage: "checkmark.seal.fill")
+                                }
+                                .tint(.orange)
+                            }
+                        }
+                    } header: {
+                        if index == 0 {
+                            Text("Words")
+                        }
                     }
                 }
 
                 ListBottomSpacer()
             }
+            .listSectionSpacing(12)
 
             BottomCTA(title: "Start learning", systemImage: "plus.circle.fill") {
                 showingConvert = true
@@ -190,46 +311,60 @@ struct ReadyGroupDetailView: View {
             }
         }
         .sheet(item: $browsingWord) { word in
-            WordLookupView(browsing: word.w, starring: starredSenseIDs(for: word))
+            WordLookupView(browsing: word.w)
+        }
+        .alert(
+            "Already being learned",
+            isPresented: Binding(
+                get: { blockedLemma != nil },
+                set: { if !$0 { blockedLemma = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("“\(blockedLemma ?? "")” is in one of your groups. Mark its senses as Learned on the word page instead.")
         }
     }
 
-    // The senses conversion would enable for this list: star them on the word page.
-    private func starredSenseIDs(for word: ReadyWord) -> Set<Int64> {
-        Set(enabledSenses(of: word, in: entriesByWord ?? [:], group: ready)
-            .filter { $0.isEnabled }
-            .map { $0.entry.id })
+    // "Knew already" marks the one sense this list teaches; unmarking only
+    // clears knew statuses so real learned progress survives a stray swipe.
+    private func setKnown(_ word: ReadyWord, _ on: Bool) {
+        let lemma = DictionaryService.normalize(word.w)
+        if on {
+            guard !allWords.contains(where: { $0.lemma == lemma && $0.group != nil }) else {
+                blockedLemma = word.w
+                return
+            }
+            guard let entry = boundSense(of: word, in: entriesByWord ?? [:], group: ready) else { return }
+            let stats = SenseStats.findOrInsert(lemma: lemma, definition: entry.definition, in: context)
+            if stats.learnStatus == .none {
+                stats.learnStatus = .knew
+            }
+        } else {
+            for stats in progressed where stats.lemma == lemma && stats.learnStatus == .knew {
+                stats.learnStatus = .none
+            }
+        }
     }
 
     private func firstDefinition(for word: ReadyWord) -> String? {
-        topicalFirstSense(of: word, in: entriesByWord ?? [:], group: ready)?.definition
+        boundSense(of: word, in: entriesByWord ?? [:], group: ready)?.definition
     }
 }
 
-private func senses(of word: ReadyWord,
-                    in entriesByWord: [String: [DictionaryService.Entry]],
-                    group: ReadyGroup) -> [DictionaryService.Entry] {
+// The single sense a ready word stands for: first topical one, else the top-
+// ranked sense of the list's POS. Everything (row card, "knew already",
+// conversion) binds to this definition.
+private func boundSense(of word: ReadyWord,
+                        in entriesByWord: [String: [DictionaryService.Entry]],
+                        group: ReadyGroup) -> DictionaryService.Entry? {
     let all = entriesByWord[word.w] ?? []
-    guard let pos = group.effectivePOS(for: word) else { return all }
-    let filtered = all.filter { $0.partOfSpeech == pos }
-    return filtered.isEmpty ? all : filtered
-}
-
-// Each kept sense paired with whether it should be enabled. When the hints
-// match nothing, everything is enabled — a word with all senses disabled would
-// silently vanish from every quiz.
-private func enabledSenses(of word: ReadyWord,
-                           in entriesByWord: [String: [DictionaryService.Entry]],
-                           group: ReadyGroup) -> [(entry: DictionaryService.Entry, isEnabled: Bool)] {
-    let list = senses(of: word, in: entriesByWord, group: group)
-    let anyTopical = list.contains { word.isTopical($0.definition) }
-    return list.map { ($0, !anyTopical || word.isTopical($0.definition)) }
-}
-
-private func topicalFirstSense(of word: ReadyWord,
-                               in entriesByWord: [String: [DictionaryService.Entry]],
-                               group: ReadyGroup) -> DictionaryService.Entry? {
-    enabledSenses(of: word, in: entriesByWord, group: group).first(where: { $0.isEnabled })?.entry
+    var list = all
+    if let pos = group.effectivePOS(for: word) {
+        let filtered = all.filter { $0.partOfSpeech == pos }
+        if !filtered.isEmpty { list = filtered }
+    }
+    return list.first(where: { word.isTopical($0.definition) }) ?? list.first
 }
 
 // MARK: - Convert ("filter and start learning")
@@ -245,7 +380,7 @@ struct ConvertReadyGroupSheet: View {
     @State private var excluded: Set<String> = []
     @State private var groupName: String
 
-    @Query(sort: \CustomSense.createdAt) private var allCustomSenses: [CustomSense]
+    @Query(filter: #Predicate<SenseStats> { $0.status != "" }) private var progressed: [SenseStats]
 
     init(ready: ReadyGroup,
          entriesByWord: [String: [DictionaryService.Entry]],
@@ -258,7 +393,16 @@ struct ConvertReadyGroupSheet: View {
 
     private var selectedCount: Int { ready.words.count - excluded.count }
 
+    // Swiped "knew already" in the list: permanently out of the conversion.
+    private var knownIDs: Set<String> {
+        let known = Set(progressed.filter { $0.learnStatus == .knew }.map { $0.lemma })
+        return Set(ready.words
+            .filter { known.contains(DictionaryService.normalize($0.w)) }
+            .map { $0.id })
+    }
+
     var body: some View {
+        let knownIDs = knownIDs
         NavigationStack {
             Form {
                 Section("Group name") {
@@ -267,6 +411,7 @@ struct ConvertReadyGroupSheet: View {
 
                 Section {
                     ForEach(ready.words) { word in
+                        let isKnown = knownIDs.contains(word.id)
                         Button {
                             if excluded.contains(word.id) { excluded.remove(word.id) }
                             else { excluded.insert(word.id) }
@@ -276,8 +421,8 @@ struct ConvertReadyGroupSheet: View {
                                     .foregroundStyle(excluded.contains(word.id) ? Color.secondary : Color.accentColor)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(word.w)
-                                        .foregroundStyle(.primary)
-                                    if let def = topicalFirstSense(of: word, in: entriesByWord, group: ready)?.definition {
+                                        .foregroundStyle(isKnown ? Color.secondary : Color.primary)
+                                    if let def = boundSense(of: word, in: entriesByWord, group: ready)?.definition {
                                         Text(def)
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
@@ -287,13 +432,16 @@ struct ConvertReadyGroupSheet: View {
                             }
                         }
                         .buttonStyle(.plain)
+                        .disabled(isKnown)
+                        .opacity(isKnown ? 0.45 : 1)
                     }
                 } header: {
                     HStack {
-                        Text("Learning \(selectedCount) of \(ready.words.count)")
+                        Text("Learning \(selectedCount) of \(ready.words.count - knownIDs.count)")
                         Spacer()
-                        Button(excluded.isEmpty ? "Deselect all" : "Select all") {
-                            excluded = excluded.isEmpty ? Set(ready.words.map { $0.id }) : []
+                        let allSelected = excluded.subtracting(knownIDs).isEmpty
+                        Button(allSelected ? "Deselect all" : "Select all") {
+                            excluded = allSelected ? Set(ready.words.map { $0.id }) : knownIDs
                         }
                         .font(.caption)
                         .textCase(nil)
@@ -304,6 +452,9 @@ struct ConvertReadyGroupSheet: View {
             }
             .navigationTitle("Filter words")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                excluded.formUnion(knownIDs)
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -324,17 +475,12 @@ struct ConvertReadyGroupSheet: View {
         group.sourceReadyGroupID = ready.id
         context.insert(group)
 
-        let customsByLemma = Dictionary(grouping: allCustomSenses, by: { $0.lemma })
         for word in ready.words where !excluded.contains(word.id) {
-            let key = DictionaryService.normalize(word.w)
-            let entries = enabledSenses(of: word, in: entriesByWord, group: ready)
-            let customs = customsByLemma[key] ?? []
-            guard !entries.isEmpty || !customs.isEmpty else { continue }
-
-            let w = Word(lemma: key)
+            guard let entry = boundSense(of: word, in: entriesByWord, group: ready) else { continue }
+            let w = Word(lemma: DictionaryService.normalize(word.w))
             context.insert(w)
             w.group = group
-            w.appendSenses(entries: entries, customs: customs, in: context)
+            w.appendSenses(entries: [(entry, true)], customs: [], in: context)
         }
 
         onCreated(group)

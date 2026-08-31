@@ -28,7 +28,9 @@ struct QuizConfigSheet: View {
                 }
 
                 Section("How many words") {
-                    Toggle("All words in group (\(wordCount))", isOn: $useAll)
+                    CapsuleButton(title: "All words in group", isOn: useAll) {
+                        useAll.toggle()
+                    }
                     if !useAll && wordCount > 1 {
                         VStack(alignment: .leading) {
                             Text("Random sample: \(Int(sampleSize)) of \(wordCount)")
@@ -52,14 +54,16 @@ struct QuizConfigSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Start") {
-                        let size: Int? = useAll ? nil : Int(sampleSize)
-                        questions = QuizBuilder.build(from: group.words, mode: mode, sampleSize: size)
-                        startQuiz = true
-                    }
-                    .disabled(wordCount == 0)
+            }
+            .safeAreaInset(edge: .bottom) {
+                CapsuleButton(title: "Start quiz", systemImage: "play.fill",
+                              isDisabled: wordCount == 0, isLarge: true) {
+                    let size: Int? = useAll ? nil : Int(sampleSize)
+                    questions = QuizBuilder.build(from: group.words, mode: mode, sampleSize: size)
+                    startQuiz = true
                 }
+                .padding(.horizontal)
+                .padding(.bottom, 8)
             }
             .navigationDestination(isPresented: $startQuiz) {
                 QuizRunnerView(questions: questions, mode: mode,
