@@ -81,7 +81,7 @@ struct WordDetailView: View {
         .sheet(item: $browsing) { target in
             WordLookupView(browsing: target.id)
         }
-        .confirmationDialog(
+        .alert(
             "Reset statistics?",
             isPresented: Binding(
                 get: { resetTarget != nil },
@@ -101,6 +101,7 @@ struct WordDetailView: View {
                 }
                 resetTarget = nil
             }
+            Button("Cancel", role: .cancel) { resetTarget = nil }
         } message: { target in
             switch target {
             case .sense:

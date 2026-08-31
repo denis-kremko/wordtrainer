@@ -49,7 +49,7 @@ struct GroupsListView: View {
                 }
             }
             .sheet(isPresented: $showingNewGroup) { newGroupSheet }
-            .confirmationDialog(
+            .alert(
                 "Delete group?",
                 isPresented: Binding(
                     get: { groupPendingDelete != nil },
@@ -61,6 +61,7 @@ struct GroupsListView: View {
                     context.delete(group)
                     groupPendingDelete = nil
                 }
+                Button("Cancel", role: .cancel) { groupPendingDelete = nil }
             } message: { group in
                 Text("This removes the group and all \(group.words.count) of its words. Quiz history is kept.")
             }
