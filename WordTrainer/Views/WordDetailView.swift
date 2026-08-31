@@ -194,6 +194,7 @@ private struct SenseSection: View {
         .scaleEffect(isOn && !isDisabled ? 0.94 : 1)
         .animation(.spring(duration: 0.25), value: isOn)
         .disabled(isDisabled)
+        .listRowSeparator(.hidden)
     }
 
     var body: some View {
