@@ -143,16 +143,23 @@ struct BrowseTarget: Identifiable {
 // enclosing section recomputes its value.
 private struct SenseGlow: View {
     let stats: SenseStats?
+    let sense: WordSense
 
     var body: some View {
         ZStack {
             Color(.secondarySystemGroupedBackground)
             if let color {
                 color.opacity(0.10)
-                ContainerRelativeShape()
-                    .strokeBorder(color, lineWidth: 2)
+                border(color)
+            } else if sense.isEnabled {
+                border(.orange)
             }
         }
+    }
+
+    private func border(_ color: Color) -> some View {
+        RoundedRectangle(cornerRadius: 26, style: .continuous)
+            .strokeBorder(color, lineWidth: 2)
     }
 
     private var color: Color? {
@@ -251,6 +258,6 @@ private struct SenseSection: View {
                 }
             }
         }
-        .listRowBackground(SenseGlow(stats: stats))
+        .listRowBackground(SenseGlow(stats: stats, sense: sense))
     }
 }
