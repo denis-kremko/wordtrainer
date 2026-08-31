@@ -10,11 +10,8 @@ struct GroupStatsView: View {
         let name = group.name
         let id = group.id.uuidString
         groupName = name
-        // Legacy sessions predate groupID and joined by display name.
         _sessions = Query(
-            filter: #Predicate<QuizSession> {
-                $0.groupID == id || ($0.groupID == "" && $0.groupName == name)
-            },
+            filter: #Predicate<QuizSession> { $0.groupID == id },
             sort: \QuizSession.date
         )
     }
@@ -185,7 +182,7 @@ struct QuizSessionDetailView: View {
                 LabeledContent("Score", value: "\(session.correctCount) of \(session.totalCount)")
             }
             Section("Answers") {
-                ForEach(session.results.sorted(by: { ($0.order, $0.lemma) < ($1.order, $1.lemma) }),
+                ForEach(session.results.sorted(by: { $0.order < $1.order }),
                         id: \.persistentModelID) { result in
                     HStack(alignment: .top) {
                         Image(systemName: result.isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")

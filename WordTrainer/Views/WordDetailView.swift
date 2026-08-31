@@ -81,9 +81,9 @@ extension WordDetailView {
     // backfillSenseStats treats an empty SenseStats table as a pre-migration
     // store and would rebuild every deleted counter from saved QuizResults.
     private func resetStats(for sense: WordSense, in statsByDefinition: [String: SenseStats]) {
-        guard let stats = statsByDefinition[sense.definition] else { return }
-        stats.timesSeen = 0
-        stats.timesCorrect = 0
+        if let stats = statsByDefinition[sense.definition] {
+            context.delete(stats)
+        }
     }
 }
 
