@@ -5,6 +5,8 @@ struct GroupDetailView: View {
     @Environment(\.modelContext) private var context
     @Bindable var group: WordGroup
 
+    @Query(filter: #Predicate<SenseStats> { $0.status != "" }) private var progressed: [SenseStats]
+
     @State private var showingAddWord = false
     @State private var showingQuizConfig = false
 
@@ -21,10 +23,15 @@ struct GroupDetailView: View {
                     }
                 } else {
                     Section("Words (\(group.words.count))") {
+                        let done = Set(progressed.map { $0.definition })
                         ForEach(sortedWords) { word in
+                            let learned = !word.senses.isEmpty
+                                && word.senses.allSatisfy { done.contains($0.definition) }
                             NavigationLink(value: word) {
                                 VStack(alignment: .leading, spacing: 3) {
-                                    Text(word.lemma).font(.headline)
+                                    Text(word.lemma)
+                                        .font(.headline)
+                                        .foregroundStyle(learned ? Color.green : Color.primary)
                                     let enabled = word.senses.lazy.filter { $0.isEnabled }.count
                                     Text("\(enabled) of \(word.senses.count) senses enabled")
                                         .font(.caption)

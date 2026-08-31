@@ -217,10 +217,7 @@ private struct SenseSection: View {
                 TextField("your translation or mnemonic", text: $sense.translation, axis: .vertical)
                     .lineLimit(1...4)
             }
-            HStack(spacing: 10) {
-                statusButton(.learned, color: .green, selectedText: .white)
-                statusButton(.knew, color: .orange, selectedText: .white)
-            }
+            statusButton(.learned, color: .green, selectedText: .white)
             SenseStatsLine(stats: stats)
             if (stats?.timesSeen ?? 0) > 0 {
                 Button("Reset statistics", action: onResetStats)
