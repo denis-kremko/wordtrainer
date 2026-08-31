@@ -196,6 +196,7 @@ private struct SenseSection: View {
     var body: some View {
         Section {
             Toggle("Learn this sense", isOn: $sense.isEnabled)
+                .disabled(currentStatus != .none)
             LabeledContent("Part of speech",
                            value: PartOfSpeech.displayName(sense.partOfSpeech, lemma: sense.word?.lemma ?? ""))
             VStack(alignment: .leading, spacing: 4) {
