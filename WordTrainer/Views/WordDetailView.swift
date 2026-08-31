@@ -197,10 +197,11 @@ private struct SenseSection: View {
         Section {
             Toggle("Learn this sense", isOn: $sense.isEnabled)
                 .disabled(currentStatus != .none)
-            LabeledContent("Part of speech",
-                           value: PartOfSpeech.displayName(sense.partOfSpeech, lemma: sense.word?.lemma ?? ""))
             VStack(alignment: .leading, spacing: 4) {
-                Text("Definition").font(.caption).foregroundStyle(.secondary)
+                Text(sense.isCustom
+                     ? "Definition"
+                     : "Definition · \(PartOfSpeech.displayName(sense.partOfSpeech, lemma: sense.word?.lemma ?? ""))")
+                    .font(.caption).foregroundStyle(.secondary)
                 LinkedText(text: sense.definition, color: .primary, excluding: excludedLemma)
                     .font(.subheadline)
             }
