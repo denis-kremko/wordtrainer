@@ -6,6 +6,7 @@ struct WordDetailView: View {
     @Bindable var word: Word
 
     @State private var showingAddSense = false
+    @State private var browsing: BrowseTarget? = nil
     @State private var newDefinition = ""
     @State private var newExample = ""
 
@@ -32,6 +33,14 @@ struct WordDetailView: View {
         }
         .navigationTitle(word.lemma)
         .navigationBarTitleDisplayMode(.inline)
+        .environment(\.openURL, OpenURLAction { url in
+            guard let lemma = WordLink.lemma(from: url) else { return .systemAction }
+            browsing = BrowseTarget(id: lemma)
+            return .handled
+        })
+        .sheet(item: $browsing) { target in
+            WordLookupView(browsing: target.id)
+        }
         .sheet(isPresented: $showingAddSense) {
             NavigationStack {
                 Form {
@@ -70,6 +79,10 @@ struct WordDetailView: View {
     }
 }
 
+struct BrowseTarget: Identifiable {
+    let id: String
+}
+
 private struct SenseSection: View {
     @Bindable var sense: WordSense
     let onDelete: () -> Void
@@ -81,12 +94,15 @@ private struct SenseSection: View {
                            value: PartOfSpeech.displayName(sense.partOfSpeech, lemma: sense.word?.lemma ?? ""))
             VStack(alignment: .leading, spacing: 4) {
                 Text("Definition").font(.caption).foregroundStyle(.secondary)
-                Text(sense.definition)
+                LinkedText(text: sense.definition, color: .primary,
+                           excluding: DictionaryService.normalize(sense.word?.lemma ?? ""))
             }
             if !sense.example.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Example").font(.caption).foregroundStyle(.secondary)
-                    Text("“\(sense.example)”").italic()
+                    LinkedText(text: "“\(sense.example)”", color: .primary,
+                               excluding: DictionaryService.normalize(sense.word?.lemma ?? ""))
+                        .italic()
                 }
             }
             VStack(alignment: .leading, spacing: 4) {

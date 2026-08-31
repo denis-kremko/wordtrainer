@@ -30,6 +30,7 @@ final class DictionaryService: @unchecked Sendable {
     private let queue = DispatchQueue(label: "DictionaryService", qos: .userInitiated)
     private var db: OpaquePointer?
     private var hasFormsTable: Bool = false
+    private var resolveCache: [String: String?] = [:]
     // Guarded by sourceLock, not the queue: view bodies read `isAvailable` on the
     // main thread, and queue.sync would block them behind any in-flight query
     // (the substring search is an unindexed LIKE scan).
@@ -97,6 +98,7 @@ final class DictionaryService: @unchecked Sendable {
         if let db { sqlite3_close(db) }
         db = nil
         hasFormsTable = false
+        resolveCache = [:]
         setSource(.none)
     }
 
@@ -208,6 +210,45 @@ final class DictionaryService: @unchecked Sendable {
             out.append(String(cString: sqlite3_column_text(stmt, 0)))
         }
         return out
+    }
+
+    // token (lowercased) -> base lemma, for tappable words inside definitions.
+    // Resolves direct lemmas first, then inflected forms (ran -> run).
+    func resolveTokens(_ tokens: Set<String>) async -> [String: String] {
+        await onQueue {
+            var out: [String: String] = [:]
+            for token in tokens {
+                if let cached = self.resolveCache[token] {
+                    if let lemma = cached { out[token] = lemma }
+                    continue
+                }
+                let resolved = self.resolveTokenLocked(token)
+                self.resolveCache[token] = resolved
+                if let resolved { out[token] = resolved }
+            }
+            return out
+        }
+    }
+
+    private func resolveTokenLocked(_ token: String) -> String? {
+        var candidates = [token]
+        if token.hasSuffix("'s") { candidates.append(String(token.dropLast(2))) }
+        for candidate in candidates {
+            if self.lemmaExistsLocked(candidate) { return candidate }
+            if let base = self.formBasesLocked(for: candidate).first(where: { !$0.contains(" ") }) {
+                return base
+            }
+        }
+        return nil
+    }
+
+    private func lemmaExistsLocked(_ lemma: String) -> Bool {
+        guard let db else { return false }
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, "SELECT 1 FROM entries WHERE lemma = ? LIMIT 1", -1, &stmt, nil) == SQLITE_OK else { return false }
+        defer { sqlite3_finalize(stmt) }
+        sqlite3_bind_text(stmt, 1, lemma, -1, SQLITE_TRANSIENT)
+        return sqlite3_step(stmt) == SQLITE_ROW
     }
 
     func entriesByLemma(_ lemmas: [String]) async -> [String: [Entry]] {

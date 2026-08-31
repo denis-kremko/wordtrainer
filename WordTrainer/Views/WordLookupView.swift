@@ -118,6 +118,11 @@ struct WordLookupView: View {
             }
         }
         .task(id: lemma) { await performSearch() }
+        .environment(\.openURL, OpenURLAction { url in
+            guard let lemma = WordLink.lemma(from: url) else { return .systemAction }
+            pick(lemma)
+            return .handled
+        })
         .sheet(item: $editingEntry) { entry in
             ModifySenseSheet(entry: entry) { definition, example in
                 let sense = findOrInsertCustomSense(definition: definition, example: example)
@@ -333,15 +338,29 @@ struct WordLookupView: View {
         .padding(.vertical, 2)
     }
 
+    // Links only in browse/dictionary modes: in add mode the row is a selection
+    // button and word taps would fight the checkbox.
     private func senseText(definition: String, example: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(definition)
-                .font(.body)
-                .foregroundStyle(.primary)
+            Group {
+                if showsSelection {
+                    Text(definition)
+                } else {
+                    LinkedText(text: definition, color: .primary, excluding: searchedKey)
+                }
+            }
+            .font(.body)
+            .foregroundStyle(.primary)
             if !example.isEmpty {
-                Text("“\(example)”")
-                    .font(.caption).italic()
-                    .foregroundStyle(.secondary)
+                Group {
+                    if showsSelection {
+                        Text("“\(example)”")
+                    } else {
+                        LinkedText(text: "“\(example)”", color: .secondary, excluding: searchedKey)
+                    }
+                }
+                .font(.caption).italic()
+                .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 2)
