@@ -30,6 +30,7 @@ final class DictionaryService: @unchecked Sendable {
     private let queue = DispatchQueue(label: "DictionaryService", qos: .userInitiated)
     private var db: OpaquePointer?
     private var hasFormsTable: Bool = false
+    private var hasRankColumn: Bool = false
     private var resolveCache: [String: String?] = [:]
     // Guarded by sourceLock, not the queue: view bodies read `isAvailable` on the
     // main thread, and queue.sync would block them behind any in-flight query
@@ -87,6 +88,7 @@ final class DictionaryService: @unchecked Sendable {
         if sqlite3_open_v2(url.path, &handle, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK {
             db = handle
             hasFormsTable = tableExistsLocked("forms")
+            hasRankColumn = columnExistsLocked("rank")
             return true
         } else {
             sqlite3_close(handle)
@@ -98,8 +100,17 @@ final class DictionaryService: @unchecked Sendable {
         if let db { sqlite3_close(db) }
         db = nil
         hasFormsTable = false
+        hasRankColumn = false
         resolveCache = [:]
         setSource(.none)
+    }
+
+    private func columnExistsLocked(_ column: String) -> Bool {
+        guard let db else { return false }
+        var stmt: OpaquePointer?
+        let ok = sqlite3_prepare_v2(db, "SELECT \(column) FROM entries LIMIT 1", -1, &stmt, nil) == SQLITE_OK
+        sqlite3_finalize(stmt)
+        return ok
     }
 
     private func tableExistsLocked(_ name: String) -> Bool {
@@ -152,7 +163,9 @@ final class DictionaryService: @unchecked Sendable {
     // queue.sync inside the queue deadlocks.
     private func lookupLocked(_ key: String) -> [Entry] {
         guard let db else { return [] }
-        let sql = "SELECT id, pos, definition, example FROM entries WHERE lemma = ? ORDER BY rank, id"
+        // Older dictionary releases have no rank column; prepare would fail.
+        let order = hasRankColumn ? "rank, id" : "id"
+        let sql = "SELECT id, pos, definition, example FROM entries WHERE lemma = ? ORDER BY \(order)"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
         defer { sqlite3_finalize(stmt) }
