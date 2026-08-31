@@ -431,16 +431,9 @@ struct WordLookupView: View {
                     .lineLimit(2...5)
                 TextField("Example (optional)", text: $newCustomExample, axis: .vertical)
                     .lineLimit(1...3)
-                Button {
+                CapsuleButton(title: "Add", isDisabled: newCustomDefinition.isBlank) {
                     addCustomSense()
-                } label: {
-                    Text("Add")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 2)
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(newCustomDefinition.isBlank)
                 .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
             }
         }

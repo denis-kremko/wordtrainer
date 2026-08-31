@@ -184,31 +184,10 @@ private struct SenseSection: View {
 
     private var currentStatus: LearnStatus { stats?.learnStatus ?? .none }
 
-    private func capsuleButton(_ title: String,
-                               isOn: Bool,
-                               color: Color,
-                               selectedText: Color = .white,
-                               isDisabled: Bool = false,
-                               action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(isDisabled ? Color.secondary : (isOn ? selectedText : color))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 7)
-                .background(isDisabled ? Color(.systemGray5) : (isOn ? color : color.opacity(0.15)))
-                .clipShape(Capsule())
-        }
-        .buttonStyle(.borderless)
-        .scaleEffect(isOn && !isDisabled ? 0.94 : 1)
-        .animation(.spring(duration: 0.25), value: isOn)
-        .disabled(isDisabled)
-    }
-
     var body: some View {
         Section {
             VStack(alignment: .leading, spacing: 14) {
-            capsuleButton("Learn this sense",
+            CapsuleButton(title: "Learn this sense",
                           isOn: sense.isEnabled,
                           color: .orange) {
                 if sense.isEnabled {
@@ -218,7 +197,7 @@ private struct SenseSection: View {
                     if currentStatus != .none { onSetStatus(.none) }
                 }
             }
-            capsuleButton("Learned",
+            CapsuleButton(title: "Learned",
                           isOn: currentStatus == .learned,
                           color: .green) {
                 onSetStatus(currentStatus == .learned ? .none : .learned)
@@ -246,9 +225,9 @@ private struct SenseSection: View {
             }
             SenseStatsLine(stats: stats)
             if (stats?.timesSeen ?? 0) > 0 {
-                capsuleButton("Reset statistics", isOn: false, color: .blue, action: onResetStats)
+                CapsuleButton(title: "Reset statistics", isOn: false, color: .blue, action: onResetStats)
             }
-            capsuleButton("Delete sense", isOn: false, color: .red, action: onDelete)
+            CapsuleButton(title: "Delete sense", isOn: false, color: .red, action: onDelete)
             }
         } header: {
             HStack {

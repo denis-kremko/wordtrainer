@@ -74,28 +74,14 @@ struct GroupDetailView: View {
 
     private var bottomCTAs: some View {
         HStack(spacing: 12) {
-            Button {
+            CapsuleButton(title: "Add word", systemImage: "plus.circle.fill",
+                          isOn: false, isLarge: true) {
                 showingAddWord = true
-            } label: {
-                Label("Add word", systemImage: "plus.circle.fill")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-
-            Button {
+            CapsuleButton(title: "Start quiz", systemImage: "play.fill",
+                          isDisabled: group.words.isEmpty, isLarge: true) {
                 showingQuizConfig = true
-            } label: {
-                Label("Start quiz", systemImage: "play.fill")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .disabled(group.words.isEmpty)
         }
         .padding(.horizontal)
         .padding(.bottom, 8)

@@ -75,29 +75,18 @@ struct QuizRunnerView: View {
                         }
                     }
 
-                    HStack {
-                        Button {
+                    HStack(spacing: 12) {
+                        CapsuleButton(title: "Got it wrong", systemImage: "xmark.circle.fill",
+                                      color: .red, isLarge: true) {
                             recordSelfCheck(isCorrect: false, for: q)
-                        } label: {
-                            Label("Got it wrong", systemImage: "xmark.circle.fill")
-                                .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.red)
-
-                        Button {
+                        CapsuleButton(title: "Knew it", systemImage: "checkmark.circle.fill",
+                                      color: .green, isLarge: true) {
                             recordSelfCheck(isCorrect: true, for: q)
-                        } label: {
-                            Label("Knew it", systemImage: "checkmark.circle.fill")
-                                .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.green)
                     }
                 } else {
-                    Button("Show answer") { revealed = true }
-                        .buttonStyle(.borderedProminent)
-                        .frame(maxWidth: .infinity)
+                    CapsuleButton(title: "Show answer", isLarge: true) { revealed = true }
                 }
             } else {
                 TextField("Your answer", text: $userAnswer)
@@ -116,14 +105,11 @@ struct QuizRunnerView: View {
                             Text(ok ? "Correct" : "Expected: \(q.expectedAnswer)")
                         }
                     }
-                    Button("Next") { advance() }
-                        .buttonStyle(.borderedProminent)
-                        .frame(maxWidth: .infinity)
+                    CapsuleButton(title: "Next", isLarge: true) { advance() }
                 } else {
-                    Button("Check") { submit(q) }
-                        .buttonStyle(.borderedProminent)
-                        .frame(maxWidth: .infinity)
-                        .disabled(userAnswer.isBlank)
+                    CapsuleButton(title: "Check", isDisabled: userAnswer.isBlank, isLarge: true) {
+                        submit(q)
+                    }
                 }
             }
 
@@ -225,8 +211,8 @@ struct QuizSummaryView: View {
             VStack(spacing: 8) {
                 BottomCTA(title: "Save to statistics", systemImage: "chart.bar.fill", action: onSave)
 
-                Button("Don't save") { onDiscard() }
-                    .foregroundStyle(.secondary)
+                CapsuleButton(title: "Don't save", isOn: false, color: .secondary) { onDiscard() }
+                    .padding(.horizontal)
             }
             .padding(.bottom)
         }

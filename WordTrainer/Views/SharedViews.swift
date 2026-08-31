@@ -151,22 +151,50 @@ struct TagBadge: View {
     }
 }
 
+// The app-wide button: a capsule that is solid when active/primary and lightly
+// tinted otherwise, pressed-in via a slight scale.
+struct CapsuleButton: View {
+    let title: String
+    var systemImage: String? = nil
+    var isOn: Bool = true
+    var color: Color = .accentColor
+    var selectedText: Color = .white
+    var isDisabled: Bool = false
+    var isLarge: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Group {
+                if let systemImage {
+                    Label(title, systemImage: systemImage)
+                } else {
+                    Text(title)
+                }
+            }
+            .font(isLarge ? .headline : .subheadline.weight(.semibold))
+            .foregroundStyle(isDisabled ? Color.secondary : (isOn ? selectedText : color))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, isLarge ? 12 : 7)
+            .background(isDisabled ? Color(.systemGray5) : (isOn ? color : color.opacity(0.15)))
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.borderless)
+        .scaleEffect(isOn && !isDisabled ? 0.97 : 1)
+        .animation(.spring(duration: 0.25), value: isOn)
+        .disabled(isDisabled)
+    }
+}
+
 struct BottomCTA: View {
     let title: String
     let systemImage: String
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .padding(.horizontal)
-        .padding(.bottom, 8)
+        CapsuleButton(title: title, systemImage: systemImage, isLarge: true, action: action)
+            .padding(.horizontal)
+            .padding(.bottom, 8)
     }
 }
 
