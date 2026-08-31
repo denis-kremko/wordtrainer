@@ -201,9 +201,13 @@ private struct SenseSection: View {
         Section {
             capsuleButton("Learn this sense",
                           isOn: sense.isEnabled,
-                          color: .orange,
-                          isDisabled: currentStatus != .none) {
-                sense.isEnabled.toggle()
+                          color: .orange) {
+                if sense.isEnabled {
+                    sense.isEnabled = false
+                } else {
+                    sense.isEnabled = true
+                    if currentStatus != .none { onSetStatus(.none) }
+                }
             }
             capsuleButton("Learned",
                           isOn: currentStatus == .learned,
