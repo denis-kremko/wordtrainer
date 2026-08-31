@@ -46,6 +46,9 @@ struct WordLookupView: View {
 
     @State private var lemma: String = ""
     @State private var picked: String? = nil
+    // Drill-down trail (word links, "Contains" taps); back pops it, and in
+    // dict/add modes the last back returns to the search stage.
+    @State private var history: [String] = []
     @State private var lookup: DictionaryService.LookupResult? = nil
     @State private var searchedKey: String = ""
     @State private var selected: Set<Int64> = []
@@ -71,7 +74,7 @@ struct WordLookupView: View {
         } else {
             NavigationStack {
                 content
-                    .navigationTitle(lockedLemma != nil ? (picked ?? lockedLemma!) : "New Word")
+                    .navigationTitle(lockedLemma != nil ? "" : "New Word")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         if showsSelection {
@@ -94,7 +97,7 @@ struct WordLookupView: View {
 
     private var content: some View {
         Form {
-            if lockedLemma == nil {
+            if lockedLemma == nil && picked == nil {
                 Section("Word") {
                     HStack {
                         TextField("e.g. run", text: $lemma)
@@ -105,6 +108,10 @@ struct WordLookupView: View {
                         }
                     }
                 }
+            }
+
+            if picked != nil {
+                Section { wordHeader }
             }
 
             if let result = lookup {
@@ -182,11 +189,45 @@ struct WordLookupView: View {
     private func pick(_ word: String) {
         let key = DictionaryService.normalize(word)
         guard !key.isEmpty else { return }
+        if let current = picked, current != key {
+            history.append(current)
+        }
         picked = key
         if DictionaryService.normalize(lemma) != key {
             lemma = word  // restarts .task(id: lemma); performSearch handles the rest
         } else {
             expandAddFormIfNoSenses(exactIsEmpty: lookup?.exact.isEmpty ?? true)
+        }
+    }
+
+    private var canGoBack: Bool { !history.isEmpty || lockedLemma == nil }
+
+    private var wordHeader: some View {
+        HStack(spacing: 10) {
+            if canGoBack {
+                Button {
+                    goBack()
+                } label: {
+                    Image(systemName: "chevron.backward.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.borderless)
+            }
+            Text(picked ?? "")
+                .font(.title2).bold()
+                .foregroundStyle(.primary)
+            Spacer()
+        }
+        .padding(.vertical, 2)
+    }
+
+    private func goBack() {
+        if let previous = history.popLast() {
+            picked = previous
+            lemma = previous
+        } else {
+            picked = nil
         }
     }
 
@@ -396,12 +437,14 @@ struct WordLookupView: View {
         let isPickedSearch = picked == key
         if let p = picked, p != key {
             picked = nil
+            history = []
         }
         guard !key.isEmpty else {
             lookup = nil
             searchedKey = ""
             selected = []
             selectedCustom = []
+            history = []
             isSearching = false
             return
         }
