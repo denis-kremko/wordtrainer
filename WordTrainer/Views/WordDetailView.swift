@@ -156,7 +156,7 @@ private struct SenseGlow: View {
     private var color: Color? {
         switch stats?.learnStatus ?? .none {
         case .learned: return .green
-        case .knew: return .yellow
+        case .knew: return .orange
         case .none: return nil
         }
     }
@@ -219,7 +219,7 @@ private struct SenseSection: View {
             }
             HStack(spacing: 10) {
                 statusButton(.learned, color: .green, selectedText: .white)
-                statusButton(.knew, color: .yellow, selectedText: .black)
+                statusButton(.knew, color: .orange, selectedText: .white)
             }
             SenseStatsLine(stats: stats)
             if (stats?.timesSeen ?? 0) > 0 {
