@@ -33,6 +33,10 @@ struct GroupsListView: View {
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
             }
+            // Bar hidden, but the title still feeds the back button and its
+            // long-press history menu on pushed screens (else the menu shows
+            // an empty row).
+            .navigationTitle("Groups")
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: WordGroup.self) { group in
                 GroupDetailView(group: group)

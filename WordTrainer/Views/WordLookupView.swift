@@ -260,13 +260,14 @@ struct WordLookupView: View {
     private var wordHeader: some View {
         HStack(spacing: 10) {
             if canGoBack {
-                Image(systemName: "chevron.backward.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(.secondary)
-                    .contentShape(Rectangle())
-                    .onTapGesture { goBack() }
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityLabel("Back")
+                Button {
+                    goBack()
+                } label: {
+                    Image(systemName: "chevron.backward.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.borderless)
             }
             Text(picked ?? "")
                 .font(.title2).bold()
