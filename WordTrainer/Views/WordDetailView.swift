@@ -3,6 +3,7 @@ import SwiftData
 
 struct WordDetailView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
     @Bindable var word: Word
     // Live so counters recorded by a later quiz show up; one fetch shared by
     // every sense section instead of a per-section, per-render fetch.
@@ -21,9 +22,12 @@ struct WordDetailView: View {
             }
 
             ForEach(word.senses.sorted(by: { $0.order < $1.order })) { sense in
-                SenseSection(sense: sense, stats: statsByDefinition[sense.definition]) {
-                    context.delete(sense)
-                }
+                SenseSection(
+                    sense: sense,
+                    stats: statsByDefinition[sense.definition],
+                    onDelete: { context.delete(sense) },
+                    onResetStats: { resetStats(for: sense, in: statsByDefinition) }
+                )
             }
 
             Section {
@@ -32,6 +36,19 @@ struct WordDetailView: View {
                     showingAddSense = true
                 } label: {
                     Label("Add my own sense", systemImage: "plus")
+                }
+            }
+
+            Section {
+                Button("Reset statistics for all senses") {
+                    for sense in word.senses {
+                        resetStats(for: sense, in: statsByDefinition)
+                    }
+                }
+                .disabled(!word.senses.contains { (statsByDefinition[$0.definition]?.timesSeen ?? 0) > 0 })
+                Button("Delete word from group", role: .destructive) {
+                    context.delete(word)
+                    dismiss()
                 }
             }
         }
@@ -81,6 +98,14 @@ struct WordDetailView: View {
     }
 }
 
+extension WordDetailView {
+    private func resetStats(for sense: WordSense, in statsByDefinition: [String: SenseStats]) {
+        if let stats = statsByDefinition[sense.definition] {
+            context.delete(stats)
+        }
+    }
+}
+
 struct BrowseTarget: Identifiable {
     let id: String
 }
@@ -89,6 +114,7 @@ private struct SenseSection: View {
     @Bindable var sense: WordSense
     let stats: SenseStats?
     let onDelete: () -> Void
+    let onResetStats: () -> Void
 
     private var excludedLemma: String {
         DictionaryService.normalize(sense.word?.lemma ?? "")
@@ -118,6 +144,9 @@ private struct SenseSection: View {
                     .lineLimit(1...4)
             }
             SenseStatsLine(stats: stats)
+            if (stats?.timesSeen ?? 0) > 0 {
+                Button("Reset statistics", action: onResetStats)
+            }
             Button("Delete sense", role: .destructive, action: onDelete)
         } header: {
             HStack {
