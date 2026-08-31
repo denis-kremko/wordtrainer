@@ -88,7 +88,7 @@ final class DictionaryService: @unchecked Sendable {
         if sqlite3_open_v2(url.path, &handle, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK {
             db = handle
             hasFormsTable = tableExistsLocked("forms")
-            hasRankColumn = columnExistsLocked("rank")
+            hasRankColumn = columnExistsLocked(table: "entries", column: "rank")
             return true
         } else {
             sqlite3_close(handle)
@@ -105,12 +105,10 @@ final class DictionaryService: @unchecked Sendable {
         setSource(.none)
     }
 
-    private func columnExistsLocked(_ column: String) -> Bool {
-        guard let db else { return false }
-        var stmt: OpaquePointer?
-        let ok = sqlite3_prepare_v2(db, "SELECT \(column) FROM entries LIMIT 1", -1, &stmt, nil) == SQLITE_OK
-        sqlite3_finalize(stmt)
-        return ok
+    private func columnExistsLocked(table: String, column: String) -> Bool {
+        // pragma_table_info lists one row per column; empty for a missing table too.
+        let sql = "SELECT name FROM pragma_table_info(?) WHERE name = ? LIMIT 1"
+        return !stringColumnLocked(sql, binds: [table, column]).isEmpty
     }
 
     private func tableExistsLocked(_ name: String) -> Bool {

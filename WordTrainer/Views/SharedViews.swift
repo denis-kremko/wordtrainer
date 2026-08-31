@@ -201,12 +201,29 @@ struct DisclosureRow: View {
     }
 }
 
+// Global quiz counters caption under a sense; hidden until first asked.
+struct SenseStatsLine: View {
+    let stats: SenseStats?
+
+    var body: some View {
+        if let stats, stats.timesSeen > 0 {
+            Text("asked \(stats.timesSeen) · correct \(stats.timesCorrect)")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+    }
+}
+
 // Keeps the last list rows reachable above a floating BottomCTA.
 struct ListBottomSpacer: View {
     var body: some View {
-        Color.clear
-            .frame(height: 72)
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
+        // Its own section: joining the preceding implicit section would move
+        // that card's rounded bottom corners onto this invisible row.
+        Section {
+            Color.clear
+                .frame(height: 72)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+        }
     }
 }

@@ -77,12 +77,20 @@ struct WordLookupView: View {
     @State private var editingEntry: DictionaryService.Entry? = nil
 
     @Query(sort: \CustomSense.createdAt) private var allCustomSenses: [CustomSense]
-    // Global quiz stats for the current lemma, keyed by definition text.
-    @State private var statsByDefinition: [String: SenseStats] = [:]
+    // Live like allCustomSenses: this view outlives quiz runs (the Dict tab
+    // instance lasts the whole session), so a snapshot would miss rows a
+    // saved quiz inserts for the currently displayed word.
+    @Query private var allSenseStats: [SenseStats]
 
     private var customSenses: [CustomSense] {
         guard !searchedKey.isEmpty else { return [] }
         return allCustomSenses.filter { $0.lemma == searchedKey }
+    }
+
+    // Global quiz stats for the current lemma, keyed by definition text.
+    private var statsByDefinition: [String: SenseStats] {
+        guard !searchedKey.isEmpty else { return [:] }
+        return SenseStats.byDefinition(allSenseStats, lemma: searchedKey)
     }
 
     var body: some View {
@@ -452,10 +460,8 @@ struct WordLookupView: View {
                     .font(.footnote).italic()
                     .foregroundStyle(.secondary)
             }
-            if !showsSelection, let stats = statsByDefinition[definition], stats.timesSeen > 0 {
-                Text("asked \(stats.timesSeen) · correct \(stats.timesCorrect)")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+            if !showsSelection {
+                SenseStatsLine(stats: statsByDefinition[definition])
             }
         }
         .padding(.vertical, 2)
@@ -538,7 +544,6 @@ struct WordLookupView: View {
         if key != searchedKey {
             searchedKey = key
             selectedCustom = []
-            statsByDefinition = SenseStats.byDefinition(lemma: key, in: context)
         }
         if let restore = pendingRestore {
             // A goBack target finished loading: bring its selections back.

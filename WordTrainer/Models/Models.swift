@@ -5,6 +5,15 @@ extension String {
     var isBlank: Bool { trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 }
 
+extension ModelContext {
+    // Shared fetch-or-insert core: the first row matching the predicate, if any.
+    func first<T: PersistentModel>(matching predicate: Predicate<T>) -> T? {
+        var descriptor = FetchDescriptor<T>(predicate: predicate)
+        descriptor.fetchLimit = 1
+        return (try? fetch(descriptor))?.first
+    }
+}
+
 @Model
 final class WordGroup {
     var name: String
@@ -67,11 +76,8 @@ extension CustomSense {
     static func findOrInsert(lemma rawLemma: String, definition: String, example: String,
                              in context: ModelContext) -> CustomSense {
         let lemma = DictionaryService.normalize(rawLemma)
-        var descriptor = FetchDescriptor<CustomSense>(
-            predicate: #Predicate { $0.lemma == lemma && $0.definition == definition }
-        )
-        descriptor.fetchLimit = 1
-        if let existing = (try? context.fetch(descriptor))?.first {
+        let match = #Predicate<CustomSense> { $0.lemma == lemma && $0.definition == definition }
+        if let existing = context.first(matching: match) {
             if !example.isEmpty && existing.example != example {
                 existing.example = example
             }
@@ -172,10 +178,6 @@ final class SenseStats {
         self.lemma = lemma
         self.definition = definition
     }
-
-    var accuracy: Double? {
-        timesSeen > 0 ? Double(timesCorrect) / Double(timesSeen) : nil
-    }
 }
 
 extension SenseStats {
@@ -183,11 +185,8 @@ extension SenseStats {
     static func findOrInsert(lemma rawLemma: String, definition: String,
                              in context: ModelContext) -> SenseStats {
         let lemma = DictionaryService.normalize(rawLemma)
-        var descriptor = FetchDescriptor<SenseStats>(
-            predicate: #Predicate { $0.lemma == lemma && $0.definition == definition }
-        )
-        descriptor.fetchLimit = 1
-        if let existing = (try? context.fetch(descriptor))?.first {
+        let match = #Predicate<SenseStats> { $0.lemma == lemma && $0.definition == definition }
+        if let existing = context.first(matching: match) {
             return existing
         }
         let stats = SenseStats(lemma: lemma, definition: definition)
@@ -195,11 +194,12 @@ extension SenseStats {
         return stats
     }
 
-    static func byDefinition(lemma rawLemma: String, in context: ModelContext) -> [String: SenseStats] {
+    // One row per definition of a lemma, from an already-fetched (e.g. @Query)
+    // list — so views stay live when a quiz inserts new rows.
+    static func byDefinition(_ all: [SenseStats], lemma rawLemma: String) -> [String: SenseStats] {
         let lemma = DictionaryService.normalize(rawLemma)
-        let descriptor = FetchDescriptor<SenseStats>(predicate: #Predicate { $0.lemma == lemma })
-        let all = (try? context.fetch(descriptor)) ?? []
-        return Dictionary(all.map { ($0.definition, $0) }, uniquingKeysWith: { a, _ in a })
+        return Dictionary(all.filter { $0.lemma == lemma }.map { ($0.definition, $0) },
+                          uniquingKeysWith: { a, _ in a })
     }
 }
 

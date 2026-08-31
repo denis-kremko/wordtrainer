@@ -4,6 +4,9 @@ import SwiftData
 struct WordDetailView: View {
     @Environment(\.modelContext) private var context
     @Bindable var word: Word
+    // Live so counters recorded by a later quiz show up; one fetch shared by
+    // every sense section instead of a per-section, per-render fetch.
+    @Query private var allSenseStats: [SenseStats]
 
     @State private var showingAddSense = false
     @State private var browsing: BrowseTarget? = nil
@@ -11,13 +14,14 @@ struct WordDetailView: View {
     @State private var newExample = ""
 
     var body: some View {
+        let statsByDefinition = SenseStats.byDefinition(allSenseStats, lemma: word.lemma)
         Form {
             Section("Word") {
                 Text(word.lemma).font(.largeTitle).bold()
             }
 
             ForEach(word.senses.sorted(by: { $0.order < $1.order })) { sense in
-                SenseSection(sense: sense) {
+                SenseSection(sense: sense, stats: statsByDefinition[sense.definition]) {
                     context.delete(sense)
                 }
             }
@@ -82,15 +86,9 @@ struct BrowseTarget: Identifiable {
 }
 
 private struct SenseSection: View {
-    @Environment(\.modelContext) private var context
     @Bindable var sense: WordSense
+    let stats: SenseStats?
     let onDelete: () -> Void
-
-    private var stats: SenseStats? {
-        guard let lemma = sense.word?.lemma else { return nil }
-        let s = SenseStats.byDefinition(lemma: lemma, in: context)[sense.definition]
-        return (s?.timesSeen ?? 0) > 0 ? s : nil
-    }
 
     private var excludedLemma: String {
         DictionaryService.normalize(sense.word?.lemma ?? "")
@@ -119,11 +117,7 @@ private struct SenseSection: View {
                 TextField("your translation or mnemonic", text: $sense.translation, axis: .vertical)
                     .lineLimit(1...4)
             }
-            if let stats {
-                Text("asked \(stats.timesSeen) · correct \(stats.timesCorrect)")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
+            SenseStatsLine(stats: stats)
             Button("Delete sense", role: .destructive, action: onDelete)
         } header: {
             HStack {
