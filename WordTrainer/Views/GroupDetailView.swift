@@ -45,6 +45,15 @@ struct GroupDetailView: View {
             bottomCTAs
         }
         .navigationTitle(group.name)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    GroupStatsView(groupName: group.name)
+                } label: {
+                    Label("Stats", systemImage: "chart.bar.xaxis")
+                }
+            }
+        }
         .navigationDestination(for: Word.self) { word in
             WordDetailView(word: word)
         }
