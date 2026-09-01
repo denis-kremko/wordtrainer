@@ -714,7 +714,7 @@ private struct SenseTextView: View {
         VStack(alignment: .leading, spacing: 3) {
             if let pos {
                 Text(pos)
-                    .font(.caption2.weight(.semibold))
+                    .font(.caption2.weight(.bold))
                     .textCase(.uppercase)
                     .foregroundStyle(.tint)
             }
