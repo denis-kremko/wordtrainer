@@ -235,12 +235,16 @@ struct SenseSelectionView: View {
                 if result.exact.isEmpty {
                     NoSensesNote(lemma: lemma)
                 } else {
-                    Section("Dict senses") {
-                        ForEach(result.exact) { entry in
+                    ForEach(Array(result.exact.enumerated()), id: \.element.id) { index, entry in
+                        Section {
                             senseRow(entry)
+                        } header: {
+                            if index == 0 {
+                                Text("Dict senses")
+                            }
                         }
+                        .cardSurfaceRow()
                     }
-                    .cardSurfaceRow()
                 }
 
                 customSensesSection
@@ -250,6 +254,7 @@ struct SenseSelectionView: View {
         }
         .navigationTitle(lemma)
         .navigationBarTitleDisplayMode(.inline)
+        .listSectionSpacing(12)
         .appScreen()
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
@@ -340,7 +345,7 @@ struct SenseSelectionView: View {
                                     example: example, in: context)
                                 selectedCustom.insert(sense.id)
                             },
-                            onDelete: deleteCustomSenses) { sense in
+                            onDelete: deleteCustomSense) { sense in
             Button {
                 selectedCustom.toggle(sense.id)
             } label: {
@@ -363,12 +368,9 @@ struct SenseSelectionView: View {
         .padding(.vertical, 2)
     }
 
-    private func deleteCustomSenses(at offsets: IndexSet) {
-        let items = customSenses
-        for i in offsets {
-            selectedCustom.remove(items[i].id)
-            context.delete(items[i])
-        }
+    private func deleteCustomSense(_ sense: CustomSense) {
+        selectedCustom.remove(sense.id)
+        context.delete(sense)
     }
 
     // MARK: - Add
@@ -459,12 +461,16 @@ struct WordPageView: View {
                 if result.exact.isEmpty {
                     NoSensesNote(lemma: lemma)
                 } else {
-                    Section("Dict senses") {
-                        ForEach(result.exact) { entry in
+                    ForEach(Array(result.exact.enumerated()), id: \.element.id) { index, entry in
+                        Section {
                             senseRow(entry, added: added)
+                        } header: {
+                            if index == 0 {
+                                Text("Dict senses")
+                            }
                         }
+                        .cardSurfaceRow()
                     }
-                    .cardSurfaceRow()
                 }
 
                 customSensesSection
@@ -476,6 +482,7 @@ struct WordPageView: View {
         }
         .navigationTitle(lemma)
         .navigationBarTitleDisplayMode(.inline)
+        .listSectionSpacing(12)
         .appScreen()
         // Reload only for a real lemma change, not on pop-back re-appearance.
         .task(id: lemma) {
@@ -576,12 +583,7 @@ struct WordPageView: View {
                                 CustomSense.findOrInsert(lemma: lemma, definition: definition,
                                                          example: example, in: context)
                             },
-                            onDelete: { offsets in
-                                let items = customSenses
-                                for i in offsets {
-                                    context.delete(items[i])
-                                }
-                            }) { sense in
+                            onDelete: { context.delete($0) }) { sense in
             SenseTextView(definition: sense.definition, example: sense.example,
                           linkedExcluding: lemma)
         }
@@ -645,34 +647,48 @@ private struct ContainsSection: View {
     }
 }
 
-// One "Custom senses" section for both word pages; only the row body and
-// the delete behavior differ.
+// One "Custom senses" block for both word pages; only the row body and the
+// delete behavior differ. A card per sense; swipes need cardRow (a plain row
+// background unmasks square corners mid-swipe).
 private struct CustomSensesSection<Row: View>: View {
     let senses: [CustomSense]
     @Binding var isExpanded: Bool
     @Binding var definition: String
     @Binding var example: String
     let onAdd: (String, String) -> Void
-    var onDelete: ((IndexSet) -> Void)? = nil
+    var onDelete: ((CustomSense) -> Void)? = nil
     @ViewBuilder let row: (CustomSense) -> Row
 
     var body: some View {
-        Section("Custom senses") {
-            if senses.isEmpty {
-                Text("No custom senses yet")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(senses) { sense in
-                    row(sense)
+        ForEach(Array(senses.enumerated()), id: \.element.id) { index, sense in
+            Section {
+                row(sense)
+                    .cardRow()
+                    .swipeActions {
+                        if let onDelete {
+                            Button(role: .destructive) {
+                                onDelete(sense)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    }
+            } header: {
+                if index == 0 {
+                    Text("Custom senses")
                 }
-                .onDelete(perform: onDelete)
             }
+        }
 
+        Section {
             AddCustomSenseForm(isExpanded: $isExpanded,
                                definition: $definition,
                                example: $example,
                                onAdd: onAdd)
+        } header: {
+            if senses.isEmpty {
+                Text("Custom senses")
+            }
         }
         .cardSurfaceRow()
     }
