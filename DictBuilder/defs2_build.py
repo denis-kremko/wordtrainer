@@ -162,7 +162,7 @@ def cmd_gate(workdir, db_path):
     conn = sqlite3.connect(db_path)
     heads = {}
     clean, rejected = [], []
-    counts = {"freq_reject": 0, "chain_reject": 0}
+    counts = {"freq_reject": 0, "chain_reject": 0, "thin_reject": 0}
     for line in open(wd / "clean_verdicts.jsonl"):
         verdict = json.loads(line)
         lemma = verdict["id"].rsplit("|", 1)[0]
@@ -174,6 +174,10 @@ def cmd_gate(workdir, db_path):
                 continue
             if is_chain(v["d"]):
                 counts["chain_reject"] += 1
+                ok = False
+                break
+            if len(content_tokens(v["d"])) < 4:
+                counts["thin_reject"] = counts.get("thin_reject", 0) + 1
                 ok = False
                 break
             if hard_words(v["d"], heads[lemma], threshold=10000):

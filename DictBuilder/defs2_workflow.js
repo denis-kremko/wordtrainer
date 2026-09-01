@@ -54,17 +54,31 @@ Verdict actions, one per sense, same order as the input:
 
 FINAL SELF-CHECK on every rewrite before you submit: (1) it contains NO form of the headword and no word sharing its root or first 4+ letters; (2) no semicolon-separated bare synonyms and no trailing "; word." tail; (3) every content word is an everyday word a beginner knows.
 
-Groups are {id: "headword|pos", s: [{i, d (definition), e (usage example), p?}]}. Every sense id of every group must appear exactly once. Submit the result ONLY via StructuredOutput as {verdicts:[{id, v:[...]}]} - do not write any files, do not run any other commands.`
+Groups are {id: "headword|pos", s: [{i, d (definition), e (usage example), p?}]}. A group may carry "note" - feedback on why its previous rewrite attempt was rejected; treat the note as a hard requirement and fix exactly that problem. Every sense id of every group must appear exactly once. Submit the result ONLY via StructuredOutput as {verdicts:[{id, v:[...]}]} - do not write any files, do not run any other commands.`
 
 const nums = Array.from({ length: args.count }, (_, i) => String(args.start + i).padStart(4, '0'))
 
+// sonnet hangs forever emitting LONG StructuredOutput arguments (probed 2026-09-01);
+// noschema mode returns the same JSON as plain text instead.
+const useSchema = !args.noschema
+const TEXT_TAIL = ' Instead of StructuredOutput, return ONLY the raw JSON object as your final message text - no markdown fences, no commentary - with EXACTLY this nesting: {"verdicts":[{"id":"<group id>","v":[{"i":<sense id>,"a":"keep|rw|del","d":"<rewrite, only when a=rw>"}]}]} - one verdicts entry per group, one v entry per sense.'
+
 phase('Rewrite')
 const results = await parallel(nums.map(n => () => agent(
-  `${RULES}\n\nNow Read the file ${args.workdir}/batch_${n}.json (your one allowed tool call) and produce the verdicts.`,
-  { label: `simp:${n}`, phase: 'Rewrite', schema: VERDICTS, model: args.model || 'haiku', effort: args.effort || undefined }
+  `${RULES}\n\nNow Read the file ${args.workdir}/batch_${n}.json (your one allowed tool call) and produce the verdicts.${useSchema ? '' : TEXT_TAIL}`,
+  { label: `simp:${n}`, phase: 'Rewrite', ...(useSchema ? { schema: VERDICTS } : {}), model: args.model === 'inherit' ? undefined : (args.model || 'haiku'), effort: args.effort || undefined }
 )))
 
-const ok = results.filter(Boolean)
+let unparsed = 0
+const ok = results.filter(Boolean).map(r => {
+  if (typeof r !== 'string') return r
+  try {
+    return JSON.parse(r.slice(r.indexOf('{'), r.lastIndexOf('}') + 1))
+  } catch (e) {
+    unparsed += 1
+    return null
+  }
+}).filter(Boolean)
 let groups = 0, kept = 0, rewritten = 0, deleted = 0
 for (const r of ok) {
   for (const g of r.verdicts) {
@@ -76,5 +90,5 @@ for (const r of ok) {
     }
   }
 }
-log(`${ok.length}/${nums.length} batches, ${groups} groups`)
-return { batches: nums.length, completed: ok.length, groups, kept, rewritten, deleted }
+log(`${ok.length}/${nums.length} batches, ${groups} groups${unparsed ? `, ${unparsed} unparsed` : ''}`)
+return { batches: nums.length, completed: ok.length, unparsed, groups, kept, rewritten, deleted }
