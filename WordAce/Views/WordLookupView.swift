@@ -236,11 +236,8 @@ struct SenseSelectionView: View {
                     NoSensesNote(lemma: lemma)
                 } else {
                     Section("Dict senses") {
-                        ForEach(posGroups(result.exact, lemma: lemma), id: \.name) { group in
-                            POSHeader(name: group.name)
-                            ForEach(group.entries) { entry in
-                                senseRow(entry)
-                            }
+                        ForEach(result.exact) { entry in
+                            senseRow(entry)
                         }
                     }
                     .cardSurfaceRow()
@@ -314,7 +311,8 @@ struct SenseSelectionView: View {
             } label: {
                 checkRow(isOn: selected.contains(entry.id),
                          definition: entry.definition,
-                         example: entry.example)
+                         example: entry.example,
+                         pos: PartOfSpeech.displayName(entry.partOfSpeech, lemma: lemma))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
             }
@@ -354,11 +352,13 @@ struct SenseSelectionView: View {
         }
     }
 
-    private func checkRow(isOn: Bool, definition: String, example: String) -> some View {
+    private func checkRow(isOn: Bool, definition: String, example: String,
+                          pos: String? = nil) -> some View {
         HStack(alignment: .top) {
             Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(isOn ? Color.accentColor : Color.secondary)
-            SenseTextView(definition: definition, example: example, linkedExcluding: nil)
+            SenseTextView(definition: definition, example: example, linkedExcluding: nil,
+                          pos: pos)
         }
         .padding(.vertical, 2)
     }
@@ -460,11 +460,8 @@ struct WordPageView: View {
                     NoSensesNote(lemma: lemma)
                 } else {
                     Section("Dict senses") {
-                        ForEach(posGroups(result.exact, lemma: lemma), id: \.name) { group in
-                            POSHeader(name: group.name)
-                            ForEach(group.entries) { entry in
-                                senseRow(entry, added: added)
-                            }
+                        ForEach(result.exact) { entry in
+                            senseRow(entry, added: added)
                         }
                     }
                     .cardSurfaceRow()
@@ -526,7 +523,8 @@ struct WordPageView: View {
     private func senseRow(_ entry: DictionaryService.Entry, added: Set<String>) -> some View {
         HStack(alignment: .top, spacing: 8) {
             SenseTextView(definition: entry.definition, example: entry.example,
-                          linkedExcluding: lemma)
+                          linkedExcluding: lemma,
+                          pos: PartOfSpeech.displayName(entry.partOfSpeech, lemma: lemma))
                 .frame(maxWidth: .infinity, alignment: .leading)
             VStack(spacing: 10) {
                 Button {
@@ -704,40 +702,22 @@ private struct AddCustomSenseForm: View {
     }
 }
 
-private func posGroups(_ entries: [DictionaryService.Entry],
-                       lemma: String) -> [(name: String, entries: [DictionaryService.Entry])] {
-    var order: [String] = []
-    var grouped: [String: [DictionaryService.Entry]] = [:]
-    for entry in entries {
-        let name = PartOfSpeech.displayName(entry.partOfSpeech, lemma: lemma)
-        if grouped[name] == nil { order.append(name) }
-        grouped[name, default: []].append(entry)
-    }
-    return order.map { (name: $0, entries: grouped[$0] ?? []) }
-}
-
-private struct POSHeader: View {
-    let name: String
-
-    var body: some View {
-        Text(name)
-            .font(.footnote.weight(.semibold))
-            .textCase(.uppercase)
-            .foregroundStyle(.tint)
-            .padding(.top, 4)
-            .listRowSeparator(.hidden, edges: .top)
-    }
-}
-
 // Word links only when linkedExcluding is set: in selection rows word taps
 // would fight the checkbox.
 private struct SenseTextView: View {
     let definition: String
     let example: String
     let linkedExcluding: String?
+    var pos: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
+            if let pos {
+                Text(pos)
+                    .font(.caption2.weight(.semibold))
+                    .textCase(.uppercase)
+                    .foregroundStyle(.tint)
+            }
             line(definition, color: .primary)
                 .font(.subheadline)
                 .foregroundStyle(.primary)
