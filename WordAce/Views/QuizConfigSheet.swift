@@ -6,6 +6,7 @@ struct QuizConfigSheet: View {
     let group: WordGroup
 
     @AppStorage("quizIncludeLearned") private var includeLearned = false
+    @AppStorage("quizPromptMode") private var promptModeRaw = QuizMode.definitionToEn.rawValue
     @State private var sampleSize: Double = 10
     @State private var useAll: Bool = false
     @State private var startQuiz = false
@@ -19,20 +20,43 @@ struct QuizConfigSheet: View {
         SenseStats.statusKeys(statused)
     }
 
+    private var promptMode: QuizMode {
+        QuizMode(rawValue: promptModeRaw) ?? .definitionToEn
+    }
+
     // Words QuizBuilder would actually accept. Cached in state: the full
     // walk must not re-run on every slider tick.
     @State private var eligible = 0
 
     private func computeEligible() -> Int {
         let keys = statusedKeys
-        return group.words.filter {
-            !$0.quizCandidates(includeLearned: includeLearned, statused: keys).isEmpty
+        let mode = promptMode
+        return group.words.filter { word in
+            var candidates = word.quizCandidates(includeLearned: includeLearned, statused: keys)
+            if mode == .translationToEn {
+                candidates = candidates.filter { $0.translation?.isEmpty == false }
+            }
+            return !candidates.isEmpty
         }.count
     }
 
     var body: some View {
         NavigationStack {
             Form {
+                Section("Quiz by") {
+                    HStack(spacing: 12) {
+                        CapsuleButton(title: "Definitions",
+                                      isOn: promptMode == .definitionToEn) {
+                            promptModeRaw = QuizMode.definitionToEn.rawValue
+                        }
+                        CapsuleButton(title: "Translations",
+                                      isOn: promptMode == .translationToEn) {
+                            promptModeRaw = QuizMode.translationToEn.rawValue
+                        }
+                    }
+                }
+                .cardSurfaceRow()
+
                 if eligible == 0 {
                     Section {
                         Text("Nothing to quiz: every sense in this group is turned off or already learned.")
@@ -79,6 +103,10 @@ struct QuizConfigSheet: View {
                 eligible = computeEligible()
                 sampleSize = min(sampleSize, Double(max(eligible, 1)))
             }
+            .onChange(of: promptModeRaw) {
+                eligible = computeEligible()
+                sampleSize = min(sampleSize, Double(max(eligible, 1)))
+            }
             .navigationTitle("Quiz Setup")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -91,6 +119,7 @@ struct QuizConfigSheet: View {
                     BottomCTA(title: "Start quiz", systemImage: "play.fill") {
                         let size: Int? = useAll ? nil : Int(sampleSize)
                         questions = QuizBuilder.build(from: group.words, sampleSize: size,
+                                                      mode: promptMode,
                                                       includeLearned: includeLearned,
                                                       statusedKeys: statusedKeys)
                         startQuiz = true
@@ -98,7 +127,7 @@ struct QuizConfigSheet: View {
                 }
             }
             .navigationDestination(isPresented: $startQuiz) {
-                QuizRunnerView(questions: questions,
+                QuizRunnerView(questions: questions, mode: promptMode,
                                groupName: group.name, groupID: group.id.uuidString,
                                onFinished: { dismiss() })
             }

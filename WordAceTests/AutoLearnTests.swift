@@ -232,6 +232,38 @@ final class AutoLearnTests: XCTestCase {
                                          includeLearned: true, statusedKeys: keys).count, 1)
     }
 
+    func testTranslationModeSkipsUntranslatedSenses() throws {
+        let group = WordGroup(name: "a")
+        context.insert(group)
+        let bare = group.findOrCreateWord(lemma: "run", in: context)
+        bare.appendSenses(entries: [entry(1, "To move fast.")], customs: [], in: context)
+        let translated = group.findOrCreateWord(lemma: "walk", in: context)
+        translated.appendSenses(
+            entries: [DictionaryService.Entry(id: 2, partOfSpeech: "verb",
+                                              definition: "To move on foot.", example: "",
+                                              translation: "ходить")],
+            customs: [], in: context)
+
+        let questions = QuizBuilder.build(from: [bare, translated], sampleSize: nil,
+                                          mode: .translationToEn)
+        XCTAssertEqual(questions.count, 1)
+        XCTAssertEqual(questions[0].lemma, "walk")
+        XCTAssertEqual(questions[0].prompt, "ходить")
+        XCTAssertEqual(questions[0].expectedAnswer, "walk")
+    }
+
+    func testCustomSenseCarriesTranslationIntoWord() throws {
+        let group = WordGroup(name: "a")
+        context.insert(group)
+        let custom = CustomSense(lemma: "hazelnut", definition: "A round nut.",
+                                 translation: "фундук")
+        context.insert(custom)
+        let word = group.findOrCreateWord(lemma: "hazelnut", in: context)
+        word.appendSenses(entries: [], customs: [custom], in: context)
+
+        XCTAssertEqual(word.senses[0].translation, "фундук")
+    }
+
     func testBuilderNeverRevivesManuallyExcludedSense() throws {
         let word = wordInGroup("a", lemma: "run", definition: "To move fast.")
         word.senses[0].isEnabled = false  // no status: a deliberate exclusion

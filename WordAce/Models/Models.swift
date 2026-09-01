@@ -8,6 +8,8 @@ extension String {
 
     var isBlank: Bool { trimmed.isEmpty }
 
+    var nilIfEmpty: String? { isEmpty ? nil : self }
+
     // iOS smart punctuation types curly apostrophes; the app stores and
     // compares straight ones.
     var straightApostrophes: String {
@@ -196,6 +198,7 @@ extension Word {
             let clone = WordSense(partOfSpeech: sense.partOfSpeech,
                                   definition: sense.definition,
                                   example: sense.example,
+                                  translation: sense.translation,
                                   isEnabled: sense.isEnabled,
                                   isCustom: sense.isCustom,
                                   order: order)
@@ -282,13 +285,15 @@ final class CustomSense {
     var lemma: String = ""          // lowercased, trimmed
     var definition: String = ""
     var example: String = ""
+    var translation: String = ""
     var createdAt: Date = Date()
 
-    init(lemma: String, definition: String, example: String = "") {
+    init(lemma: String, definition: String, example: String = "", translation: String = "") {
         self.id = UUID()
         self.lemma = lemma
         self.definition = definition
         self.example = example
+        self.translation = translation
         self.createdAt = Date()
     }
 }
@@ -299,16 +304,20 @@ extension CustomSense {
     /// stored one instead of being silently discarded.
     @discardableResult
     static func findOrInsert(lemma rawLemma: String, definition: String, example: String,
-                             in context: ModelContext) -> CustomSense {
+                             translation: String = "", in context: ModelContext) -> CustomSense {
         let lemma = DictionaryService.normalize(rawLemma)
         let match = #Predicate<CustomSense> { $0.lemma == lemma && $0.definition == definition }
         if let existing = context.first(matching: match) {
             if !example.isEmpty && existing.example != example {
                 existing.example = example
             }
+            if !translation.isEmpty && existing.translation != translation {
+                existing.translation = translation
+            }
             return existing
         }
-        let sense = CustomSense(lemma: lemma, definition: definition, example: example)
+        let sense = CustomSense(lemma: lemma, definition: definition, example: example,
+                                translation: translation)
         context.insert(sense)
         return sense
     }
@@ -336,6 +345,7 @@ final class WordSense {
     var partOfSpeech: String = "custom"
     var definition: String = ""
     var example: String = ""
+    var translation: String? = nil
     var isEnabled: Bool = true
     var isCustom: Bool = false
     var order: Int = 0
@@ -344,10 +354,13 @@ final class WordSense {
 
     static let customPartOfSpeech = "custom"
 
-    init(partOfSpeech: String, definition: String, example: String = "", isEnabled: Bool = true, isCustom: Bool = false, order: Int = 0) {
+    init(partOfSpeech: String, definition: String, example: String = "",
+         translation: String? = nil, isEnabled: Bool = true, isCustom: Bool = false,
+         order: Int = 0) {
         self.partOfSpeech = partOfSpeech
         self.definition = definition
         self.example = example
+        self.translation = translation
         self.isEnabled = isEnabled
         self.isCustom = isCustom
         self.order = order
@@ -357,12 +370,14 @@ final class WordSense {
 extension WordSense {
     convenience init(entry: DictionaryService.Entry, isEnabled: Bool = true, order: Int) {
         self.init(partOfSpeech: entry.partOfSpeech, definition: entry.definition,
-                  example: entry.example, isEnabled: isEnabled, order: order)
+                  example: entry.example, translation: entry.translation,
+                  isEnabled: isEnabled, order: order)
     }
 
     convenience init(custom: CustomSense, order: Int) {
         self.init(partOfSpeech: WordSense.customPartOfSpeech, definition: custom.definition,
-                  example: custom.example, isCustom: true, order: order)
+                  example: custom.example, translation: custom.translation.nilIfEmpty,
+                  isCustom: true, order: order)
     }
 }
 

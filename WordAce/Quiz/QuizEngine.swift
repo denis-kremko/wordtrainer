@@ -2,18 +2,29 @@ import Foundation
 
 enum QuizMode: String {
     case definitionToEn
+    case translationToEn
 
-    var title: String { "Definition → EN" }
-    var shortTitle: String { "Def → EN" }
+    var title: String {
+        self == .definitionToEn ? "Definition → EN" : "Translation → EN"
+    }
+    var shortTitle: String {
+        self == .definitionToEn ? "Def → EN" : "Tr → EN"
+    }
+    var promptLabel: String {
+        self == .definitionToEn ? "Definition" : "Translation"
+    }
 }
 
 struct QuizQuestion: Identifiable {
     let id = UUID()
+    let mode: QuizMode
     let lemma: String
     let sense: WordSense
     let hint: String
 
-    var prompt: String { sense.definition }
+    var prompt: String {
+        mode == .translationToEn ? (sense.translation ?? "") : sense.definition
+    }
     var expectedAnswer: String { lemma }
 }
 
@@ -114,6 +125,7 @@ enum QuizBuilder {
     // learned/knew status — the ones includeLearned pulls back into rotation
     // (manually excluded senses stay out either way).
     static func build(from words: [Word], sampleSize: Int?,
+                      mode: QuizMode = .definitionToEn,
                       includeLearned: Bool = false,
                       statusedKeys: Set<String> = []) -> [QuizQuestion] {
         var questions: [QuizQuestion] = []
@@ -121,11 +133,15 @@ enum QuizBuilder {
         for word in words.shuffled() {
             if let n = sampleSize, n > 0, questions.count >= n { break }
 
-            let candidates = word.quizCandidates(includeLearned: includeLearned,
+            var candidates = word.quizCandidates(includeLearned: includeLearned,
                                                  statused: statusedKeys)
+            if mode == .translationToEn {
+                candidates = candidates.filter { $0.translation?.isEmpty == false }
+            }
             guard let sense = candidates.randomElement() else { continue }
 
             questions.append(QuizQuestion(
+                mode: mode,
                 lemma: word.lemma,
                 sense: sense,
                 // Custom senses carry an internal sentinel, not a real POS.

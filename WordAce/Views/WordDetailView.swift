@@ -258,6 +258,14 @@ private struct SenseSection: View {
                 LinkedText(text: sense.definition, color: .primary, excluding: excludedLemma)
                     .font(.subheadline)
             }
+            if let translation = sense.translation, !translation.isEmpty {
+                HStack(spacing: 6) {
+                    Text("Translation:")
+                        .foregroundStyle(Color.secondary)
+                    SpoilerText(text: translation)
+                }
+                .font(.footnote)
+            }
             if !sense.example.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Example").font(.caption).foregroundStyle(.secondary)

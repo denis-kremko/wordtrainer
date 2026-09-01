@@ -5,6 +5,7 @@ struct QuizRunnerView: View {
     @Environment(\.modelContext) private var context
 
     let questions: [QuizQuestion]
+    let mode: QuizMode
     let groupName: String
     let groupID: String
     // Closes the whole quiz cover: a plain dismiss() here would only pop back
@@ -65,7 +66,7 @@ struct QuizRunnerView: View {
             ProgressView(value: Double(index), total: Double(questions.count))
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("Definition")
+                Text(mode.promptLabel)
                     .font(.caption).foregroundStyle(.secondary)
                 // Long definitions scroll inside the plate: with the keyboard
                 // permanently up, the answer controls below must stay reachable.
@@ -291,7 +292,7 @@ struct QuizRunnerView: View {
     // user chooses to keep this quiz.
     private func saveStats() {
         let session = QuizSession(
-            mode: QuizMode.definitionToEn.rawValue,
+            mode: mode.rawValue,
             groupName: groupName,
             groupID: groupID,
             totalCount: results.count,

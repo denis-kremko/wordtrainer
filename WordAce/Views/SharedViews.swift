@@ -475,6 +475,123 @@ struct DisclosureRow: View {
 }
 
 
+// Telegram-style spoiler: the word keeps its exact place in the line (the
+// text is always laid out, just transparent) under a veil of shimmering dust
+// that scatters away on tap; tapping again gathers it back.
+struct SpoilerText: View {
+    let text: String
+    @State private var revealed = false
+    @State private var revealedAt: Date? = nil
+    // Fully dissolved: pause the timeline so settled rows cost nothing.
+    @State private var settled = false
+
+    private static let dissolve: TimeInterval = 0.45
+
+    var body: some View {
+        // The timeline only runs during the dissolve itself: the resting
+        // veil is static white dust.
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0,
+                                paused: revealedAt == nil || settled)) { timeline in
+            let progress = dissolveProgress(at: timeline.date)
+            Text(text)
+                .opacity(progress)
+                // The frame comes BEFORE the overlay so the veil covers the
+                // widened slot: short words must not betray their length.
+                .frame(minWidth: 60, alignment: .leading)
+                .overlay {
+                    SpoilerDust(dissolve: progress)
+                        .allowsHitTesting(false)
+                }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if revealed {
+                revealed = false
+                revealedAt = nil
+                settled = false
+            } else {
+                revealed = true
+                revealedAt = Date()
+            }
+        }
+        .task(id: revealed) {
+            guard revealed else { return }
+            try? await Task.sleep(for: .seconds(Self.dissolve + 0.1))
+            if !Task.isCancelled && revealed {
+                settled = true
+            }
+        }
+    }
+
+    private func dissolveProgress(at now: Date) -> Double {
+        guard revealed, let revealedAt else { return 0 }
+        return min(1, now.timeIntervalSince(revealedAt) / Self.dissolve)
+    }
+}
+
+// The dust itself: deterministic plain-white particles that drift outward
+// and fade as the dissolve progresses.
+struct SpoilerDust: View {
+    let dissolve: Double
+
+    var body: some View {
+        Canvas { context, size in
+            var rng = SplitMix(seed: 0x5EED)
+            let base = 0.85 * (1 - dissolve)
+            guard base > 0.01 else { return }
+
+            // Smoothstep to fully transparent at the border.
+            func fade(_ distance: CGFloat, _ feather: CGFloat) -> Double {
+                let t = max(0, min(1, distance / feather))
+                return Double(t * t * (3 - 2 * t))
+            }
+
+            // Stratified jittered grid instead of pure random: even coverage,
+            // no bald patches.
+            let cell: CGFloat = 3.5
+            let cols = max(1, Int(size.width / cell))
+            let rows = max(1, Int(size.height / cell))
+            let cellW = size.width / CGFloat(cols)
+            let cellH = size.height / CGFloat(rows)
+            for row in 0..<rows {
+                for col in 0..<cols {
+                    let baseX = (CGFloat(col) + 0.15 + 0.7 * rng.next()) * cellW
+                    let baseY = (CGFloat(row) + 0.15 + 0.7 * rng.next()) * cellH
+                    let radius = 0.6 + rng.next() * 0.8
+                    let angle = rng.next() * 2 * .pi
+                    let flight = dissolve * (10 + rng.next() * 22)
+                    let x = baseX + cos(angle) * flight
+                    let y = baseY + sin(angle) * flight
+                    let xFade = fade(min(baseX, size.width - baseX), 16)
+                    let yFade = fade(min(baseY, size.height - baseY), max(4, size.height * 0.4))
+                    let alpha = base * xFade * yFade * (0.7 + 0.3 * rng.next())
+                    guard alpha > 0.02 else { continue }
+                    context.fill(
+                        Path(ellipseIn: CGRect(x: x - radius, y: y - radius,
+                                               width: radius * 2, height: radius * 2)),
+                        with: .color(.white.opacity(alpha)))
+                }
+            }
+        }
+    }
+}
+
+// Deterministic per-frame randomness: the same seed must place the same
+// particles on every redraw, or the dust would boil chaotically.
+struct SplitMix {
+    private var state: UInt64
+    init(seed: UInt64) { state = seed }
+
+    mutating func next() -> Double {
+        state = state &+ 0x9E3779B97F4A7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
+        z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
+        z = z ^ (z >> 31)
+        return Double(z >> 11) / Double(UInt64.max >> 11)
+    }
+}
+
 // Rounded stat card for the profile and stats grids.
 struct StatTile: View {
     let value: String

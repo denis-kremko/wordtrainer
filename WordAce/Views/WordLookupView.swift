@@ -228,6 +228,7 @@ struct SenseSelectionView: View {
     @State private var addFormExpanded: Bool = false
     @State private var newCustomDefinition: String = ""
     @State private var newCustomExample: String = ""
+    @State private var newCustomTranslation: String = ""
     @State private var editingEntry: DictionaryService.Entry? = nil
     @State private var pushedSelection: WordPage? = nil
     @State private var pushedBrowse: WordPage? = nil
@@ -300,9 +301,10 @@ struct SenseSelectionView: View {
             WordPageView(lemma: page.lemma)
         }
         .sheet(item: $editingEntry) { entry in
-            ModifySenseSheet(entry: entry) { definition, example in
+            ModifySenseSheet(entry: entry) { definition, example, translation in
                 let sense = CustomSense.findOrInsert(lemma: lemma, definition: definition,
-                                                     example: example, in: context)
+                                                     example: example, translation: translation,
+                                                     in: context)
                 selectedCustom.insert(sense.id)
             }
             .presentationDetents([.medium, .large])
@@ -351,10 +353,12 @@ struct SenseSelectionView: View {
                             isExpanded: $addFormExpanded,
                             definition: $newCustomDefinition,
                             example: $newCustomExample,
-                            onAdd: { definition, example in
+                            translation: $newCustomTranslation,
+                            onAdd: { definition, example, translation in
                                 let sense = CustomSense.findOrInsert(
                                     lemma: lemma, definition: definition,
-                                    example: example, in: context)
+                                    example: example, translation: translation,
+                                    in: context)
                                 selectedCustom.insert(sense.id)
                             },
                             onDelete: deleteCustomSense) { sense in
@@ -363,7 +367,8 @@ struct SenseSelectionView: View {
             } label: {
                 checkRow(isOn: selectedCustom.contains(sense.id),
                          definition: sense.definition,
-                         example: sense.example)
+                         example: sense.example,
+                         translation: sense.translation.nilIfEmpty)
             }
             .buttonStyle(.plain)
         }
@@ -419,6 +424,7 @@ struct SenseSelectionView: View {
             let draft = CustomSense.findOrInsert(
                 lemma: lemma, definition: draftDefinition,
                 example: newCustomExample.trimmed,
+                translation: newCustomTranslation.trimmed,
                 in: context)
             if !customs.contains(where: { $0.id == draft.id }) {
                 customs.append(draft)
@@ -454,6 +460,7 @@ struct WordPageView: View {
     @State private var addFormExpanded: Bool = false
     @State private var newCustomDefinition: String = ""
     @State private var newCustomExample: String = ""
+    @State private var newCustomTranslation: String = ""
     @State private var editingEntry: DictionaryService.Entry? = nil
     @State private var newGroupFor: DictionaryService.Entry? = nil
 
@@ -515,9 +522,10 @@ struct WordPageView: View {
             pushedWord = WordPage(lemma: DictionaryService.normalize(word))
         })
         .sheet(item: $editingEntry) { entry in
-            ModifySenseSheet(entry: entry) { definition, example in
+            ModifySenseSheet(entry: entry) { definition, example, translation in
                 CustomSense.findOrInsert(lemma: lemma, definition: definition,
-                                         example: example, in: context)
+                                         example: example, translation: translation,
+                                         in: context)
             }
             .presentationDetents([.medium, .large])
         }
@@ -592,13 +600,16 @@ struct WordPageView: View {
                             isExpanded: $addFormExpanded,
                             definition: $newCustomDefinition,
                             example: $newCustomExample,
-                            onAdd: { definition, example in
+                            translation: $newCustomTranslation,
+                            onAdd: { definition, example, translation in
                                 CustomSense.findOrInsert(lemma: lemma, definition: definition,
-                                                         example: example, in: context)
+                                                         example: example, translation: translation,
+                                                         in: context)
                             },
                             onDelete: { context.delete($0) }) { sense in
             SenseTextView(definition: sense.definition, example: sense.example,
-                          linkedExcluding: lemma)
+                          linkedExcluding: lemma,
+                          translation: sense.translation.nilIfEmpty)
         }
     }
 }
@@ -670,7 +681,8 @@ private struct CustomSensesSection<Row: View>: View {
     @Binding var isExpanded: Bool
     @Binding var definition: String
     @Binding var example: String
-    let onAdd: (String, String) -> Void
+    @Binding var translation: String
+    let onAdd: (String, String, String) -> Void
     var onDelete: ((CustomSense) -> Void)? = nil
     @ViewBuilder let row: (CustomSense) -> Row
 
@@ -699,6 +711,7 @@ private struct CustomSensesSection<Row: View>: View {
             AddCustomSenseForm(isExpanded: $isExpanded,
                                definition: $definition,
                                example: $example,
+                               translation: $translation,
                                onAdd: onAdd)
         } header: {
             if senses.isEmpty {
@@ -713,7 +726,8 @@ private struct AddCustomSenseForm: View {
     @Binding var isExpanded: Bool
     @Binding var definition: String
     @Binding var example: String
-    let onAdd: (String, String) -> Void
+    @Binding var translation: String
+    let onAdd: (String, String, String) -> Void
 
     var body: some View {
         DisclosureGroup("Add my own definition", isExpanded: $isExpanded) {
@@ -721,132 +735,17 @@ private struct AddCustomSenseForm: View {
                 .lineLimit(2...5)
             TextField("Example (optional)", text: $example, axis: .vertical)
                 .lineLimit(1...3)
+            TextField("Translation (optional)", text: $translation)
             CapsuleButton(title: "Add", isDisabled: definition.isBlank) {
                 let trimmed = definition.trimmed
                 guard !trimmed.isEmpty else { return }
-                onAdd(trimmed, example.trimmed)
+                onAdd(trimmed, example.trimmed, translation.trimmed)
                 definition = ""
                 example = ""
+                translation = ""
             }
             .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
         }
-    }
-}
-
-// Telegram-style spoiler: the word keeps its exact place in the line (the
-// text is always laid out, just transparent) under a veil of shimmering dust
-// that scatters away on tap; tapping again gathers it back.
-private struct SpoilerText: View {
-    let text: String
-    @State private var revealed = false
-    @State private var revealedAt: Date? = nil
-    // Fully dissolved: pause the timeline so settled rows cost nothing.
-    @State private var settled = false
-
-    private static let dissolve: TimeInterval = 0.45
-
-    var body: some View {
-        // The timeline only runs during the dissolve itself: the resting
-        // veil is static white dust.
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0,
-                                paused: revealedAt == nil || settled)) { timeline in
-            let progress = dissolveProgress(at: timeline.date)
-            Text(text)
-                .opacity(progress)
-                // The frame comes BEFORE the overlay so the veil covers the
-                // widened slot: short words must not betray their length.
-                .frame(minWidth: 60, alignment: .leading)
-                .overlay {
-                    SpoilerDust(dissolve: progress)
-                        .allowsHitTesting(false)
-                }
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if revealed {
-                revealed = false
-                revealedAt = nil
-                settled = false
-            } else {
-                revealed = true
-                revealedAt = Date()
-            }
-        }
-        .task(id: revealed) {
-            guard revealed else { return }
-            try? await Task.sleep(for: .seconds(Self.dissolve + 0.1))
-            if !Task.isCancelled && revealed {
-                settled = true
-            }
-        }
-    }
-
-    private func dissolveProgress(at now: Date) -> Double {
-        guard revealed, let revealedAt else { return 0 }
-        return min(1, now.timeIntervalSince(revealedAt) / Self.dissolve)
-    }
-}
-
-// The dust itself: deterministic plain-white particles that drift outward
-// and fade as the dissolve progresses.
-private struct SpoilerDust: View {
-    let dissolve: Double
-
-    var body: some View {
-        Canvas { context, size in
-            var rng = SplitMix(seed: 0x5EED)
-            let base = 0.85 * (1 - dissolve)
-            guard base > 0.01 else { return }
-
-            // Smoothstep to fully transparent at the border.
-            func fade(_ distance: CGFloat, _ feather: CGFloat) -> Double {
-                let t = max(0, min(1, distance / feather))
-                return Double(t * t * (3 - 2 * t))
-            }
-
-            // Stratified jittered grid instead of pure random: even coverage,
-            // no bald patches.
-            let cell: CGFloat = 3.5
-            let cols = max(1, Int(size.width / cell))
-            let rows = max(1, Int(size.height / cell))
-            let cellW = size.width / CGFloat(cols)
-            let cellH = size.height / CGFloat(rows)
-            for row in 0..<rows {
-                for col in 0..<cols {
-                    let baseX = (CGFloat(col) + 0.15 + 0.7 * rng.next()) * cellW
-                    let baseY = (CGFloat(row) + 0.15 + 0.7 * rng.next()) * cellH
-                    let radius = 0.6 + rng.next() * 0.8
-                    let angle = rng.next() * 2 * .pi
-                    let flight = dissolve * (10 + rng.next() * 22)
-                    let x = baseX + cos(angle) * flight
-                    let y = baseY + sin(angle) * flight
-                    let xFade = fade(min(baseX, size.width - baseX), 16)
-                    let yFade = fade(min(baseY, size.height - baseY), max(4, size.height * 0.4))
-                    let alpha = base * xFade * yFade * (0.7 + 0.3 * rng.next())
-                    guard alpha > 0.02 else { continue }
-                    context.fill(
-                        Path(ellipseIn: CGRect(x: x - radius, y: y - radius,
-                                               width: radius * 2, height: radius * 2)),
-                        with: .color(.white.opacity(alpha)))
-                }
-            }
-        }
-    }
-}
-
-// Deterministic per-frame randomness: the same seed must place the same
-// particles on every redraw, or the dust would boil chaotically.
-private struct SplitMix {
-    private var state: UInt64
-    init(seed: UInt64) { state = seed }
-
-    mutating func next() -> Double {
-        state = state &+ 0x9E3779B97F4A7C15
-        var z = state
-        z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
-        z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
-        z = z ^ (z >> 31)
-        return Double(z >> 11) / Double(UInt64.max >> 11)
     }
 }
 
@@ -948,16 +847,18 @@ private struct ModifySenseSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let entry: DictionaryService.Entry
-    let onSave: (String, String) -> Void
+    let onSave: (String, String, String) -> Void
 
     @State private var definition: String
     @State private var example: String
+    @State private var translation: String
 
-    init(entry: DictionaryService.Entry, onSave: @escaping (String, String) -> Void) {
+    init(entry: DictionaryService.Entry, onSave: @escaping (String, String, String) -> Void) {
         self.entry = entry
         self.onSave = onSave
         _definition = State(initialValue: entry.definition)
         _example = State(initialValue: entry.example)
+        _translation = State(initialValue: entry.translation ?? "")
     }
 
     var body: some View {
@@ -971,6 +872,10 @@ private struct ModifySenseSheet: View {
                 Section("Example (optional)") {
                     TextField("example sentence", text: $example, axis: .vertical)
                         .lineLimit(1...4)
+                }
+                .cardSurfaceRow()
+                Section("Translation (optional)") {
+                    TextField("перевод", text: $translation)
                 }
                 .cardSurfaceRow()
                 Section {
@@ -991,7 +896,8 @@ private struct ModifySenseSheet: View {
                     Button("Save to custom") {
                         onSave(
                             definition.trimmed,
-                            example.trimmed
+                            example.trimmed,
+                            translation.trimmed
                         )
                         dismiss()
                     }
