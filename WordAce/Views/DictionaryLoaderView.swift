@@ -91,7 +91,9 @@ struct DictionaryLoaderView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 if DictionaryService.shared.isAvailable {
-                    Button("Continue with demo dictionary") { onReady() }
+                    // What opens is whatever openBest found: the previous full
+                    // dictionary when one is installed, the demo otherwise.
+                    Button("Continue offline") { onReady() }
                 }
             }
         }

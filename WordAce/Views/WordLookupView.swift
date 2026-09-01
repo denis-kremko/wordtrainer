@@ -34,9 +34,14 @@ struct WordLookupView: View {
 
     @State private var lemma: String = ""
     @State private var lookup: DictionaryService.LookupResult? = nil
-    @State private var searchedKey: String = ""
-    @State private var isSearching: Bool = false
     @State private var pushedPage: WordPage? = nil
+
+    // Both derive from (input, lookup.key); separate @State copies would have
+    // to be kept in sync at every bail-out path.
+    private var normalizedInput: String { DictionaryService.normalize(lemma) }
+    private var isSearching: Bool {
+        !normalizedInput.isEmpty && lookup?.key != normalizedInput
+    }
 
     var body: some View {
         switch mode {
@@ -106,15 +111,15 @@ struct WordLookupView: View {
             }
             .cardSurfaceRow()
 
-            if let result = lookup {
-                candidatesContent(result)
-            } else if !DictionaryService.shared.isAvailable {
+            if !DictionaryService.shared.isAvailable {
                 Section {
                     Text("Offline dictionary is not bundled. See README, step “Build the dictionary”.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
                 .cardSurfaceRow()
+            } else if let result = lookup {
+                candidatesContent(result)
             }
         }
         .appScreen()
@@ -124,7 +129,7 @@ struct WordLookupView: View {
 
     private func candidateList(_ result: DictionaryService.LookupResult) -> [String] {
         var out: [String] = []
-        if !result.exact.isEmpty { out.append(searchedKey) }
+        if !result.exact.isEmpty { out.append(result.key) }
         for f in result.formMatches where !out.contains(f) { out.append(f) }
         for t in result.translationMatches where !out.contains(t) { out.append(t) }
         for p in result.prefixMatches where !out.contains(p) { out.append(p) }
@@ -142,32 +147,26 @@ struct WordLookupView: View {
                     .foregroundStyle(.secondary)
             }
             .cardSurfaceRow()
-            Section {
-                useAnywayButton
-            }
-            .cardSurfaceRow()
         } else {
             CardSections("Results", items: candidates, id: { $0 }) { candidate in
                 DisclosureRow(title: candidate) { open(candidate) }
             }
-            // Prefix completions alone must not hide the escape hatch:
-            // the typed word itself is still absent from the dictionary.
-            // Translation hits do hide it - Cyrillic input is not a lemma draft.
-            if result.exact.isEmpty && result.formMatches.isEmpty
-                && result.substringMatches.isEmpty && result.translationMatches.isEmpty {
-                Section {
-                    useAnywayButton
-                }
-                .cardSurfaceRow()
-            }
         }
-    }
-
-    private var useAnywayButton: some View {
-        Button {
-            open(searchedKey)
-        } label: {
-            Label("Use “\(searchedKey)” anyway", systemImage: "square.and.pencil")
+        // Prefix completions alone must not hide the escape hatch: the typed
+        // word itself is still absent from the dictionary. Never for a stale
+        // key (its search is still in flight) or Cyrillic input - that is a
+        // translation query, not an English lemma draft.
+        if result.key == normalizedInput && !result.isCyrillic
+            && result.exact.isEmpty && result.formMatches.isEmpty
+            && result.substringMatches.isEmpty {
+            Section {
+                Button {
+                    open(result.key)
+                } label: {
+                    Label("Use “\(result.key)” anyway", systemImage: "square.and.pencil")
+                }
+            }
+            .cardSurfaceRow()
         }
     }
 
@@ -179,24 +178,18 @@ struct WordLookupView: View {
 
     // .task(id: lemma) cancels the previous run per keystroke; the sleep is the debounce.
     private func performSearch() async {
-        let key = DictionaryService.normalize(lemma)
+        let key = normalizedInput
         guard !key.isEmpty else {
             lookup = nil
-            searchedKey = ""
-            isSearching = false
             return
         }
+        // .task also re-fires on pop-back/tab-return with the lemma unchanged.
+        if lookup?.key == key { return }
         try? await Task.sleep(for: .milliseconds(250))
         guard !Task.isCancelled else { return }
-
-        isSearching = true
         let result = await DictionaryService.shared.search(key)
-        // Bail before touching state: a cancelled run must not clear the
-        // spinner its successor has already turned on.
         guard !Task.isCancelled else { return }
-        isSearching = false
         lookup = result
-        searchedKey = key
     }
 }
 

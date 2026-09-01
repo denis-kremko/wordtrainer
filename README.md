@@ -52,7 +52,7 @@
 URL и контрольная сумма зашиты в `WordAce/Info.plist` (ключи `DictionaryDownloadURL` и `DictionarySHA256`). Именно файл, а не build setting: механизм `INFOPLIST_KEY_*` работает только для известных системных ключей — кастомные Xcode молча выбрасывает. Сейчас там:
 
 ```
-https://github.com/denis-kremko/wordtrainer/releases/download/dict-v10/dictionary-v10.sqlite.gz
+https://github.com/denis-kremko/wordtrainer/releases/download/dict-v13/dictionary-v13.sqlite.gz
 ```
 
 ### Как выложить релиз (один раз)
@@ -68,19 +68,19 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v10/dictionar
      --norvig ../count_1w.txt --subs ../en_full.txt --review-queue /tmp/review_queue.jsonl
    gzip -9 /tmp/dictionary.sqlite   # приложение ждёт .gz — разжимает при первом запуске
    ```
-   Фильтры: частотник (Norvig top-100k ∪ OpenSubtitles top-250k по каждому content-слову леммы), 3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare (vulgar/derogatory-лексика включена намеренно — сериальный английский; offensive/slur исключены), без инфлекционных кросс-рефов и словообразовательных заглушек. Подозрительные определения (самоссылки, циркулярные, сложные) не выбрасываются, а пишутся в `review_queue.jsonl` — их прогоняет LLM-ревью (`review_tools.py split/validate/apply`). dict-v10: 260.3k senses, 181k лемм, ~28 МБ в gzip; ~110k определений переписаны LLM на простой самодостаточный язык (без синонимных цепочек и циклов), восстановлены потерянные главные значения (chestnut-орех и т.п.), значения ранжированы по употребимости (колонка rank, near-дубли удалены), 99.9% значений с примером употребления, 81% с русским переводом (таблица translations).
+   Фильтры: частотник (Norvig top-100k ∪ OpenSubtitles top-250k по каждому content-слову леммы), 3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare (vulgar/derogatory-лексика включена намеренно — сериальный английский; offensive/slur исключены), без инфлекционных кросс-рефов и словообразовательных заглушек. Подозрительные определения (самоссылки, циркулярные, сложные) не выбрасываются, а пишутся в `review_queue.jsonl` — их прогоняет LLM-ревью (`review_tools.py split/validate/apply`). dict-v13: 260.2k senses, 181k лемм, ~28 МБ в gzip; ~110k определений переписаны LLM на простой самодостаточный язык (без синонимных цепочек и циклов), восстановлены потерянные главные значения (chestnut-орех и т.п.), значения ранжированы по употребимости (колонка rank, near-дубли удалены), 99.9% значений с примером употребления, 81% с русским переводом (таблица translations).
 
 2. Залей файл релизом. Через `gh`:
    ```bash
-   gh release create dict-v10 /tmp/dictionary-v10.sqlite.gz \
+   gh release create dict-v13 /tmp/dictionary-v13.sqlite.gz \
      --repo denis-kremko/wordtrainer \
-     --title "Dictionary v10" \
+     --title "Dictionary v13" \
      --notes "Curated English dictionary (~28 MB gzipped)."
    ```
 
 3. Проверь URL:
    ```bash
-   curl -IL https://github.com/denis-kremko/wordtrainer/releases/download/dict-v10/dictionary-v10.sqlite.gz
+   curl -IL https://github.com/denis-kremko/wordtrainer/releases/download/dict-v13/dictionary-v13.sqlite.gz
    # HTTP/2 200
    ```
 
@@ -93,7 +93,7 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v10/dictionar
 ### Как обновить словарь
 
 1. Пересобери `dictionary.sqlite`.
-2. `gh release create dict-v10 ...` (новый тег).
+2. `gh release create dict-v13 ...` (новый тег).
 3. Обнови `DictionaryDownloadURL` и `DictionarySHA256` в `WordAce/Info.plist`.
 4. Приложение при следующем запуске сравнит SHA из Info.plist с той, под которую качался локальный файл, и само перекачает словарь (сносить приложение не нужно).
 

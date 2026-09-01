@@ -46,9 +46,10 @@ from pathlib import Path
 import sqlite3
 
 from dictfilters import (
-    CROSS_REF_RE, MAX_GLOSS_LEN, MIN_GLOSS_LEN, STUB_RE, FrequencyFilter,
-    create_indexes, create_schema, is_circular_multiword, is_complex,
-    leading_paren_labels, self_ref_token, strip_grammar_label, write_jsonl,
+    CROSS_REF_RE, MAX_GLOSS_LEN, MIN_GLOSS_LEN, SHORT_LEMMA_KEEP, STUB_RE,
+    FrequencyFilter, create_indexes, create_schema, is_circular_multiword,
+    is_complex, leading_paren_labels, self_ref_token, strip_grammar_label,
+    write_jsonl,
 )
 
 DROP_PREFIXES = (
@@ -271,6 +272,8 @@ def main() -> None:
                 continue
 
             lemma = word.lower()
+            if len(lemma) <= 2 and lemma not in SHORT_LEMMA_KEEP:
+                continue
             if not freq.lemma_is_common(lemma):
                 dropped_rare += 1
                 continue

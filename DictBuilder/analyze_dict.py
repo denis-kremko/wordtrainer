@@ -26,7 +26,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-from dictfilters import FrequencyFilter, build_forms_map, is_complex, self_ref_token
+from dictfilters import SHORT_LEMMA_KEEP, FrequencyFilter, build_forms_map, is_complex, self_ref_token
 
 
 def main(db_path: str, norvig_path: str, subs_path: str, out_dir: str) -> None:
@@ -42,6 +42,7 @@ def main(db_path: str, norvig_path: str, subs_path: str, out_dir: str) -> None:
 
     self_ref: list[dict] = []
     complex_: list[dict] = []
+    short_junk: list[dict] = []
     rare_lemmas: dict[str, list[dict]] = defaultdict(list)
     total = 0
     lemmas: set[str] = set()
@@ -57,6 +58,8 @@ def main(db_path: str, norvig_path: str, subs_path: str, out_dir: str) -> None:
             complex_.append(row)
         if not freq.lemma_is_common(lemma):
             rare_lemmas[lemma].append(row)
+        if len(lemma) <= 2 and lemma not in SHORT_LEMMA_KEEP:
+            short_junk.append(row)
 
     rare_count = sum(len(v) for v in rare_lemmas.values())
     stats = {
@@ -66,6 +69,7 @@ def main(db_path: str, norvig_path: str, subs_path: str, out_dir: str) -> None:
         "complex_senses": len(complex_),
         "rare_lemmas": len(rare_lemmas),
         "rare_senses": rare_count,
+        "short_junk_lemmas": len({r["lemma"] for r in short_junk}),
     }
     print(json.dumps(stats, indent=2))
 

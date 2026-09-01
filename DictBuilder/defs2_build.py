@@ -44,7 +44,7 @@ def best_rank(word):
 def content_tokens(text):
     out = []
     for w in TOKEN_RE.findall(text):
-        w = w.lower().rstrip("'").removesuffix("'s").rstrip("'")
+        w = w.lower().strip("'").removesuffix("'s").strip("'")
         if len(w) >= 3 and w not in STOP:
             out.append(w)
     return out
@@ -71,11 +71,18 @@ def is_chain(definition):
     total = content_tokens(definition)
     return short >= 2 or (len(total) <= 3 and len(definition.split()) <= 5)
 
+# Plain A1-B1 phrasing is mostly stopwords; "thin" only means short raw text
+# AND almost no content words.
+def is_thin(definition):
+    return len(content_tokens(definition)) < 4 and len(definition.split()) <= 7
+
 def hard_words(definition, h_rank, threshold, factor=1.5):
     ex = exempt(definition)
     bad = []
     for w in set(content_tokens(definition)):
-        if w in ex:
+        # Contractions and quoted fragments miss the frequency lists entirely;
+        # they are never the hard vocabulary this gate hunts.
+        if w in ex or "'" in w:
             continue
         r = best_rank(w)
         if r > threshold and r > h_rank * factor:
@@ -159,7 +166,6 @@ def cmd_build(db_path, workdir, patched_path, bound_path, leftover_paths):
 
 def cmd_gate(workdir, db_path):
     wd = Path(workdir)
-    conn = sqlite3.connect(db_path)
     heads = {}
     clean, rejected = [], []
     counts = {"freq_reject": 0, "chain_reject": 0, "thin_reject": 0}
@@ -176,8 +182,8 @@ def cmd_gate(workdir, db_path):
                 counts["chain_reject"] += 1
                 ok = False
                 break
-            if len(content_tokens(v["d"])) < 4:
-                counts["thin_reject"] = counts.get("thin_reject", 0) + 1
+            if is_thin(v["d"]):
+                counts["thin_reject"] += 1
                 ok = False
                 break
             if hard_words(v["d"], heads[lemma], threshold=10000):

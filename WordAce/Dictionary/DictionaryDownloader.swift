@@ -34,7 +34,7 @@ final class DictionaryDownloader: NSObject {
         return appSupport.appendingPathComponent("dictionary.sqlite")
     }
 
-    private static let installedSHAKey = "dictionaryInstalledSHA256"
+    nonisolated private static let installedSHAKey = "dictionaryInstalledSHA256"
 
     nonisolated static var isInstalled: Bool {
         guard let url = installedURL,
@@ -71,7 +71,7 @@ final class DictionaryDownloader: NSObject {
     @ObservationIgnored private lazy var session: URLSession = {
         let cfg = URLSessionConfiguration.default
         cfg.waitsForConnectivity = true
-        cfg.timeoutIntervalForResource = 60 * 60
+        cfg.timeoutIntervalForResource = 15 * 60
         cfg.allowsCellularAccess = true
         cfg.allowsExpensiveNetworkAccess = true
         cfg.allowsConstrainedNetworkAccess = true
@@ -88,10 +88,30 @@ final class DictionaryDownloader: NSObject {
             setState(.done)
             return
         }
+        // A kill during gunzip/verify strands both UUID-named payloads in tmp;
+        // iOS purges them only opportunistically, so sweep before adding more.
+        Self.sweepTempFiles()
         setState(.downloading(bytesReceived: 0, bytesTotal: -1))
-        let task = session.downloadTask(with: URLRequest(url: remote))
+        let task = session.downloadTask(with: URLRequest(url: remote,
+                                                         cachePolicy: .reloadIgnoringLocalCacheData))
         self.task = task
         task.resume()
+    }
+
+    nonisolated private static let tempPrefix = "dictionary-"
+
+    nonisolated fileprivate static func newTempURL() -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent("\(tempPrefix)\(UUID().uuidString).sqlite")
+    }
+
+    nonisolated private static func sweepTempFiles() {
+        let fm = FileManager.default
+        guard let leftovers = try? fm.contentsOfDirectory(
+            at: fm.temporaryDirectory, includingPropertiesForKeys: nil) else { return }
+        for url in leftovers where url.lastPathComponent.hasPrefix(tempPrefix) {
+            try? fm.removeItem(at: url)
+        }
     }
 
     func cancel() {
@@ -111,7 +131,9 @@ final class DictionaryDownloader: NSObject {
             var payloadURL = tempURL
             do {
                 await setState(.verifying)
-                if Self.remoteURL?.pathExtension.lowercased() == "gz" {
+                // Sniff the payload, not the URL: signed query strings or a
+                // renamed asset must not silently skip the gunzip.
+                if try Self.isGzip(tempURL) {
                     payloadURL = try Self.gunzip(tempURL)
                     try? FileManager.default.removeItem(at: tempURL)
                 }
@@ -134,6 +156,11 @@ final class DictionaryDownloader: NSObject {
                     return
                 }
                 await setState(.installing)
+                // Data blocks must be durable before the rename and the SHA
+                // key write, or power loss blesses garbage.
+                let payloadHandle = try FileHandle(forWritingTo: payloadURL)
+                try payloadHandle.synchronize()
+                try payloadHandle.close()
                 guard let dest = Self.installedURL else {
                     throw DownloadError("Could not locate Application Support directory.")
                 }
@@ -154,7 +181,7 @@ final class DictionaryDownloader: NSObject {
                 values.isExcludedFromBackup = true
                 try? resDest.setResourceValues(values)
 
-                DictionaryService.shared.reload()
+                await DictionaryService.shared.reload()
                 await setState(.done)
             } catch {
                 // Verification/install failed: don't strand a ~60 MB payload in tmp.
@@ -190,8 +217,7 @@ final class DictionaryDownloader: NSObject {
 
     // Streams gunzip on disk using Apple's Compression framework. RFC 1952 header parsing.
     nonisolated fileprivate static func gunzip(_ src: URL) throws -> URL {
-        let dst = FileManager.default.temporaryDirectory
-            .appendingPathComponent("dictionary-\(UUID().uuidString).sqlite")
+        let dst = newTempURL()
         FileManager.default.createFile(atPath: dst.path, contents: nil)
         do {
             return try gunzip(src, into: dst)
@@ -266,9 +292,19 @@ final class DictionaryDownloader: NSObject {
         }
     }
 
+    nonisolated private static func isGzipMagic(_ h: FileHandle) throws -> Bool {
+        let magic = try h.read(upToCount: 2) ?? Data()
+        return magic.count == 2 && magic[0] == 0x1f && magic[1] == 0x8b
+    }
+
+    nonisolated private static func isGzip(_ url: URL) throws -> Bool {
+        let h = try FileHandle(forReadingFrom: url)
+        defer { try? h.close() }
+        return try isGzipMagic(h)
+    }
+
     nonisolated private static func skipGzipHeader(_ h: FileHandle) throws {
-        guard let magic = try h.read(upToCount: 2), magic.count == 2,
-              magic[0] == 0x1f, magic[1] == 0x8b else {
+        guard try isGzipMagic(h) else {
             throw DownloadError("Not a gzip file.")
         }
         guard let cmFlg = try h.read(upToCount: 2), cmFlg.count == 2 else {
@@ -334,8 +370,7 @@ extension DictionaryDownloader: URLSessionDownloadDelegate {
                                 downloadTask: URLSessionDownloadTask,
                                 didFinishDownloadingTo location: URL) {
         // The temp URL is deleted when this callback returns; copy synchronously first.
-        let tempCopy = FileManager.default.temporaryDirectory
-            .appendingPathComponent("dictionary-\(UUID().uuidString).sqlite")
+        let tempCopy = DictionaryDownloader.newTempURL()
         do {
             try FileManager.default.moveItem(at: location, to: tempCopy)
         } catch {

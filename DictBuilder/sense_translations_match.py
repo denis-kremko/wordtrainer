@@ -90,8 +90,9 @@ def main():
             rows.append((eid, ru))
 
     conn.execute("DROP TABLE IF EXISTS translations")
-    conn.execute("CREATE TABLE translations (id INTEGER PRIMARY KEY, word TEXT NOT NULL)")
-    conn.executemany("INSERT INTO translations VALUES (?, ?)", rows)
+    conn.execute("CREATE TABLE translations (id INTEGER PRIMARY KEY, word TEXT NOT NULL, word_lc TEXT NOT NULL)")
+    conn.executemany("INSERT INTO translations VALUES (?, ?, ?)",
+                     [(i, w, w.lower()) for i, w in rows])
     conn.commit()
     print(json.dumps({"kaikki_ru_senses": len(exact), "translated_ids": len(rows),
                       "exact": hits_exact, "soft": hits_soft, "current": hits_current}))

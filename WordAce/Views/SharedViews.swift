@@ -416,6 +416,9 @@ struct CapsuleButton: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, isLarge ? 12 : 7)
             .background(isDisabled ? Color.white.opacity(0.08) : (isOn ? color : color.opacity(0.22)))
+            // The tint washes are see-through on their own; scrolling cards
+            // must not show through the capsule.
+            .background(Color.appBackground)
             .clipShape(Capsule())
         }
         .buttonStyle(SolidPressStyle())

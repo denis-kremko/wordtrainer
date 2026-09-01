@@ -16,6 +16,8 @@ import json, os, sys
 import sqlite3
 from pathlib import Path
 
+from dictfilters import put_translation
+
 BATCH_TARGETS = 100
 
 
@@ -162,12 +164,13 @@ def cmd_apply(clean_path, db_path):
         verdict = json.loads(line)
         for v in verdict["v"]:
             if v["a"] == "add":
-                if queue_wordy.get(v["i"]):
-                    replaced += 1
-                else:
-                    added += 1
-                conn.execute("INSERT OR REPLACE INTO translations VALUES (?, ?)",
-                             (v["i"], v["t"].strip()))
+                row = conn.execute("SELECT lemma FROM entries WHERE id = ?",
+                                   (v["i"],)).fetchone()
+                if row and put_translation(conn, v["i"], v["t"], row[0]):
+                    if queue_wordy.get(v["i"]):
+                        replaced += 1
+                    else:
+                        added += 1
             elif v["a"] == "skip" and queue_wordy.get(v["i"]):
                 removed += conn.execute("DELETE FROM translations WHERE id = ?",
                                         (v["i"],)).rowcount

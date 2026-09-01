@@ -115,12 +115,12 @@ def main(dst: str) -> None:
     # same schema as the released dictionary.
     cur.execute("""
         INSERT INTO translations
-        SELECT id, 'бегать' FROM entries WHERE lemma = 'run' AND pos = 'verb'
+        SELECT id, 'бегать', 'бегать' FROM entries WHERE lemma = 'run' AND pos = 'verb'
         ORDER BY id LIMIT 1
     """)
     cur.execute("""
         INSERT INTO translations
-        SELECT id, 'сдаваться' FROM entries WHERE lemma = 'give up'
+        SELECT id, 'сдаваться', 'сдаваться' FROM entries WHERE lemma = 'give up'
         ORDER BY id LIMIT 1
     """)
     create_indexes(cur)

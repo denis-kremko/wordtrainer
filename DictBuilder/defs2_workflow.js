@@ -71,11 +71,15 @@ const results = await parallel(nums.map(n => () => agent(
 
 let unparsed = 0
 const ok = results.filter(Boolean).map(r => {
-  if (typeof r !== 'string') return r
   try {
-    return JSON.parse(r.slice(r.indexOf('{'), r.lastIndexOf('}') + 1))
-  } catch (e) {
+    const parsed = typeof r === 'string'
+      ? JSON.parse(r.slice(r.indexOf('{'), r.lastIndexOf('}') + 1))
+      : r
+    if (!Array.isArray(parsed?.verdicts)) throw new Error('wrong shape')
+    return parsed
+  } catch {
     unparsed += 1
+    log(`unparsed reply: ${JSON.stringify(r).slice(0, 200)}`)
     return null
   }
 }).filter(Boolean)
@@ -83,10 +87,10 @@ let groups = 0, kept = 0, rewritten = 0, deleted = 0
 for (const r of ok) {
   for (const g of r.verdicts) {
     groups += 1
-    for (const v of g.v) {
+    for (const v of g.v || []) {
       if (v.a === 'keep') kept += 1
       else if (v.a === 'rw') rewritten += 1
-      else deleted += 1
+      else if (v.a === 'del') deleted += 1
     }
   }
 }

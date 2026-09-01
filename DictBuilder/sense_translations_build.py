@@ -122,8 +122,9 @@ def main():
     live_ids = {r[0] for r in conn.execute("SELECT id FROM entries")}
     rows = [(eid, w) for eid, w in ru_by_id.items() if eid in live_ids]
     conn.execute("DROP TABLE IF EXISTS translations")
-    conn.execute("CREATE TABLE translations (id INTEGER PRIMARY KEY, word TEXT NOT NULL)")
-    conn.executemany("INSERT INTO translations VALUES (?, ?)", rows)
+    conn.execute("CREATE TABLE translations (id INTEGER PRIMARY KEY, word TEXT NOT NULL, word_lc TEXT NOT NULL)")
+    conn.executemany("INSERT INTO translations VALUES (?, ?, ?)",
+                     [(i, w, w.lower()) for i, w in rows])
     conn.commit()
     print(json.dumps({"walked_ids": next_id - 1, "live_ids": live,
                       "sense_translations": len(rows)}))

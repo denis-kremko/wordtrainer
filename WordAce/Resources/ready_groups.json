@@ -18996,7 +18996,10 @@
       },
       {
        "w": "ashore",
-       "pos": "adv"
+       "pos": "adv",
+       "hint": [
+        "opposed"
+       ]
       },
       {
        "w": "overboard",
@@ -28644,7 +28647,10 @@
       },
       {
        "w": "dig",
-       "pos": "verb"
+       "pos": "verb",
+       "hint": [
+        "digging"
+       ]
       },
       {
        "w": "weed",
@@ -28934,7 +28940,10 @@
       },
       {
        "w": "dig",
-       "pos": "verb"
+       "pos": "verb",
+       "hint": [
+        "digging"
+       ]
       },
       {
        "w": "weed",
@@ -29891,7 +29900,10 @@
       },
       {
        "w": "dig",
-       "pos": "verb"
+       "pos": "verb",
+       "hint": [
+        "digging"
+       ]
       },
       {
        "w": "water",
@@ -34316,7 +34328,10 @@
       },
       {
        "w": "dig",
-       "pos": "verb"
+       "pos": "verb",
+       "hint": [
+        "digging"
+       ]
       },
       {
        "w": "find",
@@ -37297,7 +37312,10 @@
       },
       {
        "w": "dig",
-       "pos": "verb"
+       "pos": "verb",
+       "hint": [
+        "digging"
+       ]
       },
       {
        "w": "sand",
@@ -37639,7 +37657,10 @@
       },
       {
        "w": "dig",
-       "pos": "verb"
+       "pos": "verb",
+       "hint": [
+        "digging"
+       ]
       },
       {
        "w": "foundation",

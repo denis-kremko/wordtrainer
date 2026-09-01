@@ -16,6 +16,10 @@ final class DictionaryService: @unchecked Sendable {
     }
 
     struct LookupResult {
+        // The normalized key the result answers: views compare it to the live
+        // input instead of keeping their own copy in sync.
+        var key: String
+        var isCyrillic: Bool
         var exact: [Entry]
         var formMatches: [String]
         var prefixMatches: [String]
@@ -51,10 +55,10 @@ final class DictionaryService: @unchecked Sendable {
         if let db { sqlite3_close(db) }
     }
 
-    func reload() {
-        queue.sync {
-            closeLocked()
-            openBestLocked()
+    func reload() async {
+        await onQueue {
+            self.closeLocked()
+            self.openBestLocked()
         }
     }
 
@@ -63,16 +67,13 @@ final class DictionaryService: @unchecked Sendable {
     }
 
     private func openBestLocked() {
-        // The checksum gate, not bare file existence: a stale download from
-        // an older release may miss tables the queries now rely on.
-        if DictionaryDownloader.isInstalled,
-           let downloaded = DictionaryDownloader.installedURL,
-           openLocked(at: downloaded) {
-            setAvailable(true)
-            return
-        }
-        if let bundled = Bundle.main.url(forResource: "dictionary", withExtension: "sqlite"),
-           openLocked(at: bundled) {
+        // Any installed file first — a stale one (SHA no longer matches
+        // Info.plist, e.g. the app updated while offline) still beats the tiny
+        // bundled demo; the schema probe in openLocked rejects files that
+        // cannot serve the queries.
+        let candidates = [DictionaryDownloader.installedURL,
+                          Bundle.main.url(forResource: "dictionary", withExtension: "sqlite")]
+        for url in candidates.compactMap({ $0 }) where openLocked(at: url) {
             setAvailable(true)
             return
         }
@@ -81,14 +82,26 @@ final class DictionaryService: @unchecked Sendable {
 
     private func openLocked(at url: URL) -> Bool {
         var handle: OpaquePointer?
-        if sqlite3_open_v2(url.path, &handle, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK {
-            db = handle
-            hasFormsTable = tableExistsLocked("forms")
-            return true
-        } else {
+        guard sqlite3_open_v2(url.path, &handle, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK else {
             sqlite3_close(handle)
             return false
         }
+        db = handle
+        // sqlite3_open is lazy: it blesses an HTML page or a truncated file.
+        // One real row through the main-query JOIN proves the schema works
+        // (word_lc also gates out pre-v13 downloads).
+        let probe = "SELECT e.lemma, t.word_lc FROM entries e LEFT JOIN translations t ON t.id = e.id LIMIT 1"
+        var stmt: OpaquePointer?
+        let ok = sqlite3_prepare_v2(db, probe, -1, &stmt, nil) == SQLITE_OK
+            && sqlite3_step(stmt) == SQLITE_ROW
+        sqlite3_finalize(stmt)
+        guard ok else {
+            sqlite3_close(handle)
+            db = nil
+            return false
+        }
+        hasFormsTable = tableExistsLocked("forms")
+        return true
     }
 
     private func closeLocked() {
@@ -122,20 +135,32 @@ final class DictionaryService: @unchecked Sendable {
 
     func search(_ query: String) async -> LookupResult {
         let key = Self.normalize(query)
-        let empty = LookupResult(exact: [], formMatches: [], prefixMatches: [],
+        let cyrillic = Self.hasCyrillic(key)
+        let empty = LookupResult(key: key, isCyrillic: cyrillic,
+                                 exact: [], formMatches: [], prefixMatches: [],
                                  substringMatches: [], translationMatches: [])
         guard !key.isEmpty else { return empty }
         let cancelled = CancelFlag()
         return await withTaskCancellationHandler {
             await onQueue {
+                // Lemmas are ASCII and translations are Cyrillic, so each scan
+                // runs only for the alphabet that can match it; the flag
+                // re-checks free the serial queue for the successor sooner.
                 guard !cancelled.isSet else { return empty }
                 let exact = self.lookupLocked(key)
                 let forms = exact.isEmpty ? self.formBasesLocked(for: key) : []
-                let prefixes = key.count >= 3 ? self.prefixMatchesLocked(for: key) : []
-                let subs = key.count >= 3 ? self.substringMatchesLocked(for: key) : []
-                let translations = key.count >= 2 && Self.hasCyrillic(key)
-                    ? self.translationMatchesLocked(for: key) : []
-                return LookupResult(exact: exact, formMatches: forms, prefixMatches: prefixes,
+                var prefixes: [String] = [], subs: [String] = [], translations: [String] = []
+                if cyrillic {
+                    guard !cancelled.isSet else { return empty }
+                    if key.count >= 2 { translations = self.translationMatchesLocked(for: key) }
+                } else if key.count >= 3 {
+                    guard !cancelled.isSet else { return empty }
+                    prefixes = self.prefixMatchesLocked(for: key)
+                    guard !cancelled.isSet else { return empty }
+                    subs = self.substringMatchesLocked(for: key)
+                }
+                return LookupResult(key: key, isCyrillic: cyrillic,
+                                    exact: exact, formMatches: forms, prefixMatches: prefixes,
                                     substringMatches: subs, translationMatches: translations)
             }
         } onCancel: {
@@ -198,25 +223,23 @@ final class DictionaryService: @unchecked Sendable {
         return stringColumnLocked(sql, binds: ["%\(escaped)%", query])
     }
 
-    // SQLite LIKE folds case only for ASCII, so the normalized (lowercased)
-    // query needs an extra capitalized pattern to hit "Библия"-style values.
+    // word_lc is the build-side case fold (SQLite LIKE folds only ASCII);
+    // the normalized query is already lowercase, so two patterns cover
+    // prefix and later-word matches in every case form.
     private func translationMatchesLocked(for query: String) -> [String] {
         let escaped = Self.likeEscaped(query)
-        let capitalized = escaped.prefix(1).uppercased() + escaped.dropFirst()
         let sql = """
             SELECT e.lemma FROM translations t
             JOIN entries e ON e.id = t.id
-            WHERE t.word LIKE ? ESCAPE '\\' OR t.word LIKE ? ESCAPE '\\'
-                OR t.word LIKE ? ESCAPE '\\'
+            WHERE t.word_lc LIKE ? ESCAPE '\\' OR t.word_lc LIKE ? ESCAPE '\\'
             GROUP BY e.lemma
-            ORDER BY MIN(t.word != ?), MIN(e.rank), length(e.lemma), e.lemma
+            ORDER BY MIN(t.word_lc != ?), MIN(e.rank), length(e.lemma), e.lemma
             LIMIT 12
         """
-        return stringColumnLocked(sql, binds: ["\(escaped)%", "% \(escaped)%",
-                                               "\(capitalized)%", query])
+        return stringColumnLocked(sql, binds: ["\(escaped)%", "% \(escaped)%", query])
     }
 
-    private static func hasCyrillic(_ s: String) -> Bool {
+    static func hasCyrillic(_ s: String) -> Bool {
         s.unicodeScalars.contains { (0x0400...0x04FF).contains($0.value) }
     }
 
@@ -273,7 +296,20 @@ final class DictionaryService: @unchecked Sendable {
     }
 
     static func normalize(_ s: String) -> String {
-        let lowered = s.lowercased().trimmed
+        var lowered = s.lowercased().trimmed
+        // The DB stores straight apostrophes and precomposed Cyrillic without
+        // stress marks; iOS smart punctuation and pasted textbook text carry
+        // U+2019 and U+0301, which LIKE compares by code point. All three
+        // repairs are no-ops for pure-ASCII input — the dominant case, and
+        // this runs per keystroke and per catalog word.
+        if s.utf8.contains(where: { $0 >= 0x80 }) {
+            lowered = lowered.straightApostrophes
+            if lowered.unicodeScalars.contains(where: { $0.value == 0x0301 }) {
+                lowered = String(String.UnicodeScalarView(
+                    lowered.unicodeScalars.filter { $0.value != 0x0301 }))
+            }
+            lowered = lowered.precomposedStringWithCanonicalMapping
+        }
         // The regex costs an NSRegularExpression per call; almost every input
         // is a single word or already single-spaced.
         guard lowered.contains("  ") || lowered.contains("\t") || lowered.contains("\n") else {

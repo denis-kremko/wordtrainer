@@ -21,6 +21,14 @@ COMPLEX_COMMAS = 3
 
 CIRCULAR_MAX_LEN = 45
 
+# 1-2 letter headwords are overwhelmingly initialisms and letter names;
+# only this curated set survives as real words.
+SHORT_LEMMA_KEEP = frozenset("""a i
+ab ac ad ah ai am an as at aw ax ay be bi by cc cd cv da dj do eh em en er ew ex
+fa gi go ha he hi hm ho id if in iq is it jk ko la lo ma me mi mm my no od of og
+oh oi ok on or os ow ox oy pa pc pe pi pm re rv so ta ti to uh um up us uv vp vr
+vs we xl ya ye yo""".split())
+
 STOPWORDS = frozenset("""
 a an the to of in on at by for with up down out off over under about into onto
 from as or and not no one it be is are was were been being do does did have has
@@ -176,6 +184,33 @@ def is_complex(definition: str) -> bool:
     return False
 
 
+# NFD splits й into и+breve and ё into е+diaeresis, so only the stress
+# accents may be stripped before recomposing.
+def canonical_ru(word: str) -> str:
+    import unicodedata
+    decomposed = unicodedata.normalize("NFD", word)
+    return unicodedata.normalize(
+        "NFC", "".join(ch for ch in decomposed if ch not in "́̀")).strip()
+
+
+def is_russian(word: str) -> bool:
+    return any("Ѐ" <= ch <= "ӿ" for ch in word) and all(
+        ch.isspace() or ch == "-" or "Ѐ" <= ch <= "ӿ" for ch in word)
+
+
+def put_translation(conn, entry_id: int, raw: str, lemma: str) -> bool:
+    """Canonicalize, shape-gate and write one per-sense translation
+    (both word and word_lc). Returns False when the value is rejected."""
+    t = canonical_ru(raw or "")
+    if not (t and is_russian(t) and len(t) <= 40
+            and len(t.split()) <= max(2, len(lemma.split()))
+            and not any(ch in t for ch in ",;/()")):
+        return False
+    conn.execute("INSERT OR REPLACE INTO translations VALUES (?, ?, ?)",
+                 (entry_id, t, t.lower()))
+    return True
+
+
 def load_ranks(path: str, sep: str, max_rank: int) -> dict[str, int]:
     ranks: dict[str, int] = {}
     with open(path, encoding="utf-8", errors="ignore") as f:
@@ -225,7 +260,9 @@ def create_schema(cur: sqlite3.Cursor) -> None:
         )
     """)
     cur.execute("CREATE TABLE forms (form TEXT NOT NULL, lemma TEXT NOT NULL)")
-    cur.execute("CREATE TABLE translations (id INTEGER PRIMARY KEY, word TEXT NOT NULL)")
+    # word_lc exists because SQLite LIKE folds case only for ASCII; the app
+    # matches Russian search input against it and displays word.
+    cur.execute("CREATE TABLE translations (id INTEGER PRIMARY KEY, word TEXT NOT NULL, word_lc TEXT NOT NULL)")
 
 
 def create_indexes(cur: sqlite3.Cursor) -> None:

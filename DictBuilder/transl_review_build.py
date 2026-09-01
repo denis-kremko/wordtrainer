@@ -12,6 +12,8 @@ import json, os, sys
 import sqlite3
 from pathlib import Path
 
+from dictfilters import put_translation
+
 BATCH_TRANSLATED = 100
 
 
@@ -138,8 +140,10 @@ def cmd_apply(clean_path, db_path):
         verdict = json.loads(line)
         for v in verdict["v"]:
             if v["a"] == "rw":
-                updated += conn.execute("UPDATE translations SET word = ? WHERE id = ?",
-                                        (v["t"].strip(), v["i"])).rowcount
+                row = conn.execute("SELECT lemma FROM entries WHERE id = ?",
+                                   (v["i"],)).fetchone()
+                if row and put_translation(conn, v["i"], v["t"], row[0]):
+                    updated += 1
             elif v["a"] == "del":
                 deleted += conn.execute("DELETE FROM translations WHERE id = ?",
                                         (v["i"],)).rowcount

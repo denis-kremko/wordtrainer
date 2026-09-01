@@ -88,7 +88,7 @@ function picksPrompt(id) {
 
 For every candidate with found=true, decide:
 - pick = the index i of the definition that matches the THEME's meaning of the word (usually 0; choose a later one when the topical meaning is not first — e.g. for a bar list "shot" must bind to the drink sense, not the gunshot).
-- Keep the word's pos if it was set.
+- Copy the word's pos from probe.json VERBATIM — never add, drop, or change it: pick indices are only valid for the exact def list probe.json shows, and that list depends on pos.
 - OMIT words entirely (do not include them in picks) when: found=false, none of the defs carries the topical meaning, the word is off-level, off-topic, or belongs to an AVOID theme.
 
 Quality bar: the picked definition will be printed on the word's card — it must read as obviously belonging to this theme.
@@ -101,7 +101,7 @@ function auditPrompt(id) {
 
 Flag ONLY real problems:
 - {"w", "action": "drop", "why"} — off-topic for the theme, badly off-level, a duplicate concept already covered by a better word in this list, or no listed definition fits the theme.
-- {"w", "action": "pick", "pick": N, "why"} — the bound definition is the WRONG sense for this theme and alternative N is right.
+- {"w", "action": "pick", "pick": N, "why"} — the bound definition is the WRONG sense for this theme and alternative N is right. "pick" is REQUIRED for this action; a pick problem without it is discarded.
 
 Do not flag taste-level quibbles and do NOT trim for size — a big list of good words is welcome; a good list survives with zero or few problems. Return ONLY via StructuredOutput as {id: "${id}", problems: [...]}.`
 }
