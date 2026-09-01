@@ -733,6 +733,29 @@ private struct AddCustomSenseForm: View {
     }
 }
 
+// Tap-to-reveal spoiler: the translation must not spoil guessing the meaning
+// from the definition first. Tapping again hides it back for self-testing.
+private struct SpoilerText: View {
+    let text: String
+    @State private var revealed = false
+
+    var body: some View {
+        Text(text)
+            .foregroundStyle(revealed ? Color.primary : Color.clear)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 2)
+            .background {
+                Capsule().fill(Color.yellow.opacity(revealed ? 0 : 0.25))
+            }
+            .contentShape(Capsule())
+            .onTapGesture {
+                withAnimation(.spring(duration: 0.25)) {
+                    revealed.toggle()
+                }
+            }
+    }
+}
+
 // Word links only when linkedExcluding is set: in selection rows word taps
 // would fight the checkbox.
 private struct SenseTextView: View {
@@ -759,10 +782,13 @@ private struct SenseTextView: View {
                     .foregroundStyle(.secondary)
             }
             if let translation {
-                (Text("Translation: ").foregroundStyle(Color.secondary)
-                    + Text(translation).foregroundStyle(Color.primary))
-                    .font(.footnote)
-                    .padding(.top, 6)
+                HStack(spacing: 6) {
+                    Text("Translation:")
+                        .foregroundStyle(Color.secondary)
+                    SpoilerText(text: translation)
+                }
+                .font(.footnote)
+                .padding(.top, 6)
             }
         }
         .padding(.vertical, 2)
