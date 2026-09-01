@@ -20,6 +20,7 @@ final class DictionaryService: @unchecked Sendable {
         var formMatches: [String]
         var prefixMatches: [String]
         var substringMatches: [String]
+        var translationMatches: [String]
     }
 
     private let queue = DispatchQueue(label: "DictionaryService", qos: .userInitiated)
@@ -121,7 +122,8 @@ final class DictionaryService: @unchecked Sendable {
 
     func search(_ query: String) async -> LookupResult {
         let key = Self.normalize(query)
-        let empty = LookupResult(exact: [], formMatches: [], prefixMatches: [], substringMatches: [])
+        let empty = LookupResult(exact: [], formMatches: [], prefixMatches: [],
+                                 substringMatches: [], translationMatches: [])
         guard !key.isEmpty else { return empty }
         let cancelled = CancelFlag()
         return await withTaskCancellationHandler {
@@ -131,7 +133,10 @@ final class DictionaryService: @unchecked Sendable {
                 let forms = exact.isEmpty ? self.formBasesLocked(for: key) : []
                 let prefixes = key.count >= 3 ? self.prefixMatchesLocked(for: key) : []
                 let subs = key.count >= 3 ? self.substringMatchesLocked(for: key) : []
-                return LookupResult(exact: exact, formMatches: forms, prefixMatches: prefixes, substringMatches: subs)
+                let translations = key.count >= 2 && Self.hasCyrillic(key)
+                    ? self.translationMatchesLocked(for: key) : []
+                return LookupResult(exact: exact, formMatches: forms, prefixMatches: prefixes,
+                                    substringMatches: subs, translationMatches: translations)
             }
         } onCancel: {
             cancelled.set()
@@ -184,17 +189,43 @@ final class DictionaryService: @unchecked Sendable {
     }
 
     private func substringMatchesLocked(for query: String) -> [String] {
-        // User text can contain LIKE wildcards; escape so "a_e" stays literal.
-        let escaped = query
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "%", with: "\\%")
-            .replacingOccurrences(of: "_", with: "\\_")
+        let escaped = Self.likeEscaped(query)
         let sql = """
             SELECT DISTINCT lemma FROM entries
             WHERE lemma LIKE ? ESCAPE '\\' AND lemma LIKE '% %' AND lemma != ?
             ORDER BY length(lemma) LIMIT 12
         """
         return stringColumnLocked(sql, binds: ["%\(escaped)%", query])
+    }
+
+    // SQLite LIKE folds case only for ASCII, so the normalized (lowercased)
+    // query needs an extra capitalized pattern to hit "Библия"-style values.
+    private func translationMatchesLocked(for query: String) -> [String] {
+        let escaped = Self.likeEscaped(query)
+        let capitalized = escaped.prefix(1).uppercased() + escaped.dropFirst()
+        let sql = """
+            SELECT e.lemma FROM translations t
+            JOIN entries e ON e.id = t.id
+            WHERE t.word LIKE ? ESCAPE '\\' OR t.word LIKE ? ESCAPE '\\'
+                OR t.word LIKE ? ESCAPE '\\'
+            GROUP BY e.lemma
+            ORDER BY MIN(t.word != ?), MIN(e.rank), length(e.lemma), e.lemma
+            LIMIT 12
+        """
+        return stringColumnLocked(sql, binds: ["\(escaped)%", "% \(escaped)%",
+                                               "\(capitalized)%", query])
+    }
+
+    private static func hasCyrillic(_ s: String) -> Bool {
+        s.unicodeScalars.contains { (0x0400...0x04FF).contains($0.value) }
+    }
+
+    // User text can contain LIKE wildcards; escape so "a_e" stays literal.
+    private static func likeEscaped(_ query: String) -> String {
+        query
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "%", with: "\\%")
+            .replacingOccurrences(of: "_", with: "\\_")
     }
 
     // token (lowercased) -> base lemma, for tappable words inside definitions.

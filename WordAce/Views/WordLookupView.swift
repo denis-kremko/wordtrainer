@@ -126,6 +126,7 @@ struct WordLookupView: View {
         var out: [String] = []
         if !result.exact.isEmpty { out.append(searchedKey) }
         for f in result.formMatches where !out.contains(f) { out.append(f) }
+        for t in result.translationMatches where !out.contains(t) { out.append(t) }
         for p in result.prefixMatches where !out.contains(p) { out.append(p) }
         for m in result.substringMatches where !out.contains(m) { out.append(m) }
         return out
@@ -151,8 +152,9 @@ struct WordLookupView: View {
             }
             // Prefix completions alone must not hide the escape hatch:
             // the typed word itself is still absent from the dictionary.
+            // Translation hits do hide it - Cyrillic input is not a lemma draft.
             if result.exact.isEmpty && result.formMatches.isEmpty
-                && result.substringMatches.isEmpty {
+                && result.substringMatches.isEmpty && result.translationMatches.isEmpty {
                 Section {
                     useAnywayButton
                 }
