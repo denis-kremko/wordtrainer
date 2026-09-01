@@ -796,8 +796,8 @@ private struct SpoilerDust: View {
         Canvas { context, size in
             var rng = SplitMix(seed: 0x5EED)
             let count = max(26, Int(size.width * size.height / 12))
-            let alpha = 0.75 * (1 - dissolve)
-            guard alpha > 0.01 else { return }
+            let base = 0.75 * (1 - dissolve)
+            guard base > 0.01 else { return }
             for _ in 0..<count {
                 let baseX = rng.next() * size.width
                 let baseY = rng.next() * size.height
@@ -806,6 +806,12 @@ private struct SpoilerDust: View {
                 let flight = dissolve * (10 + rng.next() * 22)
                 let x = baseX + cos(angle) * flight
                 let y = baseY + sin(angle) * flight
+                // Feathered edges: dots fade out toward the veil border
+                // instead of cutting off in a hard rectangle.
+                let xFade = min(1, min(baseX, size.width - baseX) / 10)
+                let yFade = min(1, min(baseY, size.height - baseY) / 5)
+                let alpha = base * xFade * yFade
+                guard alpha > 0.02 else { continue }
                 context.fill(
                     Path(ellipseIn: CGRect(x: x - radius, y: y - radius,
                                            width: radius * 2, height: radius * 2)),
