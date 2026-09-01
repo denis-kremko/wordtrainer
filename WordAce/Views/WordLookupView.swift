@@ -753,14 +753,14 @@ private struct SpoilerText: View {
             let progress = dissolveProgress(at: timeline.date)
             Text(text)
                 .opacity(progress)
+                // The frame comes BEFORE the overlay so the veil covers the
+                // widened slot: short words must not betray their length.
+                .frame(minWidth: 60, alignment: .leading)
                 .overlay {
                     SpoilerDust(dissolve: progress)
                         .allowsHitTesting(false)
                 }
         }
-        // Short words must not betray their length: the veil is never
-        // narrower than roughly eight letters.
-        .frame(minWidth: 60, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture {
             if revealed {
