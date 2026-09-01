@@ -6,10 +6,10 @@
 	     settings only work for known system keys and silently drop custom ones.
 	     This file is merged with the generated Info.plist (GENERATE_INFOPLIST_FILE). -->
 	<key>DictionaryDownloadURL</key>
-	<string>https://github.com/denis-kremko/wordtrainer/releases/download/dict-v7/dictionary-v7.sqlite.gz</string>
+	<string>https://github.com/denis-kremko/wordtrainer/releases/download/dict-v8/dictionary-v8.sqlite.gz</string>
 	<!-- SHA256 of the *decompressed* dictionary.sqlite. Update together with the URL
 	     when publishing a new dictionary release. -->
 	<key>DictionarySHA256</key>
-	<string>ae681dd32645d3502243d8646dfd35aaee7f650df887f66e780e636dec01a045</string>
+	<string>d6b1c8fc3421871f6e9dc368ee467e362b833eb320cfcfea5f9fa8fe09d2a923</string>
 </dict>
 </plist>

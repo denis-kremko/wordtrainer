@@ -52,7 +52,7 @@
 URL и контрольная сумма зашиты в `WordAce/Info.plist` (ключи `DictionaryDownloadURL` и `DictionarySHA256`). Именно файл, а не build setting: механизм `INFOPLIST_KEY_*` работает только для известных системных ключей — кастомные Xcode молча выбрасывает. Сейчас там:
 
 ```
-https://github.com/denis-kremko/wordtrainer/releases/download/dict-v7/dictionary-v7.sqlite.gz
+https://github.com/denis-kremko/wordtrainer/releases/download/dict-v8/dictionary-v8.sqlite.gz
 ```
 
 ### Как выложить релиз (один раз)
@@ -68,11 +68,11 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v7/dictionary
      --norvig ../count_1w.txt --subs ../en_full.txt --review-queue /tmp/review_queue.jsonl
    gzip -9 /tmp/dictionary.sqlite   # приложение ждёт .gz — разжимает при первом запуске
    ```
-   Фильтры: частотник (Norvig top-100k ∪ OpenSubtitles top-250k по каждому content-слову леммы), 3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare (vulgar/derogatory-лексика включена намеренно — сериальный английский; offensive/slur исключены), без инфлекционных кросс-рефов и словообразовательных заглушек. Подозрительные определения (самоссылки, циркулярные, сложные) не выбрасываются, а пишутся в `review_queue.jsonl` — их прогоняет LLM-ревью (`review_tools.py split/validate/apply`). dict-v7: 259.4k senses, 181k лемм, ~27 МБ в gzip; ~85k определений переписаны LLM на простой язык, значения ранжированы по употребимости (колонка rank, near-дубли удалены), 99.9% значений с примером употребления.
+   Фильтры: частотник (Norvig top-100k ∪ OpenSubtitles top-250k по каждому content-слову леммы), 3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare (vulgar/derogatory-лексика включена намеренно — сериальный английский; offensive/slur исключены), без инфлекционных кросс-рефов и словообразовательных заглушек. Подозрительные определения (самоссылки, циркулярные, сложные) не выбрасываются, а пишутся в `review_queue.jsonl` — их прогоняет LLM-ревью (`review_tools.py split/validate/apply`). dict-v8: 259.4k senses, 181k лемм, ~27 МБ в gzip; ~85k определений переписаны LLM на простой язык, значения ранжированы по употребимости (колонка rank, near-дубли удалены), 99.9% значений с примером употребления.
 
 2. Залей файл релизом. Через `gh`:
    ```bash
-   gh release create dict-v7 /tmp/dictionary-v7.sqlite.gz \
+   gh release create dict-v8 /tmp/dictionary-v8.sqlite.gz \
      --repo denis-kremko/wordtrainer \
      --title "Dictionary v2" \
      --notes "Curated English dictionary (~26 MB gzipped)."
@@ -80,7 +80,7 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v7/dictionary
 
 3. Проверь URL:
    ```bash
-   curl -IL https://github.com/denis-kremko/wordtrainer/releases/download/dict-v7/dictionary-v7.sqlite.gz
+   curl -IL https://github.com/denis-kremko/wordtrainer/releases/download/dict-v8/dictionary-v8.sqlite.gz
    # HTTP/2 200
    ```
 
@@ -93,7 +93,7 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v7/dictionary
 ### Как обновить словарь
 
 1. Пересобери `dictionary.sqlite`.
-2. `gh release create dict-v7 ...` (новый тег).
+2. `gh release create dict-v8 ...` (новый тег).
 3. Обнови `DictionaryDownloadURL` и `DictionarySHA256` в `WordAce/Info.plist`.
 4. Первое приложение при следующем запуске увидит, что локальный файл уже есть, и **не** перекачает. Для форс-обновления сейчас нужно снести приложение или добавить кнопку «Redownload dictionary» в настройки (по запросу сделаю).
 
