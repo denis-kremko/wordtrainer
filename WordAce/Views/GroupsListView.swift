@@ -135,7 +135,6 @@ struct GroupsListView: View {
 
                         ListBottomSpacer()
                     }
-                    .listSectionSpacing(12)
                 }
             }
 
@@ -157,7 +156,6 @@ struct GroupsListView: View {
                 }
                 .cardSurfaceRow()
             }
-            .listSectionSpacing(12)
             .appScreen()
             .navigationTitle("New Group")
             .navigationBarTitleDisplayMode(.inline)
@@ -185,7 +183,9 @@ struct GroupsListView: View {
     // One pass over the whole history for the whole list: with a fixed
     // denominator the best attempt is simply the one with the most points.
     private var bestPointsByGroup: [String: Int] {
+        // Definition-mode sessions only — the same rule as the group page.
         allSessions.reduce(into: [:]) { best, session in
+            guard session.mode == QuizMode.definitionToEn.rawValue else { return }
             best[session.groupID] = max(best[session.groupID] ?? 0, session.points)
         }
     }
@@ -261,7 +261,6 @@ private struct ProfileView: View {
                 }
                 .cardSurfaceRow()
             }
-            .listSectionSpacing(12)
             .appScreen()
             .navigationTitle("Profile")
             .onChange(of: pointsToLearn) {

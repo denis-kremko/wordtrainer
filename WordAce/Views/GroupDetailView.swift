@@ -112,7 +112,6 @@ struct GroupDetailView: View {
 
                 ListBottomSpacer(height: 84)
             }
-            .listSectionSpacing(12)
 
             if isSelecting {
                 selectionCTAs
@@ -159,7 +158,12 @@ struct GroupDetailView: View {
     }
 
     private func bestMedalPercent(done: Set<String>) -> Int {
-        let bestPoints = sessions.lazy.map(\.points).max() ?? 0
+        // Medals grade the main discipline: definition quizzes. Translation
+        // mode can't ask untranslated words, so its sessions never compare
+        // fairly against the quizzable denominator.
+        let bestPoints = sessions.lazy
+            .filter { $0.mode == QuizMode.definitionToEn.rawValue }
+            .map(\.points).max() ?? 0
         let quizzable = group.words.filter { $0.isQuizzable(byStatused: done) }.count
         return Medal.percent(points: bestPoints, wordCount: quizzable)
     }
@@ -293,29 +297,21 @@ private struct WordsDestinationSheet: View {
                 }
                 .cardSurfaceRow()
 
-                ForEach(Array(otherGroups.enumerated()), id: \.element.id) { index, target in
-                    Section {
-                        Button {
-                            transfer(to: target)
-                        } label: {
-                            HStack {
-                                Text(target.name)
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                Text("^[\(target.words.count) word](inflect: true)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    } header: {
-                        if index == 0 {
-                            Text("Existing group")
+                CardSections("Existing group", items: otherGroups, id: \.id) { target in
+                    Button {
+                        transfer(to: target)
+                    } label: {
+                        HStack {
+                            Text(target.name)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text("^[\(target.words.count) word](inflect: true)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
-                    .cardSurfaceRow()
                 }
             }
-            .listSectionSpacing(12)
             .appScreen()
             .navigationTitle("\(action.title) ^[\(words.count) word](inflect: true)")
             .navigationBarTitleDisplayMode(.inline)

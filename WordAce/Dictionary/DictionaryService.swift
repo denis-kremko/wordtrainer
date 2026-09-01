@@ -62,8 +62,10 @@ final class DictionaryService: @unchecked Sendable {
     }
 
     private func openBestLocked() {
-        if let downloaded = DictionaryDownloader.installedURL,
-           FileManager.default.fileExists(atPath: downloaded.path),
+        // The checksum gate, not bare file existence: a stale download from
+        // an older release may miss tables the queries now rely on.
+        if DictionaryDownloader.isInstalled,
+           let downloaded = DictionaryDownloader.installedURL,
            openLocked(at: downloaded) {
             setAvailable(true)
             return

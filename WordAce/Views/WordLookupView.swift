@@ -117,7 +117,6 @@ struct WordLookupView: View {
                 .cardSurfaceRow()
             }
         }
-        .listSectionSpacing(12)
         .appScreen()
         .task(id: lemma) { await performSearch() }
         .navigationDestination(item: $pushedPage, destination: destination)
@@ -147,15 +146,8 @@ struct WordLookupView: View {
             }
             .cardSurfaceRow()
         } else {
-            ForEach(Array(candidates.enumerated()), id: \.element) { index, candidate in
-                Section {
-                    DisclosureRow(title: candidate) { open(candidate) }
-                } header: {
-                    if index == 0 {
-                        Text("Results")
-                    }
-                }
-                .cardSurfaceRow()
+            CardSections("Results", items: candidates, id: { $0 }) { candidate in
+                DisclosureRow(title: candidate) { open(candidate) }
             }
             // Prefix completions alone must not hide the escape hatch:
             // the typed word itself is still absent from the dictionary.
@@ -247,15 +239,8 @@ struct SenseSelectionView: View {
                 if result.exact.isEmpty {
                     NoSensesNote(lemma: lemma)
                 } else {
-                    ForEach(Array(result.exact.enumerated()), id: \.element.id) { index, entry in
-                        Section {
-                            senseRow(entry)
-                        } header: {
-                            if index == 0 {
-                                Text("Dict senses")
-                            }
-                        }
-                        .cardSurfaceRow()
+                    CardSections("Dict senses", items: result.exact, id: \.id) { entry in
+                        senseRow(entry)
                     }
                 }
 
@@ -266,7 +251,6 @@ struct SenseSelectionView: View {
         }
         .navigationTitle(lemma)
         .navigationBarTitleDisplayMode(.inline)
-        .listSectionSpacing(12)
         .appScreen()
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
@@ -301,12 +285,9 @@ struct SenseSelectionView: View {
             WordPageView(lemma: page.lemma)
         }
         .sheet(item: $editingEntry) { entry in
-            ModifySenseSheet(entry: entry) { definition, example, translation in
-                let sense = CustomSense.findOrInsert(lemma: lemma, definition: definition,
-                                                     example: example, translation: translation,
-                                                     in: context)
-                selectedCustom.insert(sense.id)
-            }
+            ModifySenseSheet(entry: entry,
+                             existing: customSenses.first { $0.definition == entry.definition },
+                             onSave: saveCustomSense)
             .presentationDetents([.medium, .large])
         }
     }
@@ -354,13 +335,7 @@ struct SenseSelectionView: View {
                             definition: $newCustomDefinition,
                             example: $newCustomExample,
                             translation: $newCustomTranslation,
-                            onAdd: { definition, example, translation in
-                                let sense = CustomSense.findOrInsert(
-                                    lemma: lemma, definition: definition,
-                                    example: example, translation: translation,
-                                    in: context)
-                                selectedCustom.insert(sense.id)
-                            },
+                            onAdd: saveCustomSense,
                             onDelete: deleteCustomSense) { sense in
             Button {
                 selectedCustom.toggle(sense.id)
@@ -390,6 +365,13 @@ struct SenseSelectionView: View {
         context.delete(sense)
     }
 
+    private func saveCustomSense(_ definition: String, _ example: String, _ translation: String) {
+        let sense = CustomSense.findOrInsert(lemma: lemma, definition: definition,
+                                             example: example, translation: translation,
+                                             in: context)
+        selectedCustom.insert(sense.id)
+    }
+
     // MARK: - Add
 
     private var draftDefinition: String {
@@ -406,12 +388,22 @@ struct SenseSelectionView: View {
 
     private var canAdd: Bool {
         if case .word(let word) = target {
-            // Only senses the word doesn't already have, so Add can't be an
-            // enabled no-op (appendSenses would skip them).
+            // Senses the word doesn't have yet, or edited copies that would
+            // refresh an existing sense's translation/example — anything
+            // else makes Add an enabled no-op.
             let existing = Set(word.senses.map { $0.definition })
-            return chosenEntries.contains { !existing.contains($0.definition) }
+            let addsNew = chosenEntries.contains { !existing.contains($0.definition) }
                 || chosenCustoms.contains { !existing.contains($0.definition) }
                 || (!draftDefinition.isEmpty && !existing.contains(draftDefinition))
+            let refreshes = chosenCustoms.contains { custom in
+                word.senses.contains { sense in
+                    sense.definition == custom.definition
+                        && ((custom.translation.nilIfEmpty != nil
+                             && sense.translation != custom.translation)
+                            || (!custom.example.isEmpty && sense.example != custom.example))
+                }
+            }
+            return addsNew || refreshes
         }
         return !chosenEntries.isEmpty || !chosenCustoms.isEmpty || !draftDefinition.isEmpty
     }
@@ -480,15 +472,8 @@ struct WordPageView: View {
                 if result.exact.isEmpty {
                     NoSensesNote(lemma: lemma)
                 } else {
-                    ForEach(Array(result.exact.enumerated()), id: \.element.id) { index, entry in
-                        Section {
-                            senseRow(entry, added: added)
-                        } header: {
-                            if index == 0 {
-                                Text("Dict senses")
-                            }
-                        }
-                        .cardSurfaceRow()
+                    CardSections("Dict senses", items: result.exact, id: \.id) { entry in
+                        senseRow(entry, added: added)
                     }
                 }
 
@@ -501,7 +486,6 @@ struct WordPageView: View {
         }
         .navigationTitle(lemma)
         .navigationBarTitleDisplayMode(.inline)
-        .listSectionSpacing(12)
         .appScreen()
         // Reload only for a real lemma change, not on pop-back re-appearance.
         .task(id: lemma) {
@@ -522,16 +506,19 @@ struct WordPageView: View {
             pushedWord = WordPage(lemma: DictionaryService.normalize(word))
         })
         .sheet(item: $editingEntry) { entry in
-            ModifySenseSheet(entry: entry) { definition, example, translation in
-                CustomSense.findOrInsert(lemma: lemma, definition: definition,
-                                         example: example, translation: translation,
-                                         in: context)
-            }
+            ModifySenseSheet(entry: entry,
+                             existing: customSenses.first { $0.definition == entry.definition },
+                             onSave: saveCustomSense)
             .presentationDetents([.medium, .large])
         }
         .sheet(item: $newGroupFor) { entry in
             QuickAddGroupSheet(lemma: lemma, entry: entry)
         }
+    }
+
+    private func saveCustomSense(_ definition: String, _ example: String, _ translation: String) {
+        CustomSense.findOrInsert(lemma: lemma, definition: definition,
+                                 example: example, translation: translation, in: context)
     }
 
     // Live membership, not a tap memo: the checkmark survives navigation and
@@ -601,11 +588,7 @@ struct WordPageView: View {
                             definition: $newCustomDefinition,
                             example: $newCustomExample,
                             translation: $newCustomTranslation,
-                            onAdd: { definition, example, translation in
-                                CustomSense.findOrInsert(lemma: lemma, definition: definition,
-                                                         example: example, translation: translation,
-                                                         in: context)
-                            },
+                            onAdd: saveCustomSense,
                             onDelete: { context.delete($0) }) { sense in
             SenseTextView(definition: sense.definition, example: sense.example,
                           linkedExcluding: lemma,
@@ -658,17 +641,10 @@ private struct ContainsSection: View {
     let onOpen: (String) -> Void
 
     var body: some View {
-        ForEach(Array(matches.enumerated()), id: \.element) { index, candidate in
-            Section {
-                DisclosureRow(title: candidate) {
-                    onOpen(DictionaryService.normalize(candidate))
-                }
-            } header: {
-                if index == 0 {
-                    Text("Contains “\(lemma)”")
-                }
+        CardSections("Contains “\(lemma)”", items: matches, id: { $0 }) { candidate in
+            DisclosureRow(title: candidate) {
+                onOpen(DictionaryService.normalize(candidate))
             }
-            .cardSurfaceRow()
         }
     }
 }
@@ -683,7 +659,7 @@ private struct CustomSensesSection<Row: View>: View {
     @Binding var example: String
     @Binding var translation: String
     let onAdd: (String, String, String) -> Void
-    var onDelete: ((CustomSense) -> Void)? = nil
+    let onDelete: (CustomSense) -> Void
     @ViewBuilder let row: (CustomSense) -> Row
 
     var body: some View {
@@ -692,12 +668,10 @@ private struct CustomSensesSection<Row: View>: View {
                 row(sense)
                     .cardRow()
                     .swipeActions {
-                        if let onDelete {
-                            Button(role: .destructive) {
-                                onDelete(sense)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
+                        Button(role: .destructive) {
+                            onDelete(sense)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
                         }
                     }
             } header: {
@@ -774,15 +748,8 @@ private struct SenseTextView: View {
                     .font(.footnote).italic()
                     .foregroundStyle(.secondary)
             }
-            if let translation {
-                HStack(spacing: 6) {
-                    Text("Translation:")
-                        .foregroundStyle(Color.secondary)
-                    SpoilerText(text: translation)
-                }
-                .font(.footnote)
+            TranslationRow(translation: translation)
                 .padding(.top, 6)
-            }
         }
         .padding(.vertical, 2)
     }
@@ -853,12 +820,16 @@ private struct ModifySenseSheet: View {
     @State private var example: String
     @State private var translation: String
 
-    init(entry: DictionaryService.Entry, onSave: @escaping (String, String, String) -> Void) {
+    // A previously saved custom copy is the current truth for this
+    // definition: re-editing must show it, or clearing/updating would
+    // silently fight stale prefill.
+    init(entry: DictionaryService.Entry, existing: CustomSense? = nil,
+         onSave: @escaping (String, String, String) -> Void) {
         self.entry = entry
         self.onSave = onSave
-        _definition = State(initialValue: entry.definition)
-        _example = State(initialValue: entry.example)
-        _translation = State(initialValue: entry.translation ?? "")
+        _definition = State(initialValue: existing?.definition ?? entry.definition)
+        _example = State(initialValue: existing?.example ?? entry.example)
+        _translation = State(initialValue: existing?.translation ?? entry.translation ?? "")
     }
 
     var body: some View {

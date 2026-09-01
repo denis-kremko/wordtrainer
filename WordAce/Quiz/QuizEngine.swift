@@ -13,18 +13,23 @@ enum QuizMode: String {
     var promptLabel: String {
         self == .definitionToEn ? "Definition" : "Translation"
     }
+
+    // What this mode asks about a sense; nil = the sense can't be asked.
+    func prompt(for sense: WordSense) -> String? {
+        switch self {
+        case .definitionToEn: return sense.definition
+        case .translationToEn: return sense.translation.flatMap { $0.nilIfEmpty }
+        }
+    }
 }
 
 struct QuizQuestion: Identifiable {
     let id = UUID()
-    let mode: QuizMode
     let lemma: String
     let sense: WordSense
+    let prompt: String
     let hint: String
 
-    var prompt: String {
-        mode == .translationToEn ? (sense.translation ?? "") : sense.definition
-    }
     var expectedAnswer: String { lemma }
 }
 
@@ -133,17 +138,16 @@ enum QuizBuilder {
         for word in words.shuffled() {
             if let n = sampleSize, n > 0, questions.count >= n { break }
 
-            var candidates = word.quizCandidates(includeLearned: includeLearned,
+            let candidates = word.quizCandidates(mode: mode,
+                                                 includeLearned: includeLearned,
                                                  statused: statusedKeys)
-            if mode == .translationToEn {
-                candidates = candidates.filter { $0.translation?.isEmpty == false }
-            }
-            guard let sense = candidates.randomElement() else { continue }
+            guard let sense = candidates.randomElement(),
+                  let prompt = mode.prompt(for: sense) else { continue }
 
             questions.append(QuizQuestion(
-                mode: mode,
                 lemma: word.lemma,
                 sense: sense,
+                prompt: prompt,
                 // Custom senses carry an internal sentinel, not a real POS.
                 hint: sense.isCustom ? "" : PartOfSpeech.displayName(sense.partOfSpeech,
                                                                      lemma: word.lemma)

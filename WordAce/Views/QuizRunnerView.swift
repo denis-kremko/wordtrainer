@@ -305,7 +305,9 @@ struct QuizRunnerView: View {
             let result = QuizResult(
                 order: order,
                 lemma: q.lemma,
-                senseDefinition: q.sense.definition,
+                // The asked prompt: a translation-mode attempt must not
+                // display definitions the user never saw.
+                senseDefinition: q.prompt,
                 userAnswer: answer.userAnswer,
                 isCorrect: answer.isCorrect
             )
@@ -354,8 +356,6 @@ struct QuizSummaryView: View {
                     }
                 }
             }
-            .listSectionSpacing(12)
-            .scrollContentBackground(.hidden)
 
             VStack(spacing: 8) {
                 BottomCTA(title: "Save to statistics", systemImage: "chart.bar.fill", action: onSave)

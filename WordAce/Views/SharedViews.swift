@@ -252,6 +252,7 @@ extension View {
     // keeps its system blur: over a uniform canvas it reads as a solid fill.
     func appScreen() -> some View {
         self
+            .listSectionSpacing(12)
             .scrollContentBackground(.hidden)
             .background(Color.appBackground)
             // Tab-bar background is a per-screen preference: without this on
@@ -479,19 +480,21 @@ struct DisclosureRow: View {
 // text is always laid out, just transparent) under a veil of shimmering dust
 // that scatters away on tap; tapping again gathers it back.
 struct SpoilerText: View {
+    private enum Phase: Equatable {
+        case hidden
+        case dissolving(Date)
+        case settled
+    }
+
     let text: String
-    @State private var revealed = false
-    @State private var revealedAt: Date? = nil
-    // Fully dissolved: pause the timeline so settled rows cost nothing.
-    @State private var settled = false
+    @State private var phase: Phase = .hidden
 
     private static let dissolve: TimeInterval = 0.45
 
     var body: some View {
         // The timeline only runs during the dissolve itself: the resting
-        // veil is static white dust.
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0,
-                                paused: revealedAt == nil || settled)) { timeline in
+        // veil is static white dust, the settled word is plain text.
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !isDissolving)) { timeline in
             let progress = dissolveProgress(at: timeline.date)
             Text(text)
                 .opacity(progress)
@@ -505,27 +508,83 @@ struct SpoilerText: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            if revealed {
-                revealed = false
-                revealedAt = nil
-                settled = false
-            } else {
-                revealed = true
-                revealedAt = Date()
-            }
+            phase = phase == .hidden ? .dissolving(Date()) : .hidden
         }
-        .task(id: revealed) {
-            guard revealed else { return }
-            try? await Task.sleep(for: .seconds(Self.dissolve + 0.1))
-            if !Task.isCancelled && revealed {
-                settled = true
+        .task(id: phase) {
+            guard case .dissolving = phase else { return }
+            try? await Task.sleep(for: .seconds(Self.dissolve))
+            if !Task.isCancelled, case .dissolving = phase {
+                phase = .settled
             }
         }
     }
 
+    private var isDissolving: Bool {
+        if case .dissolving = phase { return true }
+        return false
+    }
+
+    // Settled renders the final state directly: a paused timeline may hold a
+    // stale frame date, and computing from it would freeze mid-dissolve.
     private func dissolveProgress(at now: Date) -> Double {
-        guard revealed, let revealedAt else { return 0 }
-        return min(1, now.timeIntervalSince(revealedAt) / Self.dissolve)
+        switch phase {
+        case .hidden: return 0
+        case .settled: return 1
+        case .dissolving(let start):
+            return min(1, now.timeIntervalSince(start) / Self.dissolve)
+        }
+    }
+}
+
+// One card per element with the section title above the first row only —
+// the app-wide list shape.
+struct CardSections<Element, ID: Hashable, Row: View>: View {
+    private struct Indexed: Identifiable {
+        let index: Int
+        let element: Element
+        let id: ID
+    }
+
+    private let title: String
+    private let indexed: [Indexed]
+    @ViewBuilder private let row: (Element) -> Row
+
+    init(_ title: String, items: [Element], id: (Element) -> ID,
+         @ViewBuilder row: @escaping (Element) -> Row) {
+        self.title = title
+        self.indexed = items.enumerated().map {
+            Indexed(index: $0.offset, element: $0.element, id: id($0.element))
+        }
+        self.row = row
+    }
+
+    var body: some View {
+        ForEach(indexed) { item in
+            Section {
+                row(item.element)
+            } header: {
+                if item.index == 0 {
+                    Text(title)
+                }
+            }
+            .cardSurfaceRow()
+        }
+    }
+}
+
+// The one "Translation:" row, spoiler included.
+struct TranslationRow: View {
+    let translation: String?
+
+    var body: some View {
+        if let translation = translation?.nilIfEmpty {
+            HStack(spacing: 6) {
+                Text("Translation:")
+                    .foregroundStyle(Color.secondary)
+                SpoilerText(text: translation)
+            }
+            .font(.footnote)
+        }
     }
 }
 

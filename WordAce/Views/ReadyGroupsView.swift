@@ -177,7 +177,6 @@ struct ReadyThemesView: View {
                 }
             }
         }
-        .listSectionSpacing(12)
         .appScreen()
     }
 }
@@ -223,7 +222,6 @@ struct ReadyThemeView: View {
                 }
             }
         }
-        .listSectionSpacing(12)
         .appScreen()
         .navigationTitle(theme.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -298,7 +296,6 @@ struct ReadyGroupDetailView: View {
 
                 ListBottomSpacer()
             }
-            .listSectionSpacing(12)
             .appScreen()
 
             BottomCTA(title: "Start learning", systemImage: "plus.circle.fill") {
@@ -497,7 +494,6 @@ struct ConvertReadyGroupSheet: View {
                     }
                 }
             }
-            .listSectionSpacing(12)
             .appScreen()
             .navigationTitle("Filter words")
             .navigationBarTitleDisplayMode(.inline)

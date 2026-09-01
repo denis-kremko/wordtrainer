@@ -99,7 +99,6 @@ struct WordDetailView: View {
             }
             .listRowBackground(Color.clear)
         }
-        .listSectionSpacing(12)
         .appScreen()
         .navigationTitle(word.lemma)
         .navigationBarTitleDisplayMode(.inline)
@@ -258,14 +257,7 @@ private struct SenseSection: View {
                 LinkedText(text: sense.definition, color: .primary, excluding: excludedLemma)
                     .font(.subheadline)
             }
-            if let translation = sense.translation, !translation.isEmpty {
-                HStack(spacing: 6) {
-                    Text("Translation:")
-                        .foregroundStyle(Color.secondary)
-                    SpoilerText(text: translation)
-                }
-                .font(.footnote)
-            }
+            TranslationRow(translation: sense.translation)
             if !sense.example.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Example").font(.caption).foregroundStyle(.secondary)

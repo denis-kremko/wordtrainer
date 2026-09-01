@@ -40,24 +40,18 @@ struct GroupStatsView: View {
                     // Identity = chronological position (sessions are
                     // append-only): persistentModelID changes on autosave
                     // and would rebuild rows, popping a pushed detail.
-                    ForEach(Array(sessions.enumerated().reversed()), id: \.offset) { index, session in
-                        Section {
-                            NavigationLink {
-                                QuizSessionDetailView(session: session, attempt: index + 1)
-                            } label: {
-                                historyRow(session, attempt: index + 1)
-                            }
-                        } header: {
-                            if index == sessions.count - 1 {
-                                Text("History")
-                            }
+                    CardSections("History",
+                                 items: Array(sessions.enumerated().reversed()),
+                                 id: \.offset) { pair in
+                        NavigationLink {
+                            QuizSessionDetailView(session: pair.element, attempt: pair.offset + 1)
+                        } label: {
+                            historyRow(pair.element, attempt: pair.offset + 1)
                         }
-                        .cardSurfaceRow()
                     }
                 }
             }
         }
-        .listSectionSpacing(12)
         .appScreen()
         .navigationTitle("Stats: \(groupName)")
         .navigationBarTitleDisplayMode(.inline)
@@ -171,21 +165,15 @@ struct QuizSessionDetailView: View {
                 LabeledContent("Score", value: "\(session.points) pts · \(session.scorePercent)% · \(session.correctCount) of \(session.totalCount) correct")
             }
             .cardSurfaceRow()
-            ForEach(Array(session.results.sorted(by: { $0.order < $1.order }).enumerated()),
-                    id: \.element.persistentModelID) { index, result in
-                Section {
-                    AnswerRow(isCorrect: result.isCorrect,
-                              title: result.lemma,
-                              subtitle: result.senseDefinition,
-                              typed: result.userAnswer)
-                } header: {
-                    if index == 0 {
-                        Text("Answers")
-                    }
-                }
+            CardSections("Answers",
+                         items: session.results.sorted(by: { $0.order < $1.order }),
+                         id: \.persistentModelID) { result in
+                AnswerRow(isCorrect: result.isCorrect,
+                          title: result.lemma,
+                          subtitle: result.senseDefinition,
+                          typed: result.userAnswer)
             }
         }
-        .listSectionSpacing(12)
         .appScreen()
         .navigationTitle("Attempt #\(attempt)")
         .navigationBarTitleDisplayMode(.inline)

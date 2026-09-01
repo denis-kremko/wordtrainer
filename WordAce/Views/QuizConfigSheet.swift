@@ -28,16 +28,14 @@ struct QuizConfigSheet: View {
     // walk must not re-run on every slider tick.
     @State private var eligible = 0
 
-    private func computeEligible() -> Int {
+    private func refreshEligible() {
         let keys = statusedKeys
         let mode = promptMode
-        return group.words.filter { word in
-            var candidates = word.quizCandidates(includeLearned: includeLearned, statused: keys)
-            if mode == .translationToEn {
-                candidates = candidates.filter { $0.translation?.isEmpty == false }
-            }
-            return !candidates.isEmpty
+        eligible = group.words.filter { word in
+            !word.quizCandidates(mode: mode, includeLearned: includeLearned,
+                                 statused: keys).isEmpty
         }.count
+        sampleSize = min(sampleSize, Double(max(eligible, 1)))
     }
 
     var body: some View {
@@ -59,7 +57,9 @@ struct QuizConfigSheet: View {
 
                 if eligible == 0 {
                     Section {
-                        Text("Nothing to quiz: every sense in this group is turned off or already learned.")
+                        Text(promptMode == .translationToEn
+                             ? "Nothing to quiz by translations: no sense in this group has one."
+                             : "Nothing to quiz: every sense in this group is turned off or already learned.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
@@ -95,18 +95,11 @@ struct QuizConfigSheet: View {
                 }
                 .cardSurfaceRow()
             }
-            .listSectionSpacing(12)
             .appScreen()
             // initial: covers first presentation; the change side covers the
             // "Include learned words" toggle shrinking eligibility mid-sheet.
-            .onChange(of: includeLearned, initial: true) {
-                eligible = computeEligible()
-                sampleSize = min(sampleSize, Double(max(eligible, 1)))
-            }
-            .onChange(of: promptModeRaw) {
-                eligible = computeEligible()
-                sampleSize = min(sampleSize, Double(max(eligible, 1)))
-            }
+            .onChange(of: includeLearned, initial: true) { refreshEligible() }
+            .onChange(of: promptModeRaw) { refreshEligible() }
             .navigationTitle("Quiz Setup")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

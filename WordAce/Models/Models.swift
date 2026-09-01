@@ -212,11 +212,16 @@ extension Word {
         !senses.isEmpty && senses.allSatisfy { done.contains(SenseStats.key(lemma, $0.definition)) }
     }
 
-    // The one rotation rule: a sense can be quizzed iff it is enabled, or it
-    // is statused and explicitly invited back ("Include learned words").
-    func quizCandidates(includeLearned: Bool, statused done: Set<String>) -> [WordSense] {
-        senses.filter {
-            $0.isEnabled || (includeLearned && done.contains(SenseStats.key(lemma, $0.definition)))
+    // The one rotation rule: a sense can be quizzed iff it is enabled (or
+    // statused and explicitly invited back via "Include learned words") and
+    // it can produce a prompt for the chosen mode.
+    func quizCandidates(mode: QuizMode = .definitionToEn,
+                        includeLearned: Bool, statused done: Set<String>) -> [WordSense] {
+        senses.filter { sense in
+            guard sense.isEnabled
+                    || (includeLearned && done.contains(SenseStats.key(lemma, sense.definition)))
+            else { return false }
+            return mode.prompt(for: sense) != nil
         }
     }
 
@@ -308,10 +313,12 @@ extension CustomSense {
         let lemma = DictionaryService.normalize(rawLemma)
         let match = #Predicate<CustomSense> { $0.lemma == lemma && $0.definition == definition }
         if let existing = context.first(matching: match) {
-            if !example.isEmpty && existing.example != example {
+            // Callers pass the full intended state, so clearing a field must
+            // stick too — not just non-empty updates.
+            if existing.example != example {
                 existing.example = example
             }
-            if !translation.isEmpty && existing.translation != translation {
+            if existing.translation != translation {
                 existing.translation = translation
             }
             return existing
@@ -413,12 +420,31 @@ extension Word {
             order += 1
         }
         for custom in customs {
-            guard seen.insert(custom.definition).inserted else { continue }
+            guard seen.insert(custom.definition).inserted else {
+                // An edited "Save to custom" copy of a checked dictionary
+                // sense keeps the dictionary row (real POS) but its fresher
+                // translation/example must not be silently dropped.
+                refreshExisting(definition: custom.definition,
+                                translation: custom.translation.nilIfEmpty,
+                                example: custom.example)
+                continue
+            }
             let sense = WordSense(custom: custom, order: order)
             sense.isEnabled = !isStatused(custom.definition)
             context.insert(sense)
             sense.word = self
             order += 1
+        }
+    }
+
+    // A re-added duplicate can still carry fresher details.
+    private func refreshExisting(definition: String, translation: String?, example: String) {
+        guard let sense = senses.first(where: { $0.definition == definition }) else { return }
+        if let translation, sense.translation != translation {
+            sense.translation = translation
+        }
+        if !example.isEmpty, sense.example != example {
+            sense.example = example
         }
     }
 
