@@ -795,27 +795,40 @@ private struct SpoilerDust: View {
     var body: some View {
         Canvas { context, size in
             var rng = SplitMix(seed: 0x5EED)
-            let count = max(26, Int(size.width * size.height / 12))
-            let base = 0.75 * (1 - dissolve)
+            let base = 0.85 * (1 - dissolve)
             guard base > 0.01 else { return }
-            for _ in 0..<count {
-                let baseX = rng.next() * size.width
-                let baseY = rng.next() * size.height
-                let radius = 0.7 + rng.next() * 0.9
-                let angle = rng.next() * 2 * .pi
-                let flight = dissolve * (10 + rng.next() * 22)
-                let x = baseX + cos(angle) * flight
-                let y = baseY + sin(angle) * flight
-                // Feathered edges: dots fade out toward the veil border
-                // instead of cutting off in a hard rectangle.
-                let xFade = min(1, min(baseX, size.width - baseX) / 10)
-                let yFade = min(1, min(baseY, size.height - baseY) / 5)
-                let alpha = base * xFade * yFade
-                guard alpha > 0.02 else { continue }
-                context.fill(
-                    Path(ellipseIn: CGRect(x: x - radius, y: y - radius,
-                                           width: radius * 2, height: radius * 2)),
-                    with: .color(.white.opacity(alpha)))
+
+            // Smoothstep to fully transparent at the border.
+            func fade(_ distance: CGFloat, _ feather: CGFloat) -> Double {
+                let t = max(0, min(1, distance / feather))
+                return Double(t * t * (3 - 2 * t))
+            }
+
+            // Stratified jittered grid instead of pure random: even coverage,
+            // no bald patches.
+            let cell: CGFloat = 3.5
+            let cols = max(1, Int(size.width / cell))
+            let rows = max(1, Int(size.height / cell))
+            let cellW = size.width / CGFloat(cols)
+            let cellH = size.height / CGFloat(rows)
+            for row in 0..<rows {
+                for col in 0..<cols {
+                    let baseX = (CGFloat(col) + 0.15 + 0.7 * rng.next()) * cellW
+                    let baseY = (CGFloat(row) + 0.15 + 0.7 * rng.next()) * cellH
+                    let radius = 0.6 + rng.next() * 0.8
+                    let angle = rng.next() * 2 * .pi
+                    let flight = dissolve * (10 + rng.next() * 22)
+                    let x = baseX + cos(angle) * flight
+                    let y = baseY + sin(angle) * flight
+                    let xFade = fade(min(baseX, size.width - baseX), 16)
+                    let yFade = fade(min(baseY, size.height - baseY), max(4, size.height * 0.4))
+                    let alpha = base * xFade * yFade * (0.7 + 0.3 * rng.next())
+                    guard alpha > 0.02 else { continue }
+                    context.fill(
+                        Path(ellipseIn: CGRect(x: x - radius, y: y - radius,
+                                               width: radius * 2, height: radius * 2)),
+                        with: .color(.white.opacity(alpha)))
+                }
             }
         }
     }
