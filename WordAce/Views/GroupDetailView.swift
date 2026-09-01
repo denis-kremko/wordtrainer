@@ -293,26 +293,29 @@ private struct WordsDestinationSheet: View {
                 }
                 .cardSurfaceRow()
 
-                if !otherGroups.isEmpty {
-                    Section("Existing group") {
-                        ForEach(otherGroups) { target in
-                            Button {
-                                transfer(to: target)
-                            } label: {
-                                HStack {
-                                    Text(target.name)
-                                        .foregroundStyle(.primary)
-                                    Spacer()
-                                    Text("^[\(target.words.count) word](inflect: true)")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
+                ForEach(Array(otherGroups.enumerated()), id: \.element.id) { index, target in
+                    Section {
+                        Button {
+                            transfer(to: target)
+                        } label: {
+                            HStack {
+                                Text(target.name)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Text("^[\(target.words.count) word](inflect: true)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
+                        }
+                    } header: {
+                        if index == 0 {
+                            Text("Existing group")
                         }
                     }
                     .cardSurfaceRow()
                 }
             }
+            .listSectionSpacing(12)
             .appScreen()
             .navigationTitle("\(action.title) ^[\(words.count) word](inflect: true)")
             .navigationBarTitleDisplayMode(.inline)

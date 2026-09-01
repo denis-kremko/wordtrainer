@@ -99,6 +99,7 @@ struct WordDetailView: View {
             }
             .listRowBackground(Color.clear)
         }
+        .listSectionSpacing(12)
         .appScreen()
         .navigationTitle(word.lemma)
         .navigationBarTitleDisplayMode(.inline)

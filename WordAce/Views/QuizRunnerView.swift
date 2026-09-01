@@ -345,12 +345,16 @@ struct QuizSummaryView: View {
             List {
                 ForEach(results.indices, id: \.self) { i in
                     let r = results[i]
-                    AnswerRow(isCorrect: r.isCorrect,
-                              title: r.question.prompt,
-                              subtitle: "Answer: \(r.question.expectedAnswer)",
-                              typed: r.userAnswer)
+                    Section {
+                        AnswerRow(isCorrect: r.isCorrect,
+                                  title: r.question.prompt,
+                                  subtitle: "Answer: \(r.question.expectedAnswer)",
+                                  typed: r.userAnswer)
+                    }
                 }
             }
+            .listSectionSpacing(12)
+            .scrollContentBackground(.hidden)
 
             VStack(spacing: 8) {
                 BottomCTA(title: "Save to statistics", systemImage: "chart.bar.fill", action: onSave)

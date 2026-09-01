@@ -71,6 +71,7 @@ struct QuizConfigSheet: View {
                 }
                 .cardSurfaceRow()
             }
+            .listSectionSpacing(12)
             .appScreen()
             // initial: covers first presentation; the change side covers the
             // "Include learned words" toggle shrinking eligibility mid-sheet.

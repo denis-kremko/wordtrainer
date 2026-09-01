@@ -117,6 +117,7 @@ struct WordLookupView: View {
                 .cardSurfaceRow()
             }
         }
+        .listSectionSpacing(12)
         .appScreen()
         .task(id: lemma) { await performSearch() }
         .navigationDestination(item: $pushedPage, destination: destination)
@@ -139,22 +140,32 @@ struct WordLookupView: View {
                 Text("Not found in the offline dictionary.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+            }
+            .cardSurfaceRow()
+            Section {
                 useAnywayButton
             }
             .cardSurfaceRow()
         } else {
-            Section("Results") {
-                ForEach(candidates, id: \.self) { candidate in
+            ForEach(Array(candidates.enumerated()), id: \.element) { index, candidate in
+                Section {
                     DisclosureRow(title: candidate) { open(candidate) }
+                } header: {
+                    if index == 0 {
+                        Text("Results")
+                    }
                 }
-                // Prefix completions alone must not hide the escape hatch:
-                // the typed word itself is still absent from the dictionary.
-                if result.exact.isEmpty && result.formMatches.isEmpty
-                    && result.substringMatches.isEmpty {
+                .cardSurfaceRow()
+            }
+            // Prefix completions alone must not hide the escape hatch:
+            // the typed word itself is still absent from the dictionary.
+            if result.exact.isEmpty && result.formMatches.isEmpty
+                && result.substringMatches.isEmpty {
+                Section {
                     useAnywayButton
                 }
+                .cardSurfaceRow()
             }
-            .cardSurfaceRow()
         }
     }
 
@@ -634,12 +645,14 @@ private struct ContainsSection: View {
     let onOpen: (String) -> Void
 
     var body: some View {
-        if !matches.isEmpty {
-            Section("Contains “\(lemma)”") {
-                ForEach(matches, id: \.self) { candidate in
-                    DisclosureRow(title: candidate) {
-                        onOpen(DictionaryService.normalize(candidate))
-                    }
+        ForEach(Array(matches.enumerated()), id: \.element) { index, candidate in
+            Section {
+                DisclosureRow(title: candidate) {
+                    onOpen(DictionaryService.normalize(candidate))
+                }
+            } header: {
+                if index == 0 {
+                    Text("Contains “\(lemma)”")
                 }
             }
             .cardSurfaceRow()

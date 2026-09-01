@@ -157,6 +157,7 @@ struct GroupsListView: View {
                 }
                 .cardSurfaceRow()
             }
+            .listSectionSpacing(12)
             .appScreen()
             .navigationTitle("New Group")
             .navigationBarTitleDisplayMode(.inline)
@@ -260,6 +261,7 @@ private struct ProfileView: View {
                 }
                 .cardSurfaceRow()
             }
+            .listSectionSpacing(12)
             .appScreen()
             .navigationTitle("Profile")
             .onChange(of: pointsToLearn) {
