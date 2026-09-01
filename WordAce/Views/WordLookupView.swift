@@ -222,7 +222,6 @@ struct SenseSelectionView: View {
 
     @State private var lookup: DictionaryService.LookupResult? = nil
     @State private var loadedLemma: String? = nil
-    @State private var translations: [String] = []
     @State private var selected: Set<Int64> = []
     // Keyed by the stored UUID: persistentModelID changes on autosave.
     @State private var selectedCustom: Set<UUID> = []
@@ -241,7 +240,7 @@ struct SenseSelectionView: View {
 
     var body: some View {
         Form {
-            WordHeaderSection(lemma: lemma, isLoading: lookup == nil, translations: translations)
+            WordHeaderSection(lemma: lemma, isLoading: lookup == nil)
 
             if let result = lookup {
                 if result.exact.isEmpty {
@@ -286,13 +285,10 @@ struct SenseSelectionView: View {
             lookup = nil
             selected = []
             selectedCustom = []
-            translations = []
             let result = await DictionaryService.shared.search(lemma)
-            let russian = await DictionaryService.shared.russianTranslations(for: lemma)
             guard !Task.isCancelled else { return }
             loadedLemma = lemma
             lookup = result
-            translations = russian
             if result.exact.isEmpty && customSenses.isEmpty {
                 addFormExpanded = true
             }
@@ -332,7 +328,8 @@ struct SenseSelectionView: View {
                 checkRow(isOn: selected.contains(entry.id),
                          definition: entry.definition,
                          example: entry.example,
-                         pos: PartOfSpeech.displayName(entry.partOfSpeech, lemma: lemma))
+                         pos: PartOfSpeech.displayName(entry.partOfSpeech, lemma: lemma),
+                         translation: entry.translation)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
             }
@@ -373,12 +370,12 @@ struct SenseSelectionView: View {
     }
 
     private func checkRow(isOn: Bool, definition: String, example: String,
-                          pos: String? = nil) -> some View {
+                          pos: String? = nil, translation: String? = nil) -> some View {
         HStack(alignment: .top) {
             Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(isOn ? Color.accentColor : Color.secondary)
             SenseTextView(definition: definition, example: example, linkedExcluding: nil,
-                          pos: pos)
+                          pos: pos, translation: translation)
         }
         .padding(.vertical, 2)
     }
@@ -453,7 +450,6 @@ struct WordPageView: View {
 
     @State private var lookup: DictionaryService.LookupResult? = nil
     @State private var loadedLemma: String? = nil
-    @State private var translations: [String] = []
     @State private var pushedWord: WordPage? = nil
     @State private var addFormExpanded: Bool = false
     @State private var newCustomDefinition: String = ""
@@ -470,7 +466,7 @@ struct WordPageView: View {
 
     var body: some View {
         Form {
-            WordHeaderSection(lemma: lemma, isLoading: lookup == nil, translations: translations)
+            WordHeaderSection(lemma: lemma, isLoading: lookup == nil)
 
             if let result = lookup {
                 let added = addedDefinitions
@@ -504,13 +500,10 @@ struct WordPageView: View {
         .task(id: lemma) {
             guard loadedLemma != lemma else { return }
             lookup = nil
-            translations = []
             let result = await DictionaryService.shared.search(lemma)
-            let russian = await DictionaryService.shared.russianTranslations(for: lemma)
             guard !Task.isCancelled else { return }
             loadedLemma = lemma
             lookup = result
-            translations = russian
             if result.exact.isEmpty && customSenses.isEmpty {
                 addFormExpanded = true
             }
@@ -550,7 +543,8 @@ struct WordPageView: View {
         HStack(alignment: .top, spacing: 8) {
             SenseTextView(definition: entry.definition, example: entry.example,
                           linkedExcluding: lemma,
-                          pos: PartOfSpeech.displayName(entry.partOfSpeech, lemma: lemma))
+                          pos: PartOfSpeech.displayName(entry.partOfSpeech, lemma: lemma),
+                          translation: entry.translation)
                 .frame(maxWidth: .infinity, alignment: .leading)
             VStack(spacing: 10) {
                 Button {
@@ -614,30 +608,19 @@ struct WordPageView: View {
 private struct WordHeaderSection: View {
     let lemma: String
     let isLoading: Bool
-    var translations: [String] = []
 
     var body: some View {
         Section {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 10) {
-                    Text(lemma)
-                        .font(.title2).bold()
-                        .foregroundStyle(.primary)
-                    SpeakButton(text: lemma)
-                    if isLoading {
-                        ProgressView()
-                            .padding(.leading, 4)
-                    }
-                    Spacer()
+            HStack(spacing: 10) {
+                Text(lemma)
+                    .font(.title2).bold()
+                    .foregroundStyle(.primary)
+                SpeakButton(text: lemma)
+                if isLoading {
+                    ProgressView()
+                        .padding(.leading, 4)
                 }
-                if !translations.isEmpty {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        TagBadge(text: "RU", tint: .accentColor)
-                        Text(translations.joined(separator: ", "))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                Spacer()
             }
             .padding(.vertical, 2)
         }
@@ -757,6 +740,7 @@ private struct SenseTextView: View {
     let example: String
     let linkedExcluding: String?
     var pos: String? = nil
+    var translation: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -773,6 +757,11 @@ private struct SenseTextView: View {
                 line("“\(example)”", color: .secondary)
                     .font(.footnote).italic()
                     .foregroundStyle(.secondary)
+            }
+            if let translation {
+                (Text("Translation: ").foregroundStyle(Color.secondary)
+                    + Text(translation).foregroundStyle(Color.primary))
+                    .font(.footnote)
             }
         }
         .padding(.vertical, 2)

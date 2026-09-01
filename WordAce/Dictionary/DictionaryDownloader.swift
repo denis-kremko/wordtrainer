@@ -34,9 +34,15 @@ final class DictionaryDownloader: NSObject {
         return appSupport.appendingPathComponent("dictionary.sqlite")
     }
 
+    private static let installedSHAKey = "dictionaryInstalledSHA256"
+
     nonisolated static var isInstalled: Bool {
-        guard let url = installedURL else { return false }
-        return FileManager.default.fileExists(atPath: url.path)
+        guard let url = installedURL,
+              FileManager.default.fileExists(atPath: url.path) else { return false }
+        // A bundle update that ships a new checksum outdates the installed
+        // file, so the loader reappears and fetches the new release.
+        guard let expected = expectedSHA256 else { return true }
+        return UserDefaults.standard.string(forKey: installedSHAKey) == expected
     }
 
     nonisolated static var isConfigured: Bool { remoteURL != nil }
@@ -139,6 +145,9 @@ final class DictionaryDownloader: NSObject {
                     _ = try FileManager.default.replaceItemAt(dest, withItemAt: payloadURL)
                 } else {
                     try FileManager.default.moveItem(at: payloadURL, to: dest)
+                }
+                if let expected = Self.expectedSHA256 {
+                    UserDefaults.standard.set(expected, forKey: Self.installedSHAKey)
                 }
                 var resDest = dest
                 var values = URLResourceValues()

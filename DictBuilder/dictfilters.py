@@ -225,6 +225,7 @@ def create_schema(cur: sqlite3.Cursor) -> None:
         )
     """)
     cur.execute("CREATE TABLE forms (form TEXT NOT NULL, lemma TEXT NOT NULL)")
+    cur.execute("CREATE TABLE translations (id INTEGER PRIMARY KEY, word TEXT NOT NULL)")
 
 
 def create_indexes(cur: sqlite3.Cursor) -> None:

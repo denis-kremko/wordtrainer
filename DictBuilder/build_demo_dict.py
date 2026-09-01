@@ -111,6 +111,18 @@ def main(dst: str) -> None:
     create_schema(cur)
     cur.executemany("INSERT INTO entries (lemma, pos, definition, example) VALUES (?, ?, ?, ?)", ENTRIES)
     cur.executemany("INSERT INTO forms (form, lemma) VALUES (?, ?)", FORMS)
+    # A couple of sample per-sense translations so the demo exercises the
+    # same schema as the released dictionary.
+    cur.execute("""
+        INSERT INTO translations
+        SELECT id, 'бегать' FROM entries WHERE lemma = 'run' AND pos = 'verb'
+        ORDER BY id LIMIT 1
+    """)
+    cur.execute("""
+        INSERT INTO translations
+        SELECT id, 'сдаваться' FROM entries WHERE lemma = 'give up'
+        ORDER BY id LIMIT 1
+    """)
     create_indexes(cur)
     conn.commit()
     conn.close()

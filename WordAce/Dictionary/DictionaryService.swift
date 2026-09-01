@@ -12,6 +12,7 @@ final class DictionaryService: @unchecked Sendable {
         let partOfSpeech: String
         let definition: String
         let example: String
+        var translation: String? = nil
     }
 
     struct LookupResult {
@@ -116,17 +117,6 @@ final class DictionaryService: @unchecked Sendable {
         return out
     }
 
-    // Russian translations for the word page. Databases before dict-v6 have
-    // no translations table; the prepare failure falls through to [].
-    func russianTranslations(for lemma: String) async -> [String] {
-        let key = Self.normalize(lemma)
-        return await onQueue {
-            self.stringColumnLocked(
-                "SELECT word FROM translations WHERE lemma = ? ORDER BY rank",
-                binds: [key])
-        }
-    }
-
     func search(_ query: String) async -> LookupResult {
         let key = Self.normalize(query)
         let empty = LookupResult(exact: [], formMatches: [], prefixMatches: [], substringMatches: [])
@@ -156,7 +146,7 @@ final class DictionaryService: @unchecked Sendable {
     // queue.sync inside the queue deadlocks.
     private func lookupLocked(_ key: String) -> [Entry] {
         guard let db else { return [] }
-        let sql = "SELECT id, pos, definition, example FROM entries WHERE lemma = ? ORDER BY rank, id"
+        let sql = "SELECT e.id, e.pos, e.definition, e.example, t.word FROM entries e LEFT JOIN translations t ON t.id = e.id WHERE e.lemma = ? ORDER BY e.rank, e.id"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
         defer { sqlite3_finalize(stmt) }
@@ -167,7 +157,9 @@ final class DictionaryService: @unchecked Sendable {
             let pos = String(cString: sqlite3_column_text(stmt, 1))
             let def = String(cString: sqlite3_column_text(stmt, 2))
             let ex = sqlite3_column_text(stmt, 3).map { String(cString: $0) } ?? ""
-            out.append(Entry(id: id, partOfSpeech: pos, definition: def, example: ex))
+            let ru = sqlite3_column_text(stmt, 4).map { String(cString: $0) }
+            out.append(Entry(id: id, partOfSpeech: pos, definition: def, example: ex,
+                             translation: ru))
         }
         return out
     }
