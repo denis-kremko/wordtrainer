@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Build the small bundled demo dictionary (WordTrainer/Resources/dictionary.sqlite).
+Build the small bundled demo dictionary (WordAce/Resources/dictionary.sqlite).
 
 The demo DB ships inside the app bundle so Xcode previews and first-launch
 fallback work without downloading the full dictionary. Same schema as
@@ -10,7 +10,7 @@ build_dict.py output:
     forms(form TEXT, lemma TEXT)
 
 Usage:
-    python3 build_demo_dict.py ../WordTrainer/Resources/dictionary.sqlite
+    python3 build_demo_dict.py ../WordAce/Resources/dictionary.sqlite
 """
 
 from __future__ import annotations

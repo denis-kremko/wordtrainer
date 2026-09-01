@@ -1,4 +1,4 @@
-# WordTrainer
+# WordAce
 
 Оффлайн iOS-приложение для запоминания английских слов. Сам создаёшь группы, добавляешь слова, приложение подтягивает все значения из встроенного словаря на английском, ты галочками отмечаешь нужные смыслы и добавляешь свои заметки (перевод, мнемонику — что угодно). Затем гоняешь тесты в трёх режимах и с рандомным сэмплом.
 
@@ -20,27 +20,27 @@
 
 ## Что лежит в проекте
 
-- `WordTrainer.xcodeproj` — Xcode-проект (iOS 17+, SwiftUI + SwiftData).
-- `WordTrainer/Resources/dictionary.sqlite` — **демо-словарь**: несколько слов + фразовых глаголов + таблица форм (came→come и т.п.) чтобы всё пощупать. Полноценный словарь собирается скриптом ниже.
-- `WordTrainer/Resources/ready_groups.json` — 20 готовых тематических листов (леммы + pos-фильтры + hint-ключи тематичности).
+- `WordAce.xcodeproj` — Xcode-проект (iOS 17+, SwiftUI + SwiftData).
+- `WordAce/Resources/dictionary.sqlite` — **демо-словарь**: несколько слов + фразовых глаголов + таблица форм (came→come и т.п.) чтобы всё пощупать. Полноценный словарь собирается скриптом ниже.
+- `WordAce/Resources/ready_groups.json` — 20 готовых тематических листов (леммы + pos-фильтры + hint-ключи тематичности).
 - `DictBuilder/build_dict.py` — конвертер из Kaikki JSONL в SQLite (частотный фильтр + эвристики качества, флаги для LLM-ревью).
 - `DictBuilder/dictfilters.py` — общие эвристики/помощники пайплайна.
 - `DictBuilder/review_tools.py` — split/validate/apply для LLM-ревью определений.
 - `DictBuilder/analyze_dict.py` — анализ собранного словаря (репорты по флагам).
-- `DictBuilder/build_demo_dict.py` — генератор демо-словаря: `python3 build_demo_dict.py ../WordTrainer/Resources/dictionary.sqlite`.
+- `DictBuilder/build_demo_dict.py` — генератор демо-словаря: `python3 build_demo_dict.py ../WordAce/Resources/dictionary.sqlite`.
 
 ## Как запустить (первый раз)
 
-1. Открой на Mac папку `WordTrainer` в Finder.
-2. Двойной клик по `WordTrainer.xcodeproj` — откроется Xcode.
+1. Открой на Mac папку `WordAce` в Finder.
+2. Двойной клик по `WordAce.xcodeproj` — откроется Xcode.
 3. Слева вверху выбери устройство: сначала попробуй `iPhone 15` в симуляторе (быстро, ничего подписывать не надо).
 4. `Cmd+R` — приложение соберётся и запустится.
 
 Если хочешь сразу на свой iPhone:
 
 1. Подключи iPhone кабелем, разблокируй, разреши «Доверять этому компьютеру».
-2. В Xcode: выбор target `WordTrainer` → таб **Signing & Capabilities** → поставь свой Apple ID в **Team** (если ID ещё нет — «Add an Account…» с обычным Apple ID, платить не надо).
-3. Bundle Identifier уже задан: `com.deniskremko.wordtrainer`. Для своего форка смени на свой.
+2. В Xcode: выбор target `WordAce` → таб **Signing & Capabilities** → поставь свой Apple ID в **Team** (если ID ещё нет — «Add an Account…» с обычным Apple ID, платить не надо).
+3. Bundle Identifier уже задан: `com.deniskremko.wordace`. Для своего форка смени на свой.
 4. Выбери сверху свой iPhone как target, `Cmd+R`.
 5. На iPhone: `Настройки → Основные → VPN и управление устройством` → доверься своему разработчику один раз.
 6. С бесплатным Apple ID сборка живёт **7 дней** — потом пересобрать. С [Apple Developer Program](https://developer.apple.com/programs/) (99 USD/год) — год без пересборок, плюс возможность выложить в App Store.
@@ -49,10 +49,10 @@
 
 Приложение при первом запуске показывает splash с прогресс-баром и качает `dictionary.sqlite` из GitHub Release. Bundled демо-БД остаётся как fallback, чтобы Xcode всегда собирался и превьюшки работали.
 
-URL и контрольная сумма зашиты в `WordTrainer/Info.plist` (ключи `DictionaryDownloadURL` и `DictionarySHA256`). Именно файл, а не build setting: механизм `INFOPLIST_KEY_*` работает только для известных системных ключей — кастомные Xcode молча выбрасывает. Сейчас там:
+URL и контрольная сумма зашиты в `WordAce/Info.plist` (ключи `DictionaryDownloadURL` и `DictionarySHA256`). Именно файл, а не build setting: механизм `INFOPLIST_KEY_*` работает только для известных системных ключей — кастомные Xcode молча выбрасывает. Сейчас там:
 
 ```
-https://github.com/denis-kremko/wordtrainer/releases/download/dict-v3/dictionary-v3.sqlite.gz
+https://github.com/denis-kremko/wordtrainer/releases/download/dict-v5/dictionary-v5.sqlite.gz
 ```
 
 ### Как выложить релиз (один раз)
@@ -68,11 +68,11 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v3/dictionary
      --norvig ../count_1w.txt --subs ../en_full.txt --review-queue /tmp/review_queue.jsonl
    gzip -9 /tmp/dictionary.sqlite   # приложение ждёт .gz — разжимает при первом запуске
    ```
-   Фильтры: частотник (Norvig top-100k ∪ OpenSubtitles top-250k по каждому content-слову леммы), 3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare (vulgar/derogatory-лексика включена намеренно — сериальный английский; offensive/slur исключены), без инфлекционных кросс-рефов и словообразовательных заглушек. Подозрительные определения (самоссылки, циркулярные, сложные) не выбрасываются, а пишутся в `review_queue.jsonl` — их прогоняет LLM-ревью (`review_tools.py split/validate/apply`). dict-v3: 280.5k senses, 181k лемм, ~27 МБ в gzip; ~85k определений переписаны LLM на простой язык, значения ранжированы по употребимости (колонка rank, near-дубли удалены), 99.9% значений с примером употребления.
+   Фильтры: частотник (Norvig top-100k ∪ OpenSubtitles top-250k по каждому content-слову леммы), 3 смысла на (word, POS), 8–200 символов на определение, без obsolete/archaic/dated/rare (vulgar/derogatory-лексика включена намеренно — сериальный английский; offensive/slur исключены), без инфлекционных кросс-рефов и словообразовательных заглушек. Подозрительные определения (самоссылки, циркулярные, сложные) не выбрасываются, а пишутся в `review_queue.jsonl` — их прогоняет LLM-ревью (`review_tools.py split/validate/apply`). dict-v5: 259.4k senses, 181k лемм, ~27 МБ в gzip; ~85k определений переписаны LLM на простой язык, значения ранжированы по употребимости (колонка rank, near-дубли удалены), 99.9% значений с примером употребления.
 
 2. Залей файл релизом. Через `gh`:
    ```bash
-   gh release create dict-v3 /tmp/dictionary-v3.sqlite.gz \
+   gh release create dict-v5 /tmp/dictionary-v5.sqlite.gz \
      --repo denis-kremko/wordtrainer \
      --title "Dictionary v2" \
      --notes "Curated English dictionary (~26 MB gzipped)."
@@ -80,11 +80,11 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v3/dictionary
 
 3. Проверь URL:
    ```bash
-   curl -IL https://github.com/denis-kremko/wordtrainer/releases/download/dict-v3/dictionary-v3.sqlite.gz
+   curl -IL https://github.com/denis-kremko/wordtrainer/releases/download/dict-v5/dictionary-v5.sqlite.gz
    # HTTP/2 200
    ```
 
-4. Обнови контрольную сумму в `WordTrainer/Info.plist` (ключ `DictionarySHA256`) — считается по **распакованному** файлу:
+4. Обнови контрольную сумму в `WordAce/Info.plist` (ключ `DictionarySHA256`) — считается по **распакованному** файлу:
    ```bash
    shasum -a 256 /tmp/dictionary.sqlite
    ```
@@ -93,8 +93,8 @@ https://github.com/denis-kremko/wordtrainer/releases/download/dict-v3/dictionary
 ### Как обновить словарь
 
 1. Пересобери `dictionary.sqlite`.
-2. `gh release create dict-v3 ...` (новый тег).
-3. Обнови `DictionaryDownloadURL` и `DictionarySHA256` в `WordTrainer/Info.plist`.
+2. `gh release create dict-v5 ...` (новый тег).
+3. Обнови `DictionaryDownloadURL` и `DictionarySHA256` в `WordAce/Info.plist`.
 4. Первое приложение при следующем запуске увидит, что локальный файл уже есть, и **не** перекачает. Для форс-обновления сейчас нужно снести приложение или добавить кнопку «Redownload dictionary» в настройки (по запросу сделаю).
 
 ### Где лежит скачанный файл

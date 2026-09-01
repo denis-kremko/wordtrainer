@@ -248,7 +248,137 @@ THEMES = [
     ('fishing-outdoors', 'Fishing & Outdoors', 'figure.fishing',
      'Rods, reels, camps, and trails.',
      ['b-fishing-outdoors']),
+    ('sci-fi-space', 'Sci-Fi & Space', 'sparkles',
+     'Spaceships, aliens, and the vocabulary of the future.',
+     ['b-sci-fi-space', 'c-sci-fi-space']),
+    ('movies-tv', 'Movies & TV', 'film',
+     'From buying a ticket to arguing about the ending.',
+     ['a-movies-tv', 'b-movies-tv', 'c-movies-tv']),
+    ('games-gaming', 'Games & Gaming', 'gamecontroller',
+     'Board games, video games, and play.',
+     ['a-games-gaming', 'b-games-gaming', 'c-games-gaming']),
+    ('medieval-knights', 'Medieval & Knights', 'shield',
+     'Castles, crowns, and the age of chivalry.',
+     ['b-medieval-knights', 'c-medieval-knights']),
+    ('verbs-motion', 'Verbs: Motion & Action', 'figure.walk.motion',
+     'How bodies and things move, from walk to hurl.',
+     ['a-verbs-motion', 'b-verbs-motion', 'c-verbs-motion']),
+    ('verbs-thinking', 'Verbs: Thinking & Feeling', 'brain.head.profile',
+     'Verbs for what happens in your head.',
+     ['a-verbs-thinking', 'b-verbs-thinking', 'c-verbs-thinking']),
+    ('adjectives-things', 'Adjectives: Look & Feel', 'cube',
+     'Size, shape, and texture words for things.',
+     ['a-adjectives-things', 'b-adjectives-things', 'c-adjectives-things']),
+    ('adjectives-people', 'Adjectives: People & Looks', 'person.crop.circle',
+     'Describing how people look and carry themselves.',
+     ['a-adjectives-people', 'b-adjectives-people', 'c-adjectives-people']),
+    ('music-instruments', 'Music & Instruments', 'music.note',
+     'From humming a tune to reading a score.',
+     ['a-music-instruments', 'b-music-instruments', 'c-music-instruments']),
+    ('art-museums', 'Art & Museums', 'paintpalette',
+     'Galleries, canvases, and how to talk about them.',
+     ['b-art-museums', 'c-art-museums']),
+    ('books-writing', 'Books & Writing', 'book.closed',
+     'Reading, writing, and the words for both.',
+     ['a-books-writing', 'b-books-writing', 'c-books-writing']),
+    ('crime-detectives', 'Crime & Detectives', 'magnifyingglass',
+     'Clues, suspects, and whodunits.',
+     ['b-crime-detectives', 'c-crime-detectives']),
+    ('war-military', 'War & Military', 'shield.lefthalf.filled',
+     'From toy soldiers to war reporting.',
+     ['b-war-military', 'c-war-military']),
+    ('science-lab', 'Science & the Lab', 'testtube.2',
+     'Experiments, theories, and lab benches.',
+     ['b-science-lab', 'c-science-lab']),
+    ('city-architecture', 'City & Architecture', 'building.2',
+     'Streets, buildings, and how cities are made.',
+     ['b-city-architecture', 'c-city-architecture']),
+    ('sea-sailing', 'Sea & Sailing', 'sailboat',
+     'Harbours, decks, and open water.',
+     ['b-sea-sailing', 'c-sea-sailing']),
+    ('myths-fantasy', 'Myths & Fantasy', 'wand.and.stars',
+     'Dragons, spells, and old gods.',
+     ['b-myths-fantasy', 'c-myths-fantasy']),
+    ('school-university', 'School & University', 'backpack',
+     'From the classroom to the thesis defence.',
+     ['a-school-university', 'b-school-university', 'c-school-university']),
+    ('love-relationships', 'Love & Relationships', 'heart',
+     'From first crush to long marriage.',
+     ['a-love-relationships', 'b-love-relationships', 'c-love-relationships']),
+    ('time-routine', 'Time & Daily Routine', 'clock',
+     'Mornings, deadlines, and the shape of a day.',
+     ['a-time-routine', 'b-time-routine', 'c-time-routine']),
 ]
+
+def rows_for(lemma, eff_pos):
+    global _conn
+    if _conn is None:
+        _conn = sqlite3.connect(DB)
+    rows = _conn.execute(
+        'SELECT id, pos, definition FROM entries WHERE lemma = ? ORDER BY rank, id',
+        (normalize(lemma),)).fetchall()
+    if eff_pos:
+        filtered = [r for r in rows if r[1] == eff_pos]
+        if filtered:
+            rows = filtered
+    return rows
+
+def cmd_snapshot_bound(out_path):
+    import glob
+    snap = {}
+    for f in sorted(glob.glob(f'{ROOT}/final/*.json')):
+        final = json.load(open(f))
+        per = {}
+        for w in final['words']:
+            eff = w.get('pos') or final.get('pos')
+            rows = rows_for(w['w'], eff)
+            defs = [(r[1], r[2]) for r in rows]
+            b = bound_index(defs, w.get('hint'))
+            if b >= 0:
+                per[w['w']] = rows[b][0]
+        snap[final['id']] = per
+    json.dump(snap, open(out_path, 'w'))
+    print('snapshot:', sum(len(v) for v in snap.values()), 'bound senses ->', out_path)
+
+def cmd_rebind(snapshot_path):
+    import glob
+    snap = json.load(open(snapshot_path))
+    ok = rehinted = lost = underivable = 0
+    for f in sorted(glob.glob(f'{ROOT}/final/*.json')):
+        final = json.load(open(f))
+        per = snap.get(final['id'], {})
+        changed = False
+        for w in final['words']:
+            target = per.get(w['w'])
+            if target is None:
+                continue
+            eff = w.get('pos') or final.get('pos')
+            rows = rows_for(w['w'], eff)
+            ids = [r[0] for r in rows]
+            defs = [(r[1], r[2]) for r in rows]
+            if target not in ids:
+                lost += 1
+                print(f"LOST {final['id']}: {w['w']} (sense {target} deleted)")
+                if w.pop('hint', None) is not None:
+                    changed = True
+                continue
+            pick = ids.index(target)
+            if bound_index(defs, w.get('hint')) == pick:
+                ok += 1
+                continue
+            hint = derive_hint(defs, pick)
+            if pick > 0 and hint is None:
+                underivable += 1
+                print(f"UNDERIVABLE {final['id']}: {w['w']} -> sense {target}")
+                continue
+            w.pop('hint', None)
+            if hint:
+                w['hint'] = hint
+            rehinted += 1
+            changed = True
+        if changed:
+            json.dump(final, open(f, 'w'), indent=1, ensure_ascii=False)
+    print(json.dumps({'ok': ok, 'rehinted': rehinted, 'lost': lost, 'underivable': underivable}))
 
 def cmd_assemble(out_path):
     themes = []
@@ -289,6 +419,10 @@ if __name__ == '__main__':
         cmd_render(sys.argv[2])
     elif cmd == 'apply_audit':
         cmd_apply_audit(sys.argv[2])
+    elif cmd == 'snapshot_bound':
+        cmd_snapshot_bound(sys.argv[2])
+    elif cmd == 'rebind':
+        cmd_rebind(sys.argv[2])
     elif cmd == 'assemble':
         cmd_assemble(sys.argv[2])
     else:
