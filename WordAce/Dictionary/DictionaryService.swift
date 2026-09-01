@@ -116,6 +116,17 @@ final class DictionaryService: @unchecked Sendable {
         return out
     }
 
+    // Russian translations for the word page. Databases before dict-v6 have
+    // no translations table; the prepare failure falls through to [].
+    func russianTranslations(for lemma: String) async -> [String] {
+        let key = Self.normalize(lemma)
+        return await onQueue {
+            self.stringColumnLocked(
+                "SELECT word FROM translations WHERE lemma = ? ORDER BY rank",
+                binds: [key])
+        }
+    }
+
     func search(_ query: String) async -> LookupResult {
         let key = Self.normalize(query)
         let empty = LookupResult(exact: [], formMatches: [], prefixMatches: [], substringMatches: [])

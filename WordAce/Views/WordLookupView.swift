@@ -222,6 +222,7 @@ struct SenseSelectionView: View {
 
     @State private var lookup: DictionaryService.LookupResult? = nil
     @State private var loadedLemma: String? = nil
+    @State private var translations: [String] = []
     @State private var selected: Set<Int64> = []
     // Keyed by the stored UUID: persistentModelID changes on autosave.
     @State private var selectedCustom: Set<UUID> = []
@@ -240,7 +241,7 @@ struct SenseSelectionView: View {
 
     var body: some View {
         Form {
-            WordHeaderSection(lemma: lemma, isLoading: lookup == nil)
+            WordHeaderSection(lemma: lemma, isLoading: lookup == nil, translations: translations)
 
             if let result = lookup {
                 if result.exact.isEmpty {
@@ -285,10 +286,13 @@ struct SenseSelectionView: View {
             lookup = nil
             selected = []
             selectedCustom = []
+            translations = []
             let result = await DictionaryService.shared.search(lemma)
+            let russian = await DictionaryService.shared.russianTranslations(for: lemma)
             guard !Task.isCancelled else { return }
             loadedLemma = lemma
             lookup = result
+            translations = russian
             if result.exact.isEmpty && customSenses.isEmpty {
                 addFormExpanded = true
             }
@@ -449,6 +453,7 @@ struct WordPageView: View {
 
     @State private var lookup: DictionaryService.LookupResult? = nil
     @State private var loadedLemma: String? = nil
+    @State private var translations: [String] = []
     @State private var pushedWord: WordPage? = nil
     @State private var addFormExpanded: Bool = false
     @State private var newCustomDefinition: String = ""
@@ -465,7 +470,7 @@ struct WordPageView: View {
 
     var body: some View {
         Form {
-            WordHeaderSection(lemma: lemma, isLoading: lookup == nil)
+            WordHeaderSection(lemma: lemma, isLoading: lookup == nil, translations: translations)
 
             if let result = lookup {
                 let added = addedDefinitions
@@ -499,10 +504,13 @@ struct WordPageView: View {
         .task(id: lemma) {
             guard loadedLemma != lemma else { return }
             lookup = nil
+            translations = []
             let result = await DictionaryService.shared.search(lemma)
+            let russian = await DictionaryService.shared.russianTranslations(for: lemma)
             guard !Task.isCancelled else { return }
             loadedLemma = lemma
             lookup = result
+            translations = russian
             if result.exact.isEmpty && customSenses.isEmpty {
                 addFormExpanded = true
             }
@@ -606,19 +614,30 @@ struct WordPageView: View {
 private struct WordHeaderSection: View {
     let lemma: String
     let isLoading: Bool
+    var translations: [String] = []
 
     var body: some View {
         Section {
-            HStack(spacing: 10) {
-                Text(lemma)
-                    .font(.title2).bold()
-                    .foregroundStyle(.primary)
-                SpeakButton(text: lemma)
-                if isLoading {
-                    ProgressView()
-                        .padding(.leading, 4)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 10) {
+                    Text(lemma)
+                        .font(.title2).bold()
+                        .foregroundStyle(.primary)
+                    SpeakButton(text: lemma)
+                    if isLoading {
+                        ProgressView()
+                            .padding(.leading, 4)
+                    }
+                    Spacer()
                 }
-                Spacer()
+                if !translations.isEmpty {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        TagBadge(text: "RU", tint: .accentColor)
+                        Text(translations.joined(separator: ", "))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             .padding(.vertical, 2)
         }
