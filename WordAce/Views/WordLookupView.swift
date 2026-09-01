@@ -762,6 +762,7 @@ private struct SenseTextView: View {
                 (Text("Translation: ").foregroundStyle(Color.secondary)
                     + Text(translation).foregroundStyle(Color.primary))
                     .font(.footnote)
+                    .padding(.top, 6)
             }
         }
         .padding(.vertical, 2)
