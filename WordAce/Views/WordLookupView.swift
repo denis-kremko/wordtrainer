@@ -746,16 +746,21 @@ private struct SpoilerText: View {
     private static let dissolve: TimeInterval = 0.45
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: settled)) { timeline in
+        // The timeline only runs during the dissolve itself: the resting
+        // veil is static white dust.
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0,
+                                paused: revealedAt == nil || settled)) { timeline in
             let progress = dissolveProgress(at: timeline.date)
             Text(text)
                 .opacity(progress)
                 .overlay {
-                    SpoilerDust(time: timeline.date.timeIntervalSinceReferenceDate,
-                                dissolve: progress)
+                    SpoilerDust(dissolve: progress)
                         .allowsHitTesting(false)
                 }
         }
+        // Short words must not betray their length: the veil is never
+        // narrower than roughly eight letters.
+        .frame(minWidth: 60, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture {
             if revealed {
@@ -782,29 +787,25 @@ private struct SpoilerText: View {
     }
 }
 
-// The dust itself: deterministic particles that twinkle in place and, as the
-// dissolve progresses, drift outward and fade.
+// The dust itself: deterministic plain-white particles that drift outward
+// and fade as the dissolve progresses.
 private struct SpoilerDust: View {
-    let time: TimeInterval
     let dissolve: Double
 
     var body: some View {
         Canvas { context, size in
             var rng = SplitMix(seed: 0x5EED)
             let count = max(26, Int(size.width * size.height / 12))
+            let alpha = 0.75 * (1 - dissolve)
+            guard alpha > 0.01 else { return }
             for _ in 0..<count {
                 let baseX = rng.next() * size.width
                 let baseY = rng.next() * size.height
-                let phase = rng.next() * 2 * .pi
-                let speed = 1.6 + rng.next() * 2.2
                 let radius = 0.7 + rng.next() * 0.9
                 let angle = rng.next() * 2 * .pi
                 let flight = dissolve * (10 + rng.next() * 22)
                 let x = baseX + cos(angle) * flight
                 let y = baseY + sin(angle) * flight
-                let twinkle = 0.45 + 0.4 * sin(time * speed + phase)
-                let alpha = twinkle * (1 - dissolve)
-                guard alpha > 0.01 else { continue }
                 context.fill(
                     Path(ellipseIn: CGRect(x: x - radius, y: y - radius,
                                            width: radius * 2, height: radius * 2)),
