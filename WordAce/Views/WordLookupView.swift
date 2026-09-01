@@ -733,26 +733,100 @@ private struct AddCustomSenseForm: View {
     }
 }
 
-// Tap-to-reveal spoiler: the translation must not spoil guessing the meaning
-// from the definition first. Tapping again hides it back for self-testing.
+// Telegram-style spoiler: the word keeps its exact place in the line (the
+// text is always laid out, just transparent) under a veil of shimmering dust
+// that scatters away on tap; tapping again gathers it back.
 private struct SpoilerText: View {
     let text: String
     @State private var revealed = false
+    @State private var revealedAt: Date? = nil
+    // Fully dissolved: pause the timeline so settled rows cost nothing.
+    @State private var settled = false
+
+    private static let dissolve: TimeInterval = 0.45
 
     var body: some View {
-        Text(text)
-            .foregroundStyle(revealed ? Color.primary : Color.clear)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 2)
-            .background {
-                Capsule().fill(Color.yellow.opacity(revealed ? 0 : 0.25))
-            }
-            .contentShape(Capsule())
-            .onTapGesture {
-                withAnimation(.spring(duration: 0.25)) {
-                    revealed.toggle()
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: settled)) { timeline in
+            let progress = dissolveProgress(at: timeline.date)
+            Text(text)
+                .opacity(progress)
+                .overlay {
+                    SpoilerDust(time: timeline.date.timeIntervalSinceReferenceDate,
+                                dissolve: progress)
+                        .allowsHitTesting(false)
                 }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if revealed {
+                revealed = false
+                revealedAt = nil
+                settled = false
+            } else {
+                revealed = true
+                revealedAt = Date()
             }
+        }
+        .task(id: revealed) {
+            guard revealed else { return }
+            try? await Task.sleep(for: .seconds(Self.dissolve + 0.1))
+            if !Task.isCancelled && revealed {
+                settled = true
+            }
+        }
+    }
+
+    private func dissolveProgress(at now: Date) -> Double {
+        guard revealed, let revealedAt else { return 0 }
+        return min(1, now.timeIntervalSince(revealedAt) / Self.dissolve)
+    }
+}
+
+// The dust itself: deterministic particles that twinkle in place and, as the
+// dissolve progresses, drift outward and fade.
+private struct SpoilerDust: View {
+    let time: TimeInterval
+    let dissolve: Double
+
+    var body: some View {
+        Canvas { context, size in
+            var rng = SplitMix(seed: 0x5EED)
+            let count = max(26, Int(size.width * size.height / 12))
+            for _ in 0..<count {
+                let baseX = rng.next() * size.width
+                let baseY = rng.next() * size.height
+                let phase = rng.next() * 2 * .pi
+                let speed = 1.6 + rng.next() * 2.2
+                let radius = 0.7 + rng.next() * 0.9
+                let angle = rng.next() * 2 * .pi
+                let flight = dissolve * (10 + rng.next() * 22)
+                let x = baseX + cos(angle) * flight
+                let y = baseY + sin(angle) * flight
+                let twinkle = 0.45 + 0.4 * sin(time * speed + phase)
+                let alpha = twinkle * (1 - dissolve)
+                guard alpha > 0.01 else { continue }
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x - radius, y: y - radius,
+                                           width: radius * 2, height: radius * 2)),
+                    with: .color(.white.opacity(alpha)))
+            }
+        }
+    }
+}
+
+// Deterministic per-frame randomness: the same seed must place the same
+// particles on every redraw, or the dust would boil chaotically.
+private struct SplitMix {
+    private var state: UInt64
+    init(seed: UInt64) { state = seed }
+
+    mutating func next() -> Double {
+        state = state &+ 0x9E3779B97F4A7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
+        z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
+        z = z ^ (z >> 31)
+        return Double(z >> 11) / Double(UInt64.max >> 11)
     }
 }
 
