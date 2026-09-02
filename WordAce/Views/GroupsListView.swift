@@ -113,13 +113,11 @@ struct GroupsListView: View {
                                                                 wordCount: quizzable),
                                                              font: .caption2)
                                                 }
-                                                if !group.groupDescription.isEmpty {
-                                                    Text("•").foregroundStyle(.secondary)
-                                                    Text(group.groupDescription)
-                                                        .font(.caption)
-                                                        .foregroundStyle(.secondary)
-                                                        .lineLimit(1)
-                                                }
+                                            }
+                                            if !group.groupDescription.isEmpty {
+                                                Text(group.groupDescription)
+                                                    .font(.caption)
+                                                    .foregroundStyle(.secondary)
                                             }
                                     }
                                 }
