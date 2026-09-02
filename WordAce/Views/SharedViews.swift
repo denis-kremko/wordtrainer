@@ -248,17 +248,14 @@ extension Color {
 
 extension View {
     // Every screen sits on the same icon-gray canvas; List/Form default
-    // backgrounds are hidden so the canvas shows through. The navigation bar
-    // keeps its system blur: over a uniform canvas it reads as a solid fill.
+    // backgrounds are hidden so the canvas shows through. Nav and tab bars
+    // keep the system glass: iOS 26 ignores toolbarBackground for both, and
+    // over the uniform canvas the glass reads close to solid (accepted).
     func appScreen() -> some View {
         self
             .listSectionSpacing(12)
             .scrollContentBackground(.hidden)
             .background(Color.appBackground)
-            // Tab-bar background is a per-screen preference: without this on
-            // every pushed page the bar reverts to the system blur material.
-            .toolbarBackground(Color.cardSurface, for: .tabBar)
-            .toolbarBackground(.visible, for: .tabBar)
     }
 
     // Default grouped rows resolve darker than the canvas; lift them to cards.

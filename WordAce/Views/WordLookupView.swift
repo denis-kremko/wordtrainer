@@ -483,10 +483,9 @@ struct WordPageView: View {
         .navigationTitle(lemma)
         .navigationBarTitleDisplayMode(.inline)
         .appScreen()
-        .overlay(alignment: .bottom) {
+        .overlay {
             if let toast {
                 ToastView(toast: toast)
-                    .padding(.bottom, 24)
                     .transition(.opacity.combined(with: .scale(scale: 0.9)))
             }
         }

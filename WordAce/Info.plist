@@ -5,11 +5,6 @@
 	<!-- Custom keys must live in a real Info.plist: Xcode's INFOPLIST_KEY_* build
 	     settings only work for known system keys and silently drop custom ones.
 	     This file is merged with the generated Info.plist (GENERATE_INFOPLIST_FILE). -->
-	<!-- Opt out of iOS 26 Liquid Glass: the floating glass tab bar ignores
-	     toolbarBackground, and the design language is all translucency —
-	     the opposite of this app's flat opaque theme. -->
-	<key>UIDesignRequiresCompatibility</key>
-	<true/>
 	<key>DictionaryDownloadURL</key>
 	<string>https://github.com/denis-kremko/wordtrainer/releases/download/dict-v13/dictionary-v13.sqlite.gz</string>
 	<!-- SHA256 of the *decompressed* dictionary.sqlite. Update together with the URL
