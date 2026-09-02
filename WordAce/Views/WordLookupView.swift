@@ -35,6 +35,7 @@ struct WordLookupView: View {
     @State private var lemma: String = ""
     @State private var lookup: DictionaryService.LookupResult? = nil
     @State private var pushedPage: WordPage? = nil
+    @FocusState private var searchFocused: Bool
 
     // Both derive from (input, lookup.key); separate @State copies would have
     // to be kept in sync at every bail-out path.
@@ -93,6 +94,7 @@ struct WordLookupView: View {
             Section("Word") {
                 HStack {
                     TextField("e.g. run", text: $lemma)
+                        .focused($searchFocused)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     if isSearching {
@@ -108,6 +110,13 @@ struct WordLookupView: View {
                         .buttonStyle(.borderless)
                     }
                 }
+                // The bare TextField only accepts taps on its own frame; the
+                // whole card must focus it.
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+                .onTapGesture { searchFocused = true }
+                .listRowInsets(EdgeInsets())
             }
             .cardSurfaceRow()
 
