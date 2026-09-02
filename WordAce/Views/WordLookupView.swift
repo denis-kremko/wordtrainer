@@ -550,11 +550,15 @@ struct WordPageView: View {
         }
     }
 
-    // One-tap add of this exact sense into a group.
+    // One-tap toggle of this exact sense per group: the checkmark shows where
+    // it already lives, tapping there removes it again.
     private func quickAddMenu(for entry: DictionaryService.Entry, isAdded: Bool) -> some View {
         Menu {
             ForEach(groups) { group in
-                Button(group.name) { quickAdd(entry, to: group) }
+                Toggle(group.name, isOn: Binding(
+                    get: { containsSense(entry, group) },
+                    set: { _ in toggleSense(entry, in: group) }
+                ))
             }
             if !groups.isEmpty {
                 Divider()
@@ -572,9 +576,25 @@ struct WordPageView: View {
         .buttonStyle(.borderless)
     }
 
-    private func quickAdd(_ entry: DictionaryService.Entry, to group: WordGroup) {
-        group.findOrCreateWord(lemma: lemma, in: context)
-            .appendSenses(entries: [entry], customs: [], in: context)
+    private func containsSense(_ entry: DictionaryService.Entry, _ group: WordGroup) -> Bool {
+        group.words.contains { word in
+            word.lemma == lemma && word.senses.contains { $0.definition == entry.definition }
+        }
+    }
+
+    private func toggleSense(_ entry: DictionaryService.Entry, in group: WordGroup) {
+        if let word = group.words.first(where: { $0.lemma == lemma }),
+           let sense = word.senses.first(where: { $0.definition == entry.definition }) {
+            if word.senses.count <= 1 {
+                // The last sense: an empty word is a husk, take it out with it.
+                context.delete(word)
+            } else {
+                context.delete(sense)
+            }
+        } else {
+            group.findOrCreateWord(lemma: lemma, in: context)
+                .appendSenses(entries: [entry], customs: [], in: context)
+        }
     }
 
     private var customSensesSection: some View {
