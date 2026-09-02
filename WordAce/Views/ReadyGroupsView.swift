@@ -119,6 +119,14 @@ struct ReadyProgress {
     }
 }
 
+// Coverage behind the ADDED badges: a list is done when every word either
+// sits in one of the user's groups or already carries a knew/learned status.
+func isCovered(_ ready: ReadyGroup, inGroups: Set<String>, progress: ReadyProgress) -> Bool {
+    !ready.words.isEmpty && ready.words.allSatisfy {
+        inGroups.contains($0.key) || progress.isClosed($0.key)
+    }
+}
+
 private struct ProgressLine: View {
     let done: Int
     let remaining: Int
@@ -141,9 +149,11 @@ private struct ProgressLine: View {
 
 struct ReadyThemesView: View {
     @Query(filter: SenseStats.statusedPredicate) private var progressed: [SenseStats]
+    @Query private var groups: [WordGroup]
 
     var body: some View {
         let progress = ReadyProgress(progressed)
+        let inGroups = Set(groups.flatMap { $0.words.lazy.map { $0.lemma } })
         List {
             ForEach(ReadyGroupsCatalog.themes) { theme in
                 let prog = progress.of(theme)
@@ -161,6 +171,11 @@ struct ReadyThemesView: View {
                                 HStack(spacing: 6) {
                                     ForEach(theme.levels) { level in
                                         TagBadge(text: level.level, tint: .accentColor)
+                                    }
+                                    if theme.levels.allSatisfy({
+                                        isCovered($0, inGroups: inGroups, progress: progress)
+                                    }) {
+                                        TagBadge(text: "ADDED", tint: .green)
                                     }
                                 }
                                 Text(theme.description)
@@ -207,9 +222,7 @@ struct ReadyThemeView: View {
                             HStack(spacing: 6) {
                                 Text(ready.level).font(.headline)
                                 TagBadge(text: ready.levelSubtitle.uppercased(), tint: .accentColor)
-                                if !ready.words.isEmpty && ready.words.allSatisfy({
-                                    inGroups.contains($0.key) || progress.isClosed($0.key)
-                                }) {
+                                if isCovered(ready, inGroups: inGroups, progress: progress) {
                                     TagBadge(text: "ADDED", tint: .green)
                                 }
                             }
