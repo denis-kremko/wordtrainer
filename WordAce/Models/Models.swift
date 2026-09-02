@@ -251,7 +251,6 @@ final class WordGroup {
     var name: String
     var groupDescription: String
     var createdAt: Date
-    var sourceReadyGroupID: String? = nil
 
     @Relationship(deleteRule: .cascade, inverse: \Word.group)
     var words: [Word] = []

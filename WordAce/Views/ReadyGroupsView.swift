@@ -189,12 +189,14 @@ struct ReadyThemeView: View {
     @Query private var groups: [WordGroup]
     @Query(filter: SenseStats.statusedPredicate) private var progressed: [SenseStats]
 
-    private var addedIDs: Set<String> {
-        Set(groups.compactMap { $0.sourceReadyGroupID })
+    // ADDED means the list is fully covered: every word either lives in one
+    // of the user's groups or already carries a knew/learned status.
+    private var groupLemmas: Set<String> {
+        Set(groups.flatMap { $0.words.lazy.map { $0.lemma } })
     }
 
     var body: some View {
-        let added = addedIDs  // one Set for the whole list, not one per row
+        let inGroups = groupLemmas  // one Set for the whole list, not one per row
         let progress = ReadyProgress(progressed)
         List {
             ForEach(theme.levels) { ready in
@@ -205,7 +207,9 @@ struct ReadyThemeView: View {
                             HStack(spacing: 6) {
                                 Text(ready.level).font(.headline)
                                 TagBadge(text: ready.levelSubtitle.uppercased(), tint: .accentColor)
-                                if added.contains(ready.id) {
+                                if !ready.words.isEmpty && ready.words.allSatisfy({
+                                    inGroups.contains($0.key) || progress.isClosed($0.key)
+                                }) {
                                     TagBadge(text: "ADDED", tint: .green)
                                 }
                             }
@@ -241,10 +245,21 @@ struct ReadyGroupDetailView: View {
     // the list per frame).
     @State private var definitions: [String: String] = [:]
     @Query(filter: SenseStats.statusedPredicate) private var progressed: [SenseStats]
+    @Query(sort: \WordGroup.createdAt) private var groups: [WordGroup]
     @State private var showingConvert = false
     @State private var browsingWord: ReadyWord? = nil
     @State private var createdGroup: WordGroup? = nil
     @State private var blockedLemma: String? = nil
+
+    private var groupNamesByLemma: [String: [String]] {
+        var out: [String: [String]] = [:]
+        for group in groups {
+            for word in group.words {
+                out[word.lemma, default: []].append(group.name)
+            }
+        }
+        return out
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -256,13 +271,25 @@ struct ReadyGroupDetailView: View {
                         .cardRow(margin: true)
                 }
                 let progress = ReadyProgress(progressed)
+                let namesByLemma = groupNamesByLemma
                 ForEach(Array(ready.words.enumerated()), id: \.element.id) { index, word in
                     let known = progress.isKnown(word.key)
                     Section {
-                        DisclosureRow(title: word.w,
-                                      subtitle: definitions[word.w] ?? "—",
-                                      titleIsHeadline: true) {
-                            browsingWord = word
+                        VStack(alignment: .leading, spacing: 4) {
+                            DisclosureRow(title: word.w,
+                                          subtitle: definitions[word.w] ?? "—",
+                                          titleIsHeadline: true) {
+                                browsingWord = word
+                            }
+                            if let names = namesByLemma[word.key] {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                    Text("In \(names.joined(separator: ", "))")
+                                        .lineLimit(1)
+                                }
+                                .font(.caption2)
+                                .foregroundStyle(.green)
+                            }
                         }
                         .cardRow(color: known ? .orange
                                       : progress.isClosed(word.key) ? .green : nil,
@@ -523,7 +550,6 @@ struct ConvertReadyGroupSheet: View {
         switch destination {
         case .new:
             target = WordGroup(name: groupName.trimmed, groupDescription: ready.description)
-            target.sourceReadyGroupID = ready.id
             context.insert(target)
         case .existing(let group):
             target = group
