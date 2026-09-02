@@ -22049,7 +22049,7 @@
      "levelSubtitle": "Beginner",
      "name": "Drinks & Bar · A1–A2",
      "icon": "cup.and.saucer",
-     "description": "Coffee, tea, and everything the bartender pours.",
+     "description": "Ordering a coffee, a juice, or a beer without pointing.",
      "words": [
       {
        "w": "drink"
@@ -22346,7 +22346,7 @@
      "levelSubtitle": "Independent",
      "name": "Drinks & Bar · B1–B2",
      "icon": "cup.and.saucer",
-     "description": "Coffee, tea, and everything the bartender pours.",
+     "description": "Rounds, refills, and small talk over the counter.",
      "words": [
       {
        "w": "bartender",
@@ -22678,7 +22678,7 @@
      "levelSubtitle": "Proficient",
      "name": "Drinks & Bar · C1–C2",
      "icon": "cup.and.saucer",
-     "description": "Coffee, tea, and everything the bartender pours.",
+     "description": "Cocktail-menu fluency: what “on the rocks, dirty” means.",
      "words": [
       {
        "w": "beverage",
@@ -22986,7 +22986,7 @@
      "levelSubtitle": "Beginner",
      "name": "Restaurants & Eating Out · A1–A2",
      "icon": "fork.knife",
-     "description": "Menus, waiters, and the bill.",
+     "description": "Booking a table and ordering the basics.",
      "words": [
       {
        "w": "restaurant",
@@ -23299,7 +23299,7 @@
      "levelSubtitle": "Independent",
      "name": "Restaurants & Eating Out · B1–B2",
      "icon": "fork.knife",
-     "description": "Menus, waiters, and the bill.",
+     "description": "Menus, allergies, and splitting the bill politely.",
      "words": [
       {
        "w": "main course",
@@ -23632,7 +23632,7 @@
      "levelSubtitle": "Proficient",
      "name": "Restaurants & Eating Out · C1–C2",
      "icon": "fork.knife",
-     "description": "Menus, waiters, and the bill.",
+     "description": "Tasting menus, food critics, and fine-dining rituals.",
      "words": [
       {
        "w": "gratuity",
@@ -23962,7 +23962,7 @@
      "levelSubtitle": "Beginner",
      "name": "Shopping & Sales · A1–A2",
      "icon": "cart",
-     "description": "Discounts, refunds, and the checkout.",
+     "description": "Prices, sizes, and paying at the till.",
      "words": [
       {
        "w": "shop",
@@ -24235,7 +24235,7 @@
      "levelSubtitle": "Independent",
      "name": "Shopping & Sales · B1–B2",
      "icon": "cart",
-     "description": "Discounts, refunds, and the checkout.",
+     "description": "Refunds, bargains, and shopping around.",
      "words": [
       {
        "w": "discount",
@@ -24542,7 +24542,7 @@
      "levelSubtitle": "Proficient",
      "name": "Shopping & Sales · C1–C2",
      "icon": "cart",
-     "description": "Discounts, refunds, and the checkout.",
+     "description": "Consumer fine print: warranties, policies, and haggling.",
      "words": [
       {
        "w": "haggle",
@@ -24871,7 +24871,7 @@
      "levelSubtitle": "Beginner",
      "name": "Wine & Gourmet · A1–A2",
      "icon": "wineglass",
-     "description": "Tasting notes and fine food.",
+     "description": "Red or white: the words on any wine label.",
      "words": [
       {
        "w": "taste"
@@ -25163,7 +25163,7 @@
      "levelSubtitle": "Independent",
      "name": "Wine & Gourmet · B1–B2",
      "icon": "wineglass",
-     "description": "Tasting notes and fine food.",
+     "description": "Tastings, pairings, and telling dry from sweet.",
      "words": [
       {
        "w": "aroma",
@@ -25475,7 +25475,7 @@
      "levelSubtitle": "Proficient",
      "name": "Wine & Gourmet · C1–C2",
      "icon": "wineglass",
-     "description": "Tasting notes and fine food.",
+     "description": "Sommelier talk: terroir, tannins, and a confident swirl.",
      "words": [
       {
        "w": "palate",
@@ -25796,7 +25796,7 @@
      "levelSubtitle": "Beginner",
      "name": "Beauty & Grooming · A1–A2",
      "icon": "comb",
-     "description": "Haircuts, skincare, and the mirror.",
+     "description": "Everyday care: soap, shampoo, and a fresh haircut.",
      "words": [
       {
        "w": "mirror",
@@ -26106,7 +26106,7 @@
      "levelSubtitle": "Independent",
      "name": "Beauty & Grooming · B1–B2",
      "icon": "comb",
-     "description": "Haircuts, skincare, and the mirror.",
+     "description": "Salon visits and the products on your shelf.",
      "words": [
       {
        "w": "haircut",
@@ -26402,7 +26402,7 @@
      "levelSubtitle": "Proficient",
      "name": "Beauty & Grooming · C1–C2",
      "icon": "comb",
-     "description": "Haircuts, skincare, and the mirror.",
+     "description": "Skincare-routine language and barbershop finesse.",
      "words": [
       {
        "w": "complexion",
@@ -26725,7 +26725,7 @@
      "levelSubtitle": "Beginner",
      "name": "Birds & Insects · A1–A2",
      "icon": "ant",
-     "description": "Sparrows, beetles, and dragonflies.",
+     "description": "Birds and bugs you meet in the park.",
      "words": [
       {
        "w": "insect",
@@ -27016,7 +27016,7 @@
      "levelSubtitle": "Independent",
      "name": "Birds & Insects · B1–B2",
      "icon": "ant",
-     "description": "Sparrows, beetles, and dragonflies.",
+     "description": "Wings, nests, and hives: how small creatures live.",
      "words": [
       {
        "w": "beak",
@@ -27315,7 +27315,7 @@
      "levelSubtitle": "Proficient",
      "name": "Birds & Insects · C1–C2",
      "icon": "ant",
-     "description": "Sparrows, beetles, and dragonflies.",
+     "description": "Birdwatcher's field notes: plumage, moults, and swarms.",
      "words": [
       {
        "w": "sparrow",
@@ -27657,7 +27657,7 @@
      "levelSubtitle": "Beginner",
      "name": "Ocean Life · A1–A2",
      "icon": "fish",
-     "description": "Reefs, whales, and what lives below.",
+     "description": "Fish, waves, and the beach.",
      "words": [
       {
        "w": "fish",
@@ -27969,7 +27969,7 @@
      "levelSubtitle": "Independent",
      "name": "Ocean Life · B1–B2",
      "icon": "fish",
-     "description": "Reefs, whales, and what lives below.",
+     "description": "Reefs, tides, and what lives below the surface.",
      "words": [
       {
        "w": "octopus",
@@ -28286,7 +28286,7 @@
      "levelSubtitle": "Proficient",
      "name": "Ocean Life · C1–C2",
      "icon": "fish",
-     "description": "Reefs, whales, and what lives below.",
+     "description": "Deep-sea documentary vocabulary: plankton to predators.",
      "words": [
       {
        "w": "marine",
@@ -28597,7 +28597,7 @@
      "levelSubtitle": "Beginner",
      "name": "Gardening & Plants · A1–A2",
      "icon": "camera.macro",
-     "description": "Soil, seeds, and pruning.",
+     "description": "Seeds, pots, and watering the flowers.",
      "words": [
       {
        "w": "plant"
@@ -28913,7 +28913,7 @@
      "levelSubtitle": "Independent",
      "name": "Gardening & Plants · B1–B2",
      "icon": "camera.macro",
-     "description": "Soil, seeds, and pruning.",
+     "description": "Pruning, weeding, and getting the soil right.",
      "words": [
       {
        "w": "soil",
@@ -29256,7 +29256,7 @@
      "levelSubtitle": "Proficient",
      "name": "Gardening & Plants · C1–C2",
      "icon": "camera.macro",
-     "description": "Soil, seeds, and pruning.",
+     "description": "A gardener's calendar: grafting, mulching, and perennials.",
      "words": [
       {
        "w": "prune",
@@ -29589,7 +29589,7 @@
      "levelSubtitle": "Beginner",
      "name": "Farm & Countryside · A1–A2",
      "icon": "sun.horizon",
-     "description": "Barns, harvests, and village life.",
+     "description": "Farm animals, fields, and country roads.",
      "words": [
       {
        "w": "farm",
@@ -29936,7 +29936,7 @@
      "levelSubtitle": "Independent",
      "name": "Farm & Countryside · B1–B2",
      "icon": "sun.horizon",
-     "description": "Barns, harvests, and village life.",
+     "description": "Harvests, barns, and life outside the city.",
      "words": [
       {
        "w": "barn",
@@ -30263,7 +30263,7 @@
      "levelSubtitle": "Proficient",
      "name": "Farm & Countryside · C1–C2",
      "icon": "sun.horizon",
-     "description": "Barns, harvests, and village life.",
+     "description": "Agricultural vocabulary: crops, livestock, and rural trades.",
      "words": [
       {
        "w": "plough",
@@ -30591,7 +30591,7 @@
      "levelSubtitle": "Beginner",
      "name": "Mountains & Climbing · A1–A2",
      "icon": "mountain.2",
-     "description": "Summits, ropes, and thin air.",
+     "description": "Hills, trails, and a walk with a view.",
      "words": [
       {
        "w": "mountain",
@@ -30894,7 +30894,7 @@
      "levelSubtitle": "Independent",
      "name": "Mountains & Climbing · B1–B2",
      "icon": "mountain.2",
-     "description": "Summits, ropes, and thin air.",
+     "description": "Hiking gear, routes, and reading the weather.",
      "words": [
       {
        "w": "summit",
@@ -31204,7 +31204,7 @@
      "levelSubtitle": "Proficient",
      "name": "Mountains & Climbing · C1–C2",
      "icon": "mountain.2",
-     "description": "Summits, ropes, and thin air.",
+     "description": "Alpinist language: pitches, ridges, and thin air.",
      "words": [
       {
        "w": "summit",
@@ -31527,7 +31527,7 @@
      "levelSubtitle": "Beginner",
      "name": "Energy & Climate · A1–A2",
      "icon": "bolt",
-     "description": "Solar panels, emissions, and the grid.",
+     "description": "Sun, wind, and switching the lights off.",
      "words": [
       {
        "w": "energy",
@@ -31797,7 +31797,7 @@
      "levelSubtitle": "Independent",
      "name": "Energy & Climate · B1–B2",
      "icon": "bolt",
-     "description": "Solar panels, emissions, and the grid.",
+     "description": "Power plants, footprints, and greener choices.",
      "words": [
       {
        "w": "renewable",
@@ -32132,7 +32132,7 @@
      "levelSubtitle": "Proficient",
      "name": "Energy & Climate · C1–C2",
      "icon": "bolt",
-     "description": "Solar panels, emissions, and the grid.",
+     "description": "The climate debate as experts argue it: emissions and grids.",
      "words": [
       {
        "w": "emission",
@@ -32453,7 +32453,7 @@
      "levelSubtitle": "Beginner",
      "name": "News & Media · A1–A2",
      "icon": "newspaper",
-     "description": "Headlines, sources, and breaking stories.",
+     "description": "Newspapers, headlines, and the evening news.",
      "words": [
       {
        "w": "news",
@@ -32754,7 +32754,7 @@
      "levelSubtitle": "Independent",
      "name": "News & Media · B1–B2",
      "icon": "newspaper",
-     "description": "Headlines, sources, and breaking stories.",
+     "description": "Sources, coverage, and telling fact from spin.",
      "words": [
       {
        "w": "headline",
@@ -33037,7 +33037,7 @@
      "levelSubtitle": "Proficient",
      "name": "News & Media · C1–C2",
      "icon": "newspaper",
-     "description": "Headlines, sources, and breaking stories.",
+     "description": "Newsroom jargon: scoops, op-eds, and press embargoes.",
      "words": [
       {
        "w": "editorial",
@@ -33308,7 +33308,7 @@
      "levelSubtitle": "Beginner",
      "name": "Religion & Beliefs · A1–A2",
      "icon": "hands.and.sparkles",
-     "description": "Temples, rituals, and faith.",
+     "description": "Churches, prayers, and holidays.",
      "words": [
       {
        "w": "religion",
@@ -33581,7 +33581,7 @@
      "levelSubtitle": "Independent",
      "name": "Religion & Beliefs · B1–B2",
      "icon": "hands.and.sparkles",
-     "description": "Temples, rituals, and faith.",
+     "description": "Faiths, rituals, and sacred places around the world.",
      "words": [
       {
        "w": "faith",
@@ -33940,7 +33940,7 @@
      "levelSubtitle": "Proficient",
      "name": "Religion & Beliefs · C1–C2",
      "icon": "hands.and.sparkles",
-     "description": "Temples, rituals, and faith.",
+     "description": "How scholars discuss belief: doctrine and rites.",
      "words": [
       {
        "w": "worship",
@@ -34281,7 +34281,7 @@
      "levelSubtitle": "Beginner",
      "name": "History & Archaeology · A1–A2",
      "icon": "scroll",
-     "description": "Empires, ruins, and digs.",
+     "description": "Kings, castles, and things from long ago.",
      "words": [
       {
        "w": "history",
@@ -34612,7 +34612,7 @@
      "levelSubtitle": "Independent",
      "name": "History & Archaeology · B1–B2",
      "icon": "scroll",
-     "description": "Empires, ruins, and digs.",
+     "description": "Empires, ruins, and what museums dig up.",
      "words": [
       {
        "w": "ancient",
@@ -34946,7 +34946,7 @@
      "levelSubtitle": "Proficient",
      "name": "History & Archaeology · C1–C2",
      "icon": "scroll",
-     "description": "Empires, ruins, and digs.",
+     "description": "The historian's toolkit: excavations, artifacts, and eras.",
      "words": [
       {
        "w": "excavation",
@@ -35296,7 +35296,7 @@
      "levelSubtitle": "Beginner",
      "name": "Manners & Etiquette · A1–A2",
      "icon": "hand.wave",
-     "description": "Please, thank you, and how to behave.",
+     "description": "Please, thank you, and polite hellos.",
      "words": [
       {
        "w": "please",
@@ -35637,7 +35637,7 @@
      "levelSubtitle": "Independent",
      "name": "Manners & Etiquette · B1–B2",
      "icon": "hand.wave",
-     "description": "Please, thank you, and how to behave.",
+     "description": "Table manners, small talk, and gentle refusals.",
      "words": [
       {
        "w": "etiquette",
@@ -35969,7 +35969,7 @@
      "levelSubtitle": "Proficient",
      "name": "Manners & Etiquette · C1–C2",
      "icon": "hand.wave",
-     "description": "Please, thank you, and how to behave.",
+     "description": "The subtle art of tact, formality, and saving face.",
      "words": [
       {
        "w": "etiquette",
@@ -36292,7 +36292,7 @@
      "levelSubtitle": "Beginner",
      "name": "Psychology & Habits · A1–A2",
      "icon": "puzzlepiece",
-     "description": "Memory, habits, and the inner life.",
+     "description": "Feelings, moods, and daily habits.",
      "words": [
       {
        "w": "habit",
@@ -36593,7 +36593,7 @@
      "levelSubtitle": "Independent",
      "name": "Psychology & Habits · B1–B2",
      "icon": "puzzlepiece",
-     "description": "Memory, habits, and the inner life.",
+     "description": "Motivation, stress, and breaking bad habits.",
      "words": [
       {
        "w": "habit",
@@ -36912,7 +36912,7 @@
      "levelSubtitle": "Proficient",
      "name": "Psychology & Habits · C1–C2",
      "icon": "puzzlepiece",
-     "description": "Memory, habits, and the inner life.",
+     "description": "Pop-psychology fluency: biases, coping, and self-awareness.",
      "words": [
       {
        "w": "willpower",
@@ -37249,7 +37249,7 @@
      "levelSubtitle": "Beginner",
      "name": "Construction & Machines · A1–A2",
      "icon": "wrench.and.screwdriver",
-     "description": "Cranes, concrete, and blueprints.",
+     "description": "Tools, bricks, and big machines.",
      "words": [
       {
        "w": "crane",
@@ -37551,7 +37551,7 @@
      "levelSubtitle": "Independent",
      "name": "Construction & Machines · B1–B2",
      "icon": "wrench.and.screwdriver",
-     "description": "Cranes, concrete, and blueprints.",
+     "description": "On the site: cranes, scaffolding, and blueprints.",
      "words": [
       {
        "w": "crane",
@@ -37887,7 +37887,7 @@
      "levelSubtitle": "Proficient",
      "name": "Construction & Machines · C1–C2",
      "icon": "wrench.and.screwdriver",
-     "description": "Cranes, concrete, and blueprints.",
+     "description": "Engineering vocabulary: foundations, loads, and heavy plant.",
      "words": [
       {
        "w": "excavator",
@@ -38215,7 +38215,7 @@
      "levelSubtitle": "Beginner",
      "name": "Emergencies & First Aid · A1–A2",
      "icon": "light.beacon.max",
-     "description": "Sirens, bandages, and staying calm.",
+     "description": "Help, hurt, and calling an ambulance.",
      "words": [
       {
        "w": "emergency",
@@ -38521,7 +38521,7 @@
      "levelSubtitle": "Independent",
      "name": "Emergencies & First Aid · B1–B2",
      "icon": "light.beacon.max",
-     "description": "Sirens, bandages, and staying calm.",
+     "description": "Cuts, burns, and what to do before the doctor comes.",
      "words": [
       {
        "w": "emergency",
@@ -38828,7 +38828,7 @@
      "levelSubtitle": "Proficient",
      "name": "Emergencies & First Aid · C1–C2",
      "icon": "light.beacon.max",
-     "description": "Sirens, bandages, and staying calm.",
+     "description": "First-responder language: triage, CPR, and stabilizing.",
      "words": [
       {
        "w": "paramedic",
@@ -39159,7 +39159,7 @@
      "levelSubtitle": "Beginner",
      "name": "Photography & Cameras · A1–A2",
      "icon": "camera",
-     "description": "Lenses, light, and the perfect frame.",
+     "description": "Cameras, photos, and saying cheese.",
      "words": [
       {
        "w": "camera",
@@ -39445,7 +39445,7 @@
      "levelSubtitle": "Independent",
      "name": "Photography & Cameras · B1–B2",
      "icon": "camera",
-     "description": "Lenses, light, and the perfect frame.",
+     "description": "Light, focus, and framing a better shot.",
      "words": [
       {
        "w": "lens",
@@ -39743,7 +39743,7 @@
      "levelSubtitle": "Proficient",
      "name": "Photography & Cameras · C1–C2",
      "icon": "camera",
-     "description": "Lenses, light, and the perfect frame.",
+     "description": "Photographer's craft: exposure, apertures, and processing.",
      "words": [
       {
        "w": "aperture",
@@ -40029,7 +40029,7 @@
      "levelSubtitle": "Beginner",
      "name": "Aviation & Flight · A1–A2",
      "icon": "airplane.departure",
-     "description": "Cockpits, runways, and turbulence.",
+     "description": "Airports, tickets, and boarding a plane.",
      "words": [
       {
        "w": "plane",
@@ -40330,7 +40330,7 @@
      "levelSubtitle": "Independent",
      "name": "Aviation & Flight · B1–B2",
      "icon": "airplane.departure",
-     "description": "Cockpits, runways, and turbulence.",
+     "description": "Takeoff to landing: cabins, crews, and layovers.",
      "words": [
       {
        "w": "cockpit",
@@ -40626,7 +40626,7 @@
      "levelSubtitle": "Proficient",
      "name": "Aviation & Flight · C1–C2",
      "icon": "airplane.departure",
-     "description": "Cockpits, runways, and turbulence.",
+     "description": "Cockpit and tower vocabulary: altitude, clearance, turbulence.",
      "words": [
       {
        "w": "turbulence",
@@ -40953,7 +40953,7 @@
      "levelSubtitle": "Beginner",
      "name": "Secrets & Spies · A1–A2",
      "icon": "binoculars",
-     "description": "Codes, covers, and shadowing.",
+     "description": "Secrets, codes, and hiding places.",
      "words": [
       {
        "w": "spy",
@@ -41296,7 +41296,7 @@
      "levelSubtitle": "Independent",
      "name": "Secrets & Spies · B1–B2",
      "icon": "binoculars",
-     "description": "Codes, covers, and shadowing.",
+     "description": "Agents, covers, and quiet meetings.",
      "words": [
       {
        "w": "spy",
@@ -41617,7 +41617,7 @@
      "levelSubtitle": "Proficient",
      "name": "Secrets & Spies · C1–C2",
      "icon": "binoculars",
-     "description": "Codes, covers, and shadowing.",
+     "description": "Tradecraft proper: moles, dead drops, and counterintelligence.",
      "words": [
       {
        "w": "espionage",
@@ -41958,7 +41958,7 @@
      "levelSubtitle": "Beginner",
      "name": "Humor & Wit · A1–A2",
      "icon": "theatermasks",
-     "description": "Puns, sarcasm, and perfect timing.",
+     "description": "Jokes, smiles, and funny stories.",
      "words": [
       {
        "w": "joke",
@@ -42233,7 +42233,7 @@
      "levelSubtitle": "Independent",
      "name": "Humor & Wit · B1–B2",
      "icon": "theatermasks",
-     "description": "Puns, sarcasm, and perfect timing.",
+     "description": "Punchlines, teasing, and comic timing.",
      "words": [
       {
        "w": "humor",
@@ -42523,7 +42523,7 @@
      "levelSubtitle": "Proficient",
      "name": "Humor & Wit · C1–C2",
      "icon": "theatermasks",
-     "description": "Puns, sarcasm, and perfect timing.",
+     "description": "Dry wit, irony, and the craft of a well-turned quip.",
      "words": [
       {
        "w": "wit",
