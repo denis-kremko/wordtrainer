@@ -37,7 +37,7 @@ struct GroupDetailView: View {
                     let learnedCount = group.words.filter { $0.isLearned(byStatused: done) }.count
 
                     medalsPlate(done: done)
-                    ProgressPlateSection(learned: learnedCount, total: group.words.count)
+                    ProgressPlateSection(learned: learnedCount, total: group.words.count, margin: true)
 
                     ForEach(Array(sortedWords.enumerated()), id: \.element.id) { index, word in
                         let learned = word.isLearned(byStatused: done)
@@ -62,9 +62,9 @@ struct GroupDetailView: View {
                                     .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
-                                .cardRow(color: isChosen ? .accentColor : baseColor)
+                                .cardRow(color: isChosen ? .accentColor : baseColor, margin: true)
                             } else {
-                                CardLinkRow(value: word, color: baseColor) {
+                                CardLinkRow(value: word, color: baseColor, margin: true) {
                                     wordRowContent(word, done: done, dimmed: dimmed)
                                 }
                                 .swipeActions {
@@ -104,7 +104,7 @@ struct GroupDetailView: View {
                             }
                         } header: {
                             if index == 0 {
-                                Text("Words")
+                                Text("Words").padding(.leading, 20)
                             }
                         }
                     }
@@ -112,6 +112,7 @@ struct GroupDetailView: View {
 
                 ListBottomSpacer(height: 84)
             }
+            .contentMargins(.horizontal, 0, for: .scrollContent)
 
             if isSelecting {
                 selectionCTAs
@@ -176,7 +177,7 @@ struct GroupDetailView: View {
                 Spacer()
                 MedalRow(bestPercent: best, font: .title3)
             }
-            .listRowBackground(RowGlow(color: best >= Medal.gold.threshold ? .yellow : nil))
+            .cardRow(color: best >= Medal.gold.threshold ? .yellow : nil, margin: true)
         }
     }
 

@@ -281,8 +281,11 @@ struct CardGlow: View {
 // Card drawn inside the row content (system row background stays clear):
 // swipe actions then drag the finished card instead of unmasking a square
 // row. Use on any single-row section that carries swipeActions.
+// margin: true is for lists with contentMargins(.horizontal, 0) — the row
+// then spans the whole screen (swipes travel to the real edge) and the 20pt
+// side inset moves inside the row.
 extension View {
-    func cardRow(color: Color? = nil) -> some View {
+    func cardRow(color: Color? = nil, margin: Bool = false) -> some View {
         self
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -295,6 +298,7 @@ extension View {
                     }
                 }
             }
+            .padding(.horizontal, margin ? 20 : 0)
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
@@ -306,6 +310,7 @@ extension View {
 struct CardLinkRow<Value: Hashable, Content: View>: View {
     let value: Value
     var color: Color? = nil
+    var margin: Bool = false
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -317,7 +322,7 @@ struct CardLinkRow<Value: Hashable, Content: View>: View {
                 RowChevron()
             }
         }
-        .cardRow(color: color)
+        .cardRow(color: color, margin: margin)
     }
 }
 
@@ -702,10 +707,12 @@ struct ListBottomSpacer: View {
 struct ProgressPlateSection: View {
     let learned: Int
     let total: Int
+    var margin: Bool = false
 
     var body: some View {
         Section {
-            VStack(alignment: .leading, spacing: 8) {
+            let glow: Color? = learned == total && total > 0 ? .green : nil
+            let content = VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("Progress").font(.headline)
                     Spacer()
@@ -716,7 +723,11 @@ struct ProgressPlateSection: View {
                 ProgressView(value: Double(learned), total: Double(max(total, 1)))
                     .tint(.green)
             }
-            .listRowBackground(RowGlow(color: learned == total && total > 0 ? .green : nil))
+            if margin {
+                content.cardRow(color: glow, margin: true)
+            } else {
+                content.listRowBackground(RowGlow(color: glow))
+            }
         }
     }
 }

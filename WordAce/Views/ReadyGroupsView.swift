@@ -253,8 +253,8 @@ struct ReadyGroupDetailView: View {
                     Text(ready.description)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                        .cardRow(margin: true)
                 }
-                .cardSurfaceRow()
                 let progress = ReadyProgress(progressed)
                 ForEach(Array(ready.words.enumerated()), id: \.element.id) { index, word in
                     let known = progress.isKnown(word.key)
@@ -265,7 +265,8 @@ struct ReadyGroupDetailView: View {
                             browsingWord = word
                         }
                         .cardRow(color: known ? .orange
-                                      : progress.isClosed(word.key) ? .green : nil)
+                                      : progress.isClosed(word.key) ? .green : nil,
+                                 margin: true)
                         .swipeActions(edge: .leading) {
                             // No action while definitions load: setKnown would
                             // silently no-op.
@@ -289,13 +290,14 @@ struct ReadyGroupDetailView: View {
                         }
                     } header: {
                         if index == 0 {
-                            Text("Words")
+                            Text("Words").padding(.leading, 20)
                         }
                     }
                 }
 
                 ListBottomSpacer()
             }
+            .contentMargins(.horizontal, 0, for: .scrollContent)
             .appScreen()
 
             BottomCTA(title: "Start learning", systemImage: "plus.circle.fill") {

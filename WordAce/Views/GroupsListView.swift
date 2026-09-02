@@ -94,7 +94,8 @@ struct GroupsListView: View {
                             let quizzable = group.words.filter { $0.isQuizzable(byStatused: done) }.count
                             Section {
                                 CardLinkRow(value: group,
-                                            color: !group.words.isEmpty && learned == group.words.count ? .green : nil) {
+                                            color: !group.words.isEmpty && learned == group.words.count ? .green : nil,
+                                            margin: true) {
                                     VStack(alignment: .leading, spacing: 4) {
                                             Text(group.name).font(.headline)
                                             HStack(spacing: 8) {
@@ -135,6 +136,9 @@ struct GroupsListView: View {
 
                         ListBottomSpacer()
                     }
+                    // Rows span the whole screen (margin lives inside cardRow)
+                    // so swipe actions travel to the real screen edge.
+                    .contentMargins(.horizontal, 0, for: .scrollContent)
                 }
             }
 
