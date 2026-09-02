@@ -450,6 +450,8 @@ struct WordPageView: View {
     @State private var newCustomTranslation: String = ""
     @State private var editingEntry: DictionaryService.Entry? = nil
     @State private var newGroupFor: DictionaryService.Entry? = nil
+    @State private var toast: SenseToast? = nil
+    @State private var toastGeneration = 0
 
     @Query(sort: \WordGroup.createdAt, order: .reverse) private var groups: [WordGroup]
     @Query(sort: \CustomSense.createdAt) private var allCustomSenses: [CustomSense]
@@ -463,12 +465,11 @@ struct WordPageView: View {
             WordHeaderSection(lemma: lemma, isLoading: lookup == nil)
 
             if let result = lookup {
-                let added = addedDefinitions
                 if result.exact.isEmpty {
                     NoSensesNote(lemma: lemma)
                 } else {
                     CardSections("Dict senses", items: result.exact, id: \.id) { entry in
-                        senseRow(entry, added: added)
+                        senseRow(entry)
                     }
                 }
 
@@ -482,6 +483,13 @@ struct WordPageView: View {
         .navigationTitle(lemma)
         .navigationBarTitleDisplayMode(.inline)
         .appScreen()
+        .overlay(alignment: .bottom) {
+            if let toast {
+                ToastView(toast: toast)
+                    .padding(.bottom, 24)
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+            }
+        }
         // Reload only for a real lemma change, not on pop-back re-appearance.
         .task(id: lemma) {
             guard loadedLemma != lemma else { return }
@@ -516,20 +524,7 @@ struct WordPageView: View {
                                  example: example, translation: translation, in: context)
     }
 
-    // Live membership, not a tap memo: the checkmark survives navigation and
-    // honestly reverts when the containing group, word, or sense is deleted.
-    // One walk per body evaluation — not one per sense row.
-    private var addedDefinitions: Set<String> {
-        var out: Set<String> = []
-        for group in groups {
-            for word in group.words where word.lemma == lemma {
-                out.formUnion(word.senses.lazy.map { $0.definition })
-            }
-        }
-        return out
-    }
-
-    private func senseRow(_ entry: DictionaryService.Entry, added: Set<String>) -> some View {
+    private func senseRow(_ entry: DictionaryService.Entry) -> some View {
         HStack(alignment: .top, spacing: 8) {
             SenseTextView(definition: entry.definition, example: entry.example,
                           linkedExcluding: lemma,
@@ -545,14 +540,14 @@ struct WordPageView: View {
                         .padding(.vertical, 4)
                 }
                 .buttonStyle(.borderless)
-                quickAddMenu(for: entry, isAdded: added.contains(entry.definition))
+                quickAddMenu(for: entry)
             }
         }
     }
 
     // One-tap toggle of this exact sense per group: the checkmark shows where
     // it already lives, tapping there removes it again.
-    private func quickAddMenu(for entry: DictionaryService.Entry, isAdded: Bool) -> some View {
+    private func quickAddMenu(for entry: DictionaryService.Entry) -> some View {
         Menu {
             ForEach(groups) { group in
                 Toggle(group.name, isOn: Binding(
@@ -569,8 +564,8 @@ struct WordPageView: View {
                 Label("New group…", systemImage: "plus")
             }
         } label: {
-            Image(systemName: isAdded ? "checkmark.circle.fill" : "plus.circle")
-                .foregroundStyle(isAdded ? Color.green : Color.accentColor)
+            Image(systemName: "plus.circle")
+                .foregroundStyle(Color.accentColor)
                 .padding(.vertical, 4)
         }
         .buttonStyle(.borderless)
@@ -591,9 +586,25 @@ struct WordPageView: View {
             } else {
                 context.delete(sense)
             }
+            showToast("Removed", icon: "minus.circle.fill")
         } else {
             group.findOrCreateWord(lemma: lemma, in: context)
                 .appendSenses(entries: [entry], customs: [], in: context)
+            showToast("Added", icon: "checkmark.circle.fill")
+        }
+    }
+
+    private func showToast(_ message: String, icon: String) {
+        toastGeneration += 1
+        let generation = toastGeneration
+        withAnimation(.spring(duration: 0.25)) {
+            toast = SenseToast(message: message, icon: icon)
+        }
+        // A newer toast restarts the clock; only the latest may dismiss.
+        Task {
+            try? await Task.sleep(for: .seconds(1.3))
+            guard toastGeneration == generation else { return }
+            withAnimation(.easeOut(duration: 0.3)) { toast = nil }
         }
     }
 
@@ -613,6 +624,27 @@ struct WordPageView: View {
 }
 
 // MARK: - Shared pieces
+
+private struct SenseToast: Equatable {
+    let message: String
+    let icon: String
+}
+
+private struct ToastView: View {
+    let toast: SenseToast
+
+    var body: some View {
+        Label(toast.message, systemImage: toast.icon)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.cardSurface.opacity(0.85), in: Capsule())
+            .overlay(Capsule().strokeBorder(Color.white.opacity(0.12)))
+            .shadow(color: .black.opacity(0.3), radius: 10, y: 3)
+            .allowsHitTesting(false)
+    }
+}
 
 private struct WordHeaderSection: View {
     let lemma: String
